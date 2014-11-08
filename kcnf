@@ -1,0 +1,2 @@
+config HELLO_WORLD
+bool "Say hello to the world"
