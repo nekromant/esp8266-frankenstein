@@ -21,4 +21,9 @@ struct console_cmd {
 	}
 
 
+extern int (*console_printf)(const char *fmt, ...);
+
+#define HELPSTR_NEWLINE "\n             "
+
 #endif
+

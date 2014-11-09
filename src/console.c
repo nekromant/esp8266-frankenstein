@@ -13,6 +13,8 @@
 //TODO: Network console 
 
 extern int ets_uart_printf(const char *fmt, ...);
+int (*console_printf)(const char *fmt, ...) = ets_uart_printf;
+
 
 #define CONSOLE_PRIO 1
 
@@ -101,14 +103,21 @@ err_too_many_args:
 	return 1;
 }
 
+
+void console_print_verinfo()
+{
+	console_printf("\n\n\nFrankenstein ESP8266 Firmware\n");
+	console_printf("Powered by Antares " CONFIG_VERSION_STRING "\n");	
+	console_printf("(c) Andrew 'Necromant' Andrianov 2014 <andrew@ncrmnt.org>\n");	
+	console_printf("This is free software (where possible), published under the terms if GPLv2\n");	
+}
+
 void console_init(int qlen) {
 	/* Microrl init */
 	microrl_init (prl, &rl_print);
 	microrl_set_execute_callback (prl, execute);
 	microrl_set_sigint_callback(prl, sigint);
-	ets_uart_printf("\n\n\n");
-	ets_uart_printf("Antares blackblade " CONFIG_VERSION_STRING " @ ESP8266. \n");	
-	ets_uart_printf("(c) Andrew 'Necromant' Andrianov 2014 <andrew@ncrmnt.org>\n");	
+	console_print_verinfo();
 	ets_uart_printf("\nMemory Layout:\n");	
 	system_print_meminfo();
 	system_set_os_print(0);
@@ -116,3 +125,5 @@ void console_init(int qlen) {
 	os_event_t *queue = os_malloc(sizeof(os_event_t) * qlen);
 	system_os_task(task_console, CONSOLE_PRIO, queue, qlen);
 }
+
+

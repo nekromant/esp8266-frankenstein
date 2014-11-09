@@ -47,9 +47,9 @@ void ICACHE_FLASH_ATTR
 user_init()
 {
 
+	wifi_set_opmode(0x0);
 	/* Reset system timer */
 	system_timer_reinit();
-
 
 	/* Configure GPIO for our blinky */
 	PIN_FUNC_SELECT(PERIPHS_IO_MUX_GPIO2_U, FUNC_GPIO2);
@@ -66,4 +66,5 @@ user_init()
 	os_delay_us(1000);
 	uart_init(115200, 115200);
 	console_init(32);
+
 }
