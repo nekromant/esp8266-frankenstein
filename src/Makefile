@@ -5,3 +5,7 @@ objects-y+=console.o
 objects-y+=cmd_iw.o
 objects-y+=cmd_ifconfig.o
 objects-y+=cmd_common.o
+#objects-y+=cmd_net.o
+objects-y+=cmd_gpio.o
+
+subdirs-y+= sdk/

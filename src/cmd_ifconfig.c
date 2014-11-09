@@ -15,44 +15,32 @@
 #include <generic/macros.h>
 
 
-#define is_digit(c)	((c) >= '0' && (c) <= '9')
-
-static int skip_atoi(const char **s)
-{
-	int i = 0;
-
-	while (is_digit(**s))
-		i = i * 10 + *((*s)++) - '0';
-	
-	return i;
-}
-
-
-/*
-static int do_iwconnect(int argc, const char*argv[])
-{
-	int mode, newmode; 
-	mode = wifi_get_opmode();
-	if ((mode != STATION_MODE) || (mode != STATIONAP_MODE)) {
-		ets_uart_printf("Cannot connect while in '%s' mode", modes[mode]);
-		return 0;
-	} 
-
-	
-}
-*/
-
-
-
 static void print_ip_info(int iface)
 {
         struct ip_info info;
 	wifi_get_ip_info(iface, &info);
+
+	if (wifi_get_opmode() == 0x0)
+		return;
+
+	if ((iface == STATION_IF) && (wifi_get_opmode() == SOFTAP_MODE))
+		return;
+
+	if ((iface == SOFTAP_IF) && (wifi_get_opmode() == STATION_MODE))
+		return;
+
 	console_printf("%s: %s\n", id_to_iface_name(iface), id_to_iface_description(iface));
-	console_printf("    inet addr:" IPSTR " Mask:" IPSTR " Gateway:" IPSTR " \n", 
+	if (iface == STATION_IF)
+		console_printf("     state: %s\n", id_to_sta_state(wifi_station_get_connect_status()));
+	else { /* AP */
+		int state = wifi_get_opmode();
+		console_printf("     state: %s\n", 
+			       ((state == SOFTAP_MODE) || (state == STATIONAP_MODE)) ? 
+			       "Running" : "Stopped");
+	}
+	console_printf("     inet addr:" IPSTR " Mask:" IPSTR " Gateway:" IPSTR " \n", 
 			IP2STR(&info.ip), IP2STR(&info.netmask), IP2STR(&info.gw));
 }
-
 
 
 static int do_ifconfig(int argc, const char* argv[])
@@ -97,7 +85,8 @@ static int do_ifconfig(int argc, const char* argv[])
 	return 0;
 }
 
-CONSOLE_CMD(ifconfig, -1, 5, do_ifconfig, NULL, 
+CONSOLE_CMD(ifconfig, -1, 5, 
+	    do_ifconfig, NULL, NULL, 
 	    "Show/setup network interfaces"
 	    HELPSTR_NEWLINE "ifconfig [iface] [ipaddr] [netmask] [gateway]"
 	    HELPSTR_NEWLINE "ifconfig sta0 192.168.0.1 255.255.255.0 192.168.0.8"

@@ -22,4 +22,7 @@ int ICACHE_FLASH_ATTR id_from_iface_name(const char *id);
 const char ICACHE_FLASH_ATTR *id_to_iface_description(int id);
 int ICACHE_FLASH_ATTR id_from_iface_description(const char *id);
 
+const char ICACHE_FLASH_ATTR *id_to_sta_state(int id);
+int ICACHE_FLASH_ATTR id_from_sta_state(const char *id);
+
 #endif

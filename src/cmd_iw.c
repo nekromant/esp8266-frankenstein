@@ -15,11 +15,11 @@ static void ICACHE_FLASH_ATTR scan_done_cb(void *arg, STATUS status)
 	scaninfo *c = arg; 
 	struct bss_info *inf; 
 	STAILQ_FOREACH(inf, c->pbss, next) {
-		ets_uart_printf("BSSID %x:%x:%x:%x:%x:%x channel %.02d rssi %.02d auth %d %s\n", 
+		ets_uart_printf("BSSID %02x:%02x:%02x:%02x:%02x:%02x channel %02d rssi %02d auth %-12s %s\n", 
 				MAC2STR(inf->bssid),
 				inf->channel, 
 				inf->rssi, 
-				inf->authmode,
+				id_to_encryption_mode(inf->authmode),
 				inf->ssid
 			);
 		inf = (struct bss_info *) &inf->next;
@@ -130,18 +130,22 @@ static int do_apconfig(int argc, const char*argv[])
 }
 
 
-CONSOLE_CMD(iwscan, -1, -1, do_scan, NULL, 
+CONSOLE_CMD(iwscan, -1, -1, 
+	    do_scan, NULL, NULL, 
 	    "Scan for available stations");
 
-CONSOLE_CMD(iwmode, -1, 2, do_iwmode, NULL, 
+CONSOLE_CMD(iwmode, -1, 2, 
+	    do_iwmode, NULL, NULL,
 	    "Get/set wireless mode. Available modes: NONE, STA, AP, APSTA"
 	    HELPSTR_NEWLINE "iwmode STA"
 );
 
-CONSOLE_CMD(iwconnect, -1, 3, do_iwconnect, NULL, 
+CONSOLE_CMD(iwconnect, -1, 3, 
+	    do_iwconnect, NULL, NULL,
 	    "Join a network/Display connection status. "
 	    HELPSTR_NEWLINE "iwconnect ssid password");
 
-CONSOLE_CMD(apconfig, -1, 4, do_apconfig, NULL, 
+CONSOLE_CMD(apconfig, -1, 4, 
+	    do_apconfig, NULL, NULL, 
 	    "Setup Access Point. "
 	    HELPSTR_NEWLINE "apconfig name OPEN/WEP/WPA_PSK/WPA2_PSK/WPA_WPA2_PSK [password]");

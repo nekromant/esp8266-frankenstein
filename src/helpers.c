@@ -37,6 +37,14 @@ static const char *ifacedsc[] = {
 };
 
 
+static const char *sta_states[] = {
+	[STATION_IDLE]              = "Idle",
+	[STATION_CONNECTING]        = "Connecting",
+	[STATION_NO_AP_FOUND]       = "No AP Found",
+	[STATION_CONNECT_FAIL]      = "Connection Failed",
+	[STATION_GOT_IP]            = "Connected",
+};
+
 
 int ICACHE_FLASH_ATTR lookup_index(char* key, char **tbl, int count)
 {
@@ -71,3 +79,16 @@ DECLARE_LOOKUP(modes, wireless_mode);
 DECLARE_LOOKUP(ciphers, encryption_mode);
 DECLARE_LOOKUP(ifacename, iface_name);
 DECLARE_LOOKUP(ifacedsc, iface_description);
+DECLARE_LOOKUP(sta_states, sta_state);
+
+#define is_digit(c)	((c) >= '0' && (c) <= '9')
+
+unsigned long ICACHE_FLASH_ATTR skip_atoul(const char **s)
+{
+	unsigned long i = 0;
+
+	while (is_digit(**s))
+		i = i * 10 + *((*s)++) - '0';
+	
+	return i;
+}
