@@ -1,14 +1,16 @@
 SRCDIR=antares
 GITURL=https://nekromant@github.com/nekromant/antares.git
+BRANCH=experimental
 OBJDIR=.
 TMPDIR=tmp
 TOPDIR=.
 project_sources=src
 ANTARES_DIR:=./antares
+ANTARES_INSTALL_DIR:=$(abspath ./antares)
 
-ifeq ($(ANTARES_INSTALL_DIR),)
+ifeq ($(ANTARES_INSTALL_DIR2),)
 antares:
-	git clone $(GITURL) $(ANTARES_DIR)
+	git clone $(GITURL) $(ANTARES_DIR) -b$(BRANCH)
 	@echo "I have fetched the antares sources for you to $(ANTARES_DIR)"
 	@echo "Please, re-run make"
 else
@@ -43,13 +45,17 @@ endef
 
 dumpiram:
 	$(tobootloader)
-	esptool.py --port /dev/ttyUSB1 dump_mem 0x40000000 65536 iram0.bin
+	esptool.py --port /dev/ttyUSB0 dump_mem 0x40000000 65536 iram0.bin
 
 reset: 
 	$(reset)
+
+PORT=/dev/ttyUSB0
+
 flash:
 	$(tobootloader)
-	-esptool.py --port /dev/ttyUSB0 write_flash 0x00000 images/antares-0x00000.bin
+	-esptool.py --port $(PORT) write_flash 0x00000 images/antares-0x00000.bin
 	$(tobootloader)
-	-esptool.py --port /dev/ttyUSB0 write_flash 0x40000 images/antares-0x40000.bin
+	-esptool.py --port $(PORT) write_flash 0x40000 images/antares-0x40000.bin
 	$(reset)
+	minicom -o -D $(PORT) -b 115200

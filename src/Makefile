@@ -7,5 +7,6 @@ objects-y+=cmd_ifconfig.o
 objects-y+=cmd_common.o
 #objects-y+=cmd_net.o
 objects-y+=cmd_gpio.o
+objects-y+=cmd_flash.o
 
-subdirs-y+= sdk/
+#subdirs-y+= sdk/

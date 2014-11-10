@@ -36,6 +36,12 @@ static void ICACHE_FLASH_ATTR task_console(os_event_t *evt)
 		microrl_insert_char (prl, (char) evt->par);
 }
 
+
+void console_exec(char *str) {
+	while (*str)
+		microrl_insert_char (prl, (char) *str++);
+}
+
 static void ICACHE_FLASH_ATTR rl_print(char *str)
 {
 	if (!console_locked)
