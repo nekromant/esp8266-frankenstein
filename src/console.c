@@ -114,6 +114,38 @@ err_too_many_args:
 	return 1;
 }
 
+/*
+#define COMPLETION_COUNT 8
+#define COMPLETION_BUF   128
+
+static char *compl_array[COMPLETION_COUNT+1];
+static char compl_buf[COMPLETION_BUF];
+static int compl_ptr; 
+static int compl_buf_ptr;
+ 
+int compl_push(char* str)
+{
+	if (compl_ptr >= COMPLETION_COUNT)
+		return -1;
+	
+	char* s = &compl_buf[compl_buf_ptr];
+	int sz = strlen(str);
+	if (COMPLETION_BUF)
+	{
+		
+	}
+}
+char ** completion(int argc, const char* const* argv)
+{
+	compl_ptr = 0;
+	compl_buf_ptr = 0;
+
+	if (argc == 1) {
+		
+	}
+	// TODO: actual command completion
+}
+*/
 
 void console_print_verinfo()
 {
@@ -128,6 +160,7 @@ void console_init(int qlen) {
 	microrl_init (prl, &rl_print);
 	microrl_set_execute_callback (prl, execute);
 	microrl_set_sigint_callback(prl, sigint);
+//	microrl_set_complete_callback(prl, completion);
 	console_print_verinfo();
 	console_printf("\nMemory Layout:\n");	
 	system_print_meminfo();
