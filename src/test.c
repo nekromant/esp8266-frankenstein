@@ -31,6 +31,7 @@ user_init()
 //	os_timer_arm(&some_timer, 1000, 1);
 //	os_delay_us(1000);
 	uart_init(115200, 115200);
+	wdt_feed();
 	console_init(32);
 
 	PIN_FUNC_SELECT(PERIPHS_IO_MUX_GPIO2_U, FUNC_GPIO2);
