@@ -12,7 +12,9 @@ struct console_cmd {
 } ;
 
 #define CONSOLE_CMD(_name, _reqargs, _maxargs, _handler, _inthandler, _completion, _help) \
-	struct console_cmd  cmd_ ##_name  __attribute__((section(".console_cmd"))) = { \
+	struct console_cmd  cmd_ ##_name				\
+	__attribute__ ((used))						\
+	__attribute__((section(".console_cmd"))) = {			\
 		.name = #_name,						\
 		.required_args = _reqargs,				\
 		.maximum_args  = _maxargs,				\

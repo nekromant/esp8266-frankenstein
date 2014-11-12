@@ -61,10 +61,6 @@ static int do_ifconfig(int argc, const char* argv[])
 		return 0;
 	}
 
-
-	/* We can't alter these dynamically. WTF??? */
-	/* Store to env */
-
 	struct ip_info info;
 	wifi_get_ip_info(iface, &info);
 	uint32_t temp; 
@@ -72,10 +68,10 @@ static int do_ifconfig(int argc, const char* argv[])
 		info.ip.addr = ipaddr_addr(argv[2]);
 
 	if (argc>3) /* Netmask */ 
-		info.ip.addr = ipaddr_addr(argv[3]);
+		info.netmask.addr = ipaddr_addr(argv[3]);
 
 	if (argc>4) /* Gateway */ 
-		info.ip.addr = ipaddr_addr(argv[4]);
+		info.gw.addr = ipaddr_addr(argv[4]);
 
 	if (!wifi_set_ip_info(iface, &info))
 	{

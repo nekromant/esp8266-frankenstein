@@ -15,7 +15,7 @@
 #include <generic/macros.h>
 
 
-static int do_gpio(int argc, const char* argv[])
+static int ICACHE_FLASH_ATTR do_gpio(int argc, const char* argv[])
 {
 	char *tmp = argv[2];
 	int gpio = skip_atoi(&tmp);

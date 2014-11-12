@@ -32,7 +32,7 @@ void console_lock(int l)
 
 static void ICACHE_FLASH_ATTR task_console(os_event_t *evt)
 {
-	if (!console_locked)
+	if (!console_locked || ((char) evt->par) == KEY_ETX)
 		microrl_insert_char (prl, (char) evt->par);
 }
 
@@ -147,13 +147,6 @@ char ** completion(int argc, const char* const* argv)
 }
 */
 
-void console_print_verinfo()
-{
-	console_printf("\n\n\nFrankenstein ESP8266 Firmware\n");
-	console_printf("Powered by Antares " CONFIG_VERSION_STRING "\n");	
-	console_printf("(c) Andrew 'Necromant' Andrianov 2014 <andrew@ncrmnt.org>\n");	
-	console_printf("This is free software (where possible), published under the terms of GPLv2\n");	
-}
 
 void console_init(int qlen) {
 	/* Microrl init */
@@ -161,10 +154,6 @@ void console_init(int qlen) {
 	microrl_set_execute_callback (prl, execute);
 	microrl_set_sigint_callback(prl, sigint);
 //	microrl_set_complete_callback(prl, completion);
-	console_print_verinfo();
-	console_printf("\nMemory Layout:\n");	
-	system_print_meminfo();
-	system_set_os_print(0);
 	console_printf("\n === Press enter to activate this console === \n");	
 	os_event_t *queue = os_malloc(sizeof(os_event_t) * qlen);
 	system_os_task(task_console, CONSOLE_PRIO, queue, qlen);

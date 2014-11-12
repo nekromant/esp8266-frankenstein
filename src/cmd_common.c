@@ -18,13 +18,13 @@
 
 
 
-static int do_version(int argc, const char* argv[])
+static ICACHE_FLASH_ATTR int do_version(int argc, const char* argv[])
 {
-	console_print_verinfo();
+	print_hello_banner();
 	return 0;
 }
 
-static int do_meminfo(int argc, const char* argv[])
+static ICACHE_FLASH_ATTR int do_meminfo(int argc, const char* argv[])
 {
 	system_set_os_print(1);
 	system_print_meminfo();
@@ -32,12 +32,12 @@ static int do_meminfo(int argc, const char* argv[])
 	return 0;
 }
 
-static int do_reboot(int argc, const char* argv[])
+static ICACHE_FLASH_ATTR int do_reboot(int argc, const char* argv[])
 {
 	system_restart();
 }
 
-static int do_argtest(int argc, const char* argv[])
+static ICACHE_FLASH_ATTR int do_argtest(int argc, const char* argv[])
 {
 	int i;
 	console_printf("argc == %d\n", argc); 
@@ -47,7 +47,7 @@ static int do_argtest(int argc, const char* argv[])
 	}
 }
 
-static int do_deepsleep(int argc, const char* argv[])
+static ICACHE_FLASH_ATTR int do_deepsleep(int argc, const char* argv[])
 {
 	char *tmp = argv[1];
 	unsigned long n = skip_atoul(&tmp); 
@@ -75,7 +75,6 @@ CONSOLE_CMD(deepsleep, 2, 2,
 	    "Enter deep sleep for some microseconds"
 	    HELPSTR_NEWLINE "deepsleep 10000"
 );
-
 
 CONSOLE_CMD(argtest, -1, -1, 
 	    do_argtest, NULL, NULL, 

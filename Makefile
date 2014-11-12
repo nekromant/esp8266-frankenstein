@@ -8,6 +8,9 @@ project_sources=src
 ANTARES_DIR:=./antares
 ANTARES_INSTALL_DIR:=$(abspath ./antares)
 
+CFLAGS+=-I$(abspath ./include/lwip-esp8266/)
+
+
 ifeq ($(ANTARES_INSTALL_DIR2),)
 antares:
 	git clone $(GITURL) $(ANTARES_DIR) -b$(BRANCH)
