@@ -60,23 +60,22 @@ network_init()
 	wifi_get_ip_info(STATION_IF, &info);
 
 	char *dhcp = env_get("sta-mode"); 
+	char *ip, *mask, *gw;
+	if (!dhcp || strcmp(dhcp, "dhcp") != 0)
+	{
+		ip = env_get("sta-ip"); 
+		mask = env_get("sta-mask");
+		gw = env_get("sta-gw");
+		if (ip)
+			info.ip.addr = ipaddr_addr(ip);
+		if (mask)
+			info.netmask.addr = ipaddr_addr(mask);
+		if (gw)
+			info.gw.addr = ipaddr_addr(gw);
+		
+		wifi_set_ip_info(STATION_IF, &info);
+	}
 	
-	if (dhcp && strcmp(dhcp, "dhcp") == 0)
-		return;
-
-	char *ip = env_get("sta-ip"); 
-	char *mask = env_get("sta-mask");
-	char *gw = env_get("sta-gw");
-	if (ip)
-		info.ip.addr = ipaddr_addr(ip);
-	if (mask)
-		info.netmask.addr = ipaddr_addr(mask);
-	if (gw)
-		info.gw.addr = ipaddr_addr(gw);
-
-	wifi_set_ip_info(STATION_IF, &info);
-
-
 	wifi_get_ip_info(SOFTAP_IF, &info);
 	ip = env_get("ap-ip"); 
 	mask = env_get("ap-mask");
