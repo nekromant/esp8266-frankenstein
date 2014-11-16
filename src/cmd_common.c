@@ -32,6 +32,11 @@ static ICACHE_FLASH_ATTR int do_meminfo(int argc, const char* argv[])
 	return 0;
 }
 
+static ICACHE_FLASH_ATTR int do_chipinfo(int argc, const char* argv[])
+{
+	console_printf("id=0x%x\n", system_get_chip_id());
+}
+
 static ICACHE_FLASH_ATTR int do_reboot(int argc, const char* argv[])
 {
 	system_restart();
@@ -63,6 +68,11 @@ CONSOLE_CMD(version, -1, -1,
 CONSOLE_CMD(meminfo, -1, -1, 
 	    do_meminfo, NULL, NULL, 
 	    "Display memory information"
+);
+
+CONSOLE_CMD(chipinfo, -1, -1,
+	    do_chipinfo, NULL, NULL,
+	    "Display chip information"
 );
 
 CONSOLE_CMD(reset, -1, -1, 
