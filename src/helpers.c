@@ -46,7 +46,7 @@ static const char *sta_states[] = {
 };
 
 
-int ICACHE_FLASH_ATTR lookup_index(char* key, char **tbl, int count)
+int  lookup_index(char* key, char **tbl, int count)
 {
 	int i; 
 	for (i=0; i<count; i++) {
@@ -56,7 +56,7 @@ int ICACHE_FLASH_ATTR lookup_index(char* key, char **tbl, int count)
 	return -1;
 }
 
-const char ICACHE_FLASH_ATTR *lookup_string(int key, char **tbl, int count)
+const char  *lookup_string(int key, char **tbl, int count)
 {
 	if (key >= count)
 		return NULL;
@@ -65,11 +65,11 @@ const char ICACHE_FLASH_ATTR *lookup_string(int key, char **tbl, int count)
 
 
 #define DECLARE_LOOKUP(_table, _func)					\
-	const char ICACHE_FLASH_ATTR *id_to_ ## _func(int id)		\
+	const char  *id_to_ ## _func(int id)		\
 	{								\
 		return lookup_string(id, _table, ARRAY_SIZE(_table));	\
 	}								\
-	int ICACHE_FLASH_ATTR id_from_ ## _func(const char *id)		\
+	int  id_from_ ## _func(const char *id)		\
 	{								\
 		return lookup_index(id, _table, ARRAY_SIZE(_table));	\
 	}								\
@@ -83,7 +83,7 @@ DECLARE_LOOKUP(sta_states, sta_state);
 
 #define is_digit(c)	((c) >= '0' && (c) <= '9')
 
-unsigned long ICACHE_FLASH_ATTR skip_atoul(const char **s)
+unsigned long  skip_atoul(const char **s)
 {
 	unsigned long i = 0;
 

@@ -12,5 +12,4 @@ objects-y+=cmd_listen.o
 objects-y+=cmd_env.o
 objects-y+=env.o
 
-#objects-y+=snprintf.o
-subdirs-y+= netapps/
+subdirs-y+=netapps/

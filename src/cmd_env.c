@@ -16,18 +16,18 @@
 
 
 
-static int ICACHE_FLASH_ATTR  do_printenv(int argc, const char* argv[])
+static int   do_printenv(int argc, const char* argv[])
 {
 	env_dump();
 }
 
-static int ICACHE_FLASH_ATTR  do_reset(int argc, const char* argv[])
+static int   do_reset(int argc, const char* argv[])
 {
 	console_printf("Reverting to default env..");
 	env_reset();
 	console_printf(".DONE!\n");
 }
-static int ICACHE_FLASH_ATTR  do_setenv(int argc, const char* argv[])
+static int   do_setenv(int argc, const char* argv[])
 {
 	switch (argc)
 	{
@@ -43,7 +43,7 @@ static int ICACHE_FLASH_ATTR  do_setenv(int argc, const char* argv[])
 	}
 }
 
-static int ICACHE_FLASH_ATTR  do_saveenv(int argc, const char* argv[])
+static int   do_saveenv(int argc, const char* argv[])
 {
 	console_printf("Writing environment to flash...");
 	env_save();

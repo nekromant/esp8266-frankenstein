@@ -12,7 +12,7 @@
 #include <generic/macros.h>
 
 
-static void ICACHE_FLASH_ATTR	hex_dump(unsigned long addr, char* data, int len)
+static void 	hex_dump(unsigned long addr, char* data, int len)
 {
 	int				ii;
 	char			textString[16];
@@ -70,7 +70,7 @@ CONSOLE_CMD(spi_wipe, 3, -1,
 	    "Wipe the whole spi flash blank"
 	    HELPSTR_NEWLINE "wipe");
 
-static int ICACHE_FLASH_ATTR do_dump(int argc, const char*argv[])
+static int  do_dump(int argc, const char*argv[])
 {
 	uint32_t tmp[16];
 	uint32_t start = skip_atoi(&argv[1]);

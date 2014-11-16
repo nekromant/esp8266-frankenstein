@@ -19,13 +19,8 @@ static char* linebuffer;
 static int lineptr; 
 static int disconn = 1; 
 
-void ping_done(struct pbuf *p, struct icmp_echo_hdr *iecho)
-{
-	console_printf("Ping done!\n");
-}
 
-
-static  void ICACHE_FLASH_ATTR
+static  void 
 webserver_recv(void *arg, char *pusrdata, unsigned short length)
 {
 	while (length--) {
@@ -57,7 +52,7 @@ webserver_recv(void *arg, char *pusrdata, unsigned short length)
 	
 }
 
-static void ICACHE_FLASH_ATTR webserver_recon(void *arg, sint8 err)
+static void  webserver_recon(void *arg, sint8 err)
 {
     struct espconn *pesp_conn = arg;
     console_printf("reconnect  | %d.%d.%d.%d:%d, error %d \n",
@@ -68,7 +63,7 @@ static void ICACHE_FLASH_ATTR webserver_recon(void *arg, sint8 err)
 		   pesp_conn->proto.tcp->remote_port, err);
 }
 
-static void ICACHE_FLASH_ATTR webserver_discon(void *arg)
+static void  webserver_discon(void *arg)
 {
     struct espconn *pesp_conn = arg;
 
@@ -80,7 +75,7 @@ static void ICACHE_FLASH_ATTR webserver_discon(void *arg)
 		   pesp_conn->proto.tcp->remote_port);
 }
 
-static void ICACHE_FLASH_ATTR webserver_listen(void *arg)
+static void  webserver_listen(void *arg)
 {
     struct espconn *pesp_conn = arg;
     console_printf("connect    | %d.%d.%d.%d:%d \n",
@@ -99,7 +94,7 @@ static void ICACHE_FLASH_ATTR webserver_listen(void *arg)
 static struct espconn esp_conn;
 static esp_tcp esptcp;
 
-static int ICACHE_FLASH_ATTR  do_listen(int argc, const char* argv[])
+static int   do_listen(int argc, const char* argv[])
 {
 	int port = skip_atoi(&argv[1]);
 	console_printf("Listening (TCP) on port %d\n", port);
@@ -114,7 +109,7 @@ static int ICACHE_FLASH_ATTR  do_listen(int argc, const char* argv[])
 	console_lock(1);
 }
 
-static int ICACHE_FLASH_ATTR do_listen_interrupt()
+static int  do_listen_interrupt()
 {
 	console_printf("BUG: How on earth to properly stop listening???\n");
 	espconn_disconnect(&esp_conn);

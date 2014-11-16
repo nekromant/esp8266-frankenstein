@@ -35,7 +35,7 @@ struct env_element {
 	char* value;
 };
 
-ICACHE_FLASH_ATTR uint16_t crc16(const unsigned char *buf, int sz)
+ uint16_t crc16(const unsigned char *buf, int sz)
 {
         uint16_t crc = 0;
         while (--sz >= 0)
@@ -52,7 +52,7 @@ ICACHE_FLASH_ATTR uint16_t crc16(const unsigned char *buf, int sz)
 }
 
 
-ICACHE_FLASH_ATTR struct env_element env_next(char **ptr)
+ struct env_element env_next(char **ptr)
 {
 	struct env_element ret;
 	ret.key = NULL;
@@ -69,7 +69,7 @@ bailout:
 	return ret;
 }
 
-ICACHE_FLASH_ATTR  int env_delete(char* key)
+  int env_delete(char* key)
 {
 
 	char *ptr = current_env->data;
@@ -92,7 +92,7 @@ ICACHE_FLASH_ATTR  int env_delete(char* key)
 	} while (e.key);	
 }
 
-ICACHE_FLASH_ATTR int env_insert(char* key, char *value)
+ int env_insert(char* key, char *value)
 {
 	int klen = strlen(key) + 1;
 	int vlen = strlen(value) + 1;
@@ -106,7 +106,7 @@ ICACHE_FLASH_ATTR int env_insert(char* key, char *value)
 	current_env->data[current_env->occupied]=0xff;
 }
 
-ICACHE_FLASH_ATTR void env_reset()
+ void env_reset()
 {
 	current_env->occupied=0;
 	current_env_end=0;
@@ -115,7 +115,7 @@ ICACHE_FLASH_ATTR void env_reset()
 	env_save();	
 }
 
-ICACHE_FLASH_ATTR void env_save()
+ void env_save()
 {
 	current_env->crc = crc16(&current_env->occupied, current_env_size + sizeof(uint16_t) );
 	spi_flash_erase_sector(current_env_flash_addr / SPI_FLASH_SEC_SIZE);
@@ -124,7 +124,7 @@ ICACHE_FLASH_ATTR void env_save()
 	
 }
 
-ICACHE_FLASH_ATTR const char* env_get(char* key)
+ const char* env_get(char* key)
 {
 	char *ptr = current_env->data;
 	struct env_element e;
@@ -136,7 +136,7 @@ ICACHE_FLASH_ATTR const char* env_get(char* key)
 	return NULL;
 }
 
-ICACHE_FLASH_ATTR void env_dump()
+ void env_dump()
 {
 	char *ptr = current_env->data;
 	struct env_element e;
@@ -152,7 +152,7 @@ ICACHE_FLASH_ATTR void env_dump()
 }
 
 
-ICACHE_FLASH_ATTR void env_init(uint32_t flashaddr, uint32_t envsize)
+ void env_init(uint32_t flashaddr, uint32_t envsize)
 {
 	current_env = os_malloc(envsize);
 	current_env_flash_addr = flashaddr;

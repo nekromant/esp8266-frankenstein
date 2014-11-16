@@ -15,7 +15,7 @@
 #include <generic/macros.h>
 
 
-static void ICACHE_FLASH_ATTR webserver_recon(void *arg, sint8 err)
+static void  webserver_recon(void *arg, sint8 err)
 {
     struct espconn *pesp_conn = arg;
     console_printf("reconnect  | %d.%d.%d.%d:%d, error %d \n",
@@ -26,7 +26,7 @@ static void ICACHE_FLASH_ATTR webserver_recon(void *arg, sint8 err)
 		   pesp_conn->proto.tcp->remote_port, err);
 }
 
-static void ICACHE_FLASH_ATTR webserver_discon(void *arg)
+static void  webserver_discon(void *arg)
 {
     struct espconn *pesp_conn = arg;
 
@@ -38,7 +38,7 @@ static void ICACHE_FLASH_ATTR webserver_discon(void *arg)
 		   pesp_conn->proto.tcp->remote_port);
 }
 
-static void ICACHE_FLASH_ATTR connected(void *arg)
+static void  connected(void *arg)
 {
     struct espconn *pesp_conn = arg;
     console_printf("connect    | %d.%d.%d.%d:%d \n",
@@ -57,7 +57,7 @@ static void ICACHE_FLASH_ATTR connected(void *arg)
 static struct espconn esp_conn;
 static esp_tcp esptcp;
 
-static int ICACHE_FLASH_ATTR  do_poke(int argc, const char* argv[])
+static int   do_poke(int argc, const char* argv[])
 {
 	int port = skip_atoi(&argv[1]);
 
@@ -71,7 +71,7 @@ static int ICACHE_FLASH_ATTR  do_poke(int argc, const char* argv[])
 	console_lock(1);
 }
 
-static int ICACHE_FLASH_ATTR do_poke_interrupt()
+static int  do_poke_interrupt()
 {
 	console_printf("BUG: How on earth to properly stop listening???\n");
 	espconn_disconnect(&esp_conn);

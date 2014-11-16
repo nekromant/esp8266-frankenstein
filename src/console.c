@@ -30,7 +30,7 @@ void console_lock(int l)
 		console_printf("\nblackblade > ");
 }
 
-static void ICACHE_FLASH_ATTR task_console(os_event_t *evt)
+static void  task_console(os_event_t *evt)
 {
 	if (!console_locked || ((char) evt->par) == KEY_ETX)
 		microrl_insert_char (prl, (char) evt->par);
@@ -42,7 +42,7 @@ void console_exec(char *str) {
 		microrl_insert_char (prl, (char) *str++);
 }
 
-static void ICACHE_FLASH_ATTR rl_print(char *str)
+static void  rl_print(char *str)
 {
 	if (!console_locked)
 		console_printf(str);

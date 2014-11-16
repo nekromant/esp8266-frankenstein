@@ -18,13 +18,13 @@
 
 
 
-static ICACHE_FLASH_ATTR int do_version(int argc, const char* argv[])
+static  int do_version(int argc, const char* argv[])
 {
 	print_hello_banner();
 	return 0;
 }
 
-static ICACHE_FLASH_ATTR int do_meminfo(int argc, const char* argv[])
+static  int do_meminfo(int argc, const char* argv[])
 {
 	system_set_os_print(1);
 	system_print_meminfo();
@@ -32,17 +32,17 @@ static ICACHE_FLASH_ATTR int do_meminfo(int argc, const char* argv[])
 	return 0;
 }
 
-static ICACHE_FLASH_ATTR int do_chipinfo(int argc, const char* argv[])
+static  int do_chipinfo(int argc, const char* argv[])
 {
 	console_printf("id=0x%x\n", system_get_chip_id());
 }
 
-static ICACHE_FLASH_ATTR int do_reboot(int argc, const char* argv[])
+static  int do_reboot(int argc, const char* argv[])
 {
 	system_restart();
 }
 
-static ICACHE_FLASH_ATTR int do_argtest(int argc, const char* argv[])
+static  int do_argtest(int argc, const char* argv[])
 {
 	int i;
 	console_printf("argc == %d\n", argc); 
@@ -52,7 +52,7 @@ static ICACHE_FLASH_ATTR int do_argtest(int argc, const char* argv[])
 	}
 }
 
-static ICACHE_FLASH_ATTR int do_deepsleep(int argc, const char* argv[])
+static  int do_deepsleep(int argc, const char* argv[])
 {
 	char *tmp = argv[1];
 	unsigned long n = skip_atoul(&tmp); 

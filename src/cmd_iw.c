@@ -10,7 +10,7 @@
 #include "microrl.h"
 #include "console.h"
 
-static void ICACHE_FLASH_ATTR scan_done_cb(void *arg, STATUS status)
+static void  scan_done_cb(void *arg, STATUS status)
 {
 	scaninfo *c = arg; 
 	struct bss_info *inf; 
@@ -28,7 +28,7 @@ static void ICACHE_FLASH_ATTR scan_done_cb(void *arg, STATUS status)
 }
 
 
-static int ICACHE_FLASH_ATTR do_scan(int argc, const char*argv[])
+static int  do_scan(int argc, const char*argv[])
 {
 	wifi_set_opmode(STATION_MODE);
 	wifi_station_scan(NULL, &scan_done_cb);
@@ -36,7 +36,7 @@ static int ICACHE_FLASH_ATTR do_scan(int argc, const char*argv[])
 }
 
 
-static int ICACHE_FLASH_ATTR do_iwmode(int argc, const char*argv[])
+static int  do_iwmode(int argc, const char*argv[])
 {
 	int mode, newmode; 
 	mode = wifi_get_opmode();
@@ -58,7 +58,7 @@ static int ICACHE_FLASH_ATTR do_iwmode(int argc, const char*argv[])
 	}	
 }
 
-static int ICACHE_FLASH_ATTR do_iwconnect(int argc, const char*argv[])
+static int  do_iwconnect(int argc, const char*argv[])
 {
 	int mode, newmode; 
 	mode = wifi_get_opmode();
@@ -87,7 +87,7 @@ static int ICACHE_FLASH_ATTR do_iwconnect(int argc, const char*argv[])
 	return 0;
 }
 
-static int ICACHE_FLASH_ATTR do_apconfig(int argc, const char*argv[])
+static int  do_apconfig(int argc, const char*argv[])
 {
         struct softap_config config;
         wifi_softap_get_config(&config);

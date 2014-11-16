@@ -13,7 +13,6 @@
 
 extern int ets_uart_printf(const char *fmt, ...);
 
-
 struct envpair {
 	char *key, *value;
 };
@@ -53,8 +52,7 @@ void print_hello_banner()
 
 extern void env_init(uint32_t flashaddr, uint32_t envsize);
 
-void ICACHE_FLASH_ATTR
-network_init()
+void network_init()
 {
 	struct ip_info info;
 	wifi_get_ip_info(STATION_IF, &info);
@@ -75,7 +73,7 @@ network_init()
 		
 		wifi_set_ip_info(STATION_IF, &info);
 	}
-	
+
 	wifi_get_ip_info(SOFTAP_IF, &info);
 	ip = env_get("ap-ip"); 
 	mask = env_get("ap-mask");
@@ -92,8 +90,7 @@ network_init()
 
 }
 
-void ICACHE_FLASH_ATTR
-user_init()
+void user_init()
 {
 	/* Reset system timer */
 	/* Configure GPIO for our blinky */
@@ -110,7 +107,6 @@ user_init()
 	env_init((512 - 16) * 1024, 4*1024);
 	network_init();
 	console_init(32);
-
 
 	PIN_FUNC_SELECT(PERIPHS_IO_MUX_GPIO2_U, FUNC_GPIO2);
 	PIN_FUNC_SELECT(PERIPHS_IO_MUX_GPIO0_U, FUNC_GPIO0);
