@@ -60,9 +60,14 @@ static  int do_deepsleep(int argc, const char* argv[])
 	system_deep_sleep(n);
 }
 
-CONSOLE_CMD(version, -1, -1, 
-	    do_version, NULL, NULL, 
-	    "Display version information and copyright"
+static  int do_hname(int argc, const char* argv[])
+{
+	set_dhcp_hostname("aura");
+}
+
+CONSOLE_CMD(hname, -1, -1, 
+	    do_hname, NULL, NULL, 
+	    "Set dhcp hostname"
 );
 
 CONSOLE_CMD(meminfo, -1, -1, 

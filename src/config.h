@@ -27,14 +27,14 @@ Token is word separate by white space, for example 3 token line:
 Define you prompt string here. You can use colors escape code, for highlight you prompt,
 for example this prompt will green color (if you terminal supports color)*/
 //#define _PROMPT_DEFAULT "\033[32mIRin >\033[0m "	// green color
-#define _PROMPT_DEFAULT "\nfrankenstein > "
+//#define _PROMPT_DEFAULT "\nfrankenstein > "
 
 //#define _PROMPT_DEFAULT "\n\033[32mfrankenstein >\033[0m "	// green color
 
 /*
 Define prompt text (without ESC sequence, only text) prompt length, it needs because if you use
 ESC sequence, it's not possible detect only text length*/
-#define _PROMPT_LEN       15
+//#define _PROMPT_LEN       15
 
 /*Define it, if you wanna use completion functional, also set completion callback in you code,
 now if user press TAB calls 'copmlitetion' callback. If you no need it, you can just set 

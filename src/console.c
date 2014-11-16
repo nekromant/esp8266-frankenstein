@@ -27,7 +27,7 @@ void console_lock(int l)
 {
 	console_locked = l;
 	if (!l) 
-		console_printf("\nblackblade > ");
+		microrl_print_prompt(prl);
 }
 
 static void  task_console(os_event_t *evt)
@@ -153,7 +153,12 @@ void console_init(int qlen) {
 	microrl_init (prl, &rl_print);
 	microrl_set_execute_callback (prl, execute);
 	microrl_set_sigint_callback(prl, sigint);
+	char *p = env_get("hostname");
+	if (p)
+		microrl_set_prompt(p);
+
 //	microrl_set_complete_callback(prl, completion);
+
 	console_printf("\n === Press enter to activate this console === \n");	
 	os_event_t *queue = os_malloc(sizeof(os_event_t) * qlen);
 	system_os_task(task_console, CONSOLE_PRIO, queue, qlen);

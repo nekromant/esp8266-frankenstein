@@ -11,6 +11,7 @@
 #include "console.h"
 #include <generic/macros.h>
 
+
 extern int ets_uart_printf(const char *fmt, ...);
 
 struct envpair {
@@ -26,7 +27,7 @@ struct envpair defaultenv[] = {
 	{ "ap-ip", "192.168.1.1" },
 	{ "ap-mask", "255.255.255.0" },
 	{ "ap-gw", "192.168.1.1" },
-
+	{ "hostname", "frankenstein" },
 	{ "bootdelay", "5" },
 };
 
@@ -107,6 +108,7 @@ void user_init()
 	env_init((512 - 16) * 1024, 4*1024);
 	network_init();
 	console_init(32);
+
 
 	PIN_FUNC_SELECT(PERIPHS_IO_MUX_GPIO2_U, FUNC_GPIO2);
 	PIN_FUNC_SELECT(PERIPHS_IO_MUX_GPIO0_U, FUNC_GPIO0);

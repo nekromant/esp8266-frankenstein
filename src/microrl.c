@@ -15,7 +15,14 @@ BUGS and TODO:
 
 //#define DBG(...) fprintf(stderr, "\033[33m");fprintf(stderr,__VA_ARGS__);fprintf(stderr,"\033[0m");
 
-char * prompt_default = _PROMPT_DEFAULT;
+static char current_prompt[16] = "\nnone > ";
+static int current_prompt_len = 7;
+
+void microrl_set_prompt(char* prompt)
+{
+	ets_sprintf(current_prompt, "\n%s > ", prompt);
+	current_prompt_len = strlen(prompt) + 3;
+}
 
 #ifdef _USE_HISTORY
 
@@ -216,6 +223,11 @@ inline static void print_prompt (microrl_t * pThis)
 	pThis->print (pThis->prompt_str);
 }
 
+void microrl_print_prompt (microrl_t * pThis)
+{
+	print_prompt(pThis);
+}
+
 //*****************************************************************************
 inline static void terminal_backspace (microrl_t * pThis)
 {
@@ -288,9 +300,10 @@ static void terminal_reset_cursor (microrl_t * pThis)
 #else
 	char *endstr;
 	strcpy (str, "\033[");
-	endstr = u16bit_to_str ( _COMMAND_LINE_LEN + _PROMPT_LEN + 2,str+2);
+	/* FixMe: Dirty hack, move current_prompt_len to pThis */
+	endstr = u16bit_to_str ( _COMMAND_LINE_LEN + current_prompt_len + 2,str+2);
 	strcpy (endstr, "D\033["); endstr += 3;
-	endstr = u16bit_to_str (_PROMPT_LEN, endstr);
+	endstr = u16bit_to_str (current_prompt_len, endstr);
 	strcpy (endstr, "C");
 #endif
 	pThis->print (str);
@@ -332,7 +345,7 @@ void microrl_init (microrl_t * pThis, void (*print) (const char *))
 #ifdef _USE_CTLR_C
 	pThis->sigint = NULL;
 #endif
-	pThis->prompt_str = prompt_default;
+	pThis->prompt_str = current_prompt;
 	pThis->print = print;
 #ifdef _ENABLE_INIT_PROMPT
 	print_prompt (pThis);

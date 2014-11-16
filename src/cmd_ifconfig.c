@@ -15,7 +15,8 @@
 #include <generic/macros.h>
 
 
-static void print_ip_info(int iface)
+
+static void print_ip_info_real(int iface, int rssi, int channel)
 {
         struct ip_info info;
 	wifi_get_ip_info(iface, &info);
@@ -30,9 +31,11 @@ static void print_ip_info(int iface)
 		return;
 
 	console_printf("%s: %s\n", id_to_iface_name(iface), id_to_iface_description(iface));
-	if (iface == STATION_IF)
-		console_printf("     state: %s\n", id_to_sta_state(wifi_station_get_connect_status()));
-	else { /* AP */
+	if (iface == STATION_IF) {
+		console_printf("     state   : %s\n", id_to_sta_state(wifi_station_get_connect_status()));
+		console_printf("     rssi    : %d\n", rssi);
+		console_printf("     channel : %d\n", channel);
+	} else { /* AP */
 		int state = wifi_get_opmode();
 		console_printf("     state: %s\n", 
 			       ((state == SOFTAP_MODE) || (state == STATIONAP_MODE)) ? 
@@ -42,12 +45,45 @@ static void print_ip_info(int iface)
 			IP2STR(&info.ip), IP2STR(&info.netmask), IP2STR(&info.gw));
 }
 
+static void  scan_done_cb(void *arg, STATUS status)
+{
+	scaninfo *c = arg; 
+	struct bss_info *inf; 
+	STAILQ_FOREACH(inf, c->pbss, next) {
+		print_ip_info_real(STATION_IF, inf->rssi, inf->channel); 
+		inf = (struct bss_info *) &inf->next;
+	}
+	console_lock(0);	
+}
+
+struct scan_config conf;
+struct station_config sconf;
+static void print_ip_info(int iface)
+{
+	int state = wifi_station_get_connect_status();
+	
+	if ((iface != STATION_IF) || 
+	    (state != STATION_GOT_IP)) {
+		print_ip_info_real(iface, 0, 0);
+		return 0;
+	}
+	memset(&conf, 0x0, sizeof(conf)); 
+	memset(&sconf, 0x0, sizeof(sconf));
+	if (wifi_station_get_config(&sconf)) {
+		conf.ssid = sconf.ssid;
+		wifi_station_scan(&conf, &scan_done_cb);
+		console_lock(1); /* Lock till we've finished scanning */
+		return;
+	} else 
+		print_ip_info_real(iface, 0, 0);
+}
 
 static int do_ifconfig(int argc, const char* argv[])
 {
 	if (argc==1) {
-		print_ip_info(STATION_IF);
 		print_ip_info(SOFTAP_IF);
+		print_ip_info(STATION_IF);
+		
 		return 0;
 	}
 
