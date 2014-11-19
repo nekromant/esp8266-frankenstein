@@ -45,28 +45,27 @@ static void  connected(void *arg)
     struct pokerface *p = arg;
     console_printf("connected!\n");    
     espconn_sent(&p->esp_conn, p->databuf, p->datalen);
-
 }
 
-
-static void cleanup(struct pokerface *p)
+static void  disconnected(void *p)
 {
-    console_printf("cleaning up\n");
-    espconn_disconnect(p);	
-    os_free(p);
-    console_lock(0);
+	console_printf("disconnected!\n");
+	os_free(p);
+	console_lock(0);
 }
 
 static void  reconnect(struct pokerface *p, sint8 err)
 {
 	console_printf("err %d\n", err);
-	cleanup(p);
+	espconn_disconnect(p);
 }
 
-static void datasent(void *p)
+static void datasent(void *arg)
 {
 	console_printf("data sent\n");
-	cleanup(p);
+	struct pokerface *p = arg;
+	p->esp_conn.state = ESPCONN_CLOSE;
+	espconn_disconnect(p);
 }
 
 
@@ -92,6 +91,7 @@ static int   do_poke(int argc, const char* argv[])
 	os_memcpy(p->esp_conn.proto.tcp->remote_ip, &target, 4);
 	espconn_regist_connectcb(p, connected);	
 	espconn_regist_reconcb(p, reconnect);
+	espconn_regist_disconcb(p, disconnected);
 	espconn_regist_sentcb(p, datasent);
 	espconn_connect(&p->esp_conn);
 	console_lock(1);

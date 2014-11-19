@@ -19,7 +19,8 @@ struct envpair {
 };
 
 struct envpair defaultenv[] = {
-	{ "sta-mode",     "dhcp" },
+	{ "sta-mode",      "dhcp" },
+	{ "default-mode",  "STA" },
 	{ "sta-ip",       "192.168.0.123" },
 	{ "sta-mask",     "255.255.255.0" },
 	{ "sta-gw",       "192.168.0.1" },
@@ -59,8 +60,8 @@ extern void env_init(uint32_t flashaddr, uint32_t envsize);
 void network_init()
 {
 	struct ip_info info;
-	wifi_get_ip_info(STATION_IF, &info);
 
+	wifi_get_ip_info(STATION_IF, &info);
 	char *dhcp = env_get("sta-mode"); 
 	char *ip, *mask, *gw;
 	if (!dhcp || strcmp(dhcp, "dhcp") != 0)
@@ -96,6 +97,7 @@ void network_init()
 		console_printf("dhcpserver: started\n");
 	} else
 		console_printf("dhcpserver: disabled\n");
+
 
 }
 
