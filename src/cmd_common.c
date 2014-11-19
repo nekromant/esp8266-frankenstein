@@ -65,10 +65,12 @@ static  int do_hname(int argc, const char* argv[])
 	set_dhcp_hostname("aura");
 }
 
+
 CONSOLE_CMD(hname, -1, -1, 
 	    do_hname, NULL, NULL, 
 	    "Set dhcp hostname"
 );
+
 
 CONSOLE_CMD(meminfo, -1, -1, 
 	    do_meminfo, NULL, NULL, 

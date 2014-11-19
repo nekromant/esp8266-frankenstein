@@ -15,11 +15,18 @@ BUGS and TODO:
 
 //#define DBG(...) fprintf(stderr, "\033[33m");fprintf(stderr,__VA_ARGS__);fprintf(stderr,"\033[0m");
 
-static char current_prompt[16] = "\nnone > ";
+#define CONFIG_PROMPT_BUF 24
+
+static char current_prompt[CONFIG_PROMPT_BUF] = "\nnone > ";
 static int current_prompt_len = 7;
 
 void microrl_set_prompt(char* prompt)
 {
+	if (strlen(prompt) + 4 > CONFIG_PROMPT_BUF) {
+		console_printf("error: prompt too long - inrease CONFIG_PROMPT_BUF\n");
+		return;
+	}	
+
 	ets_sprintf(current_prompt, "\n%s > ", prompt);
 	current_prompt_len = strlen(prompt) + 3;
 }

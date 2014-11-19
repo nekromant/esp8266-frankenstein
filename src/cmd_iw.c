@@ -14,8 +14,10 @@ static void  scan_done_cb(void *arg, STATUS status)
 {
 	scaninfo *c = arg; 
 	struct bss_info *inf; 
+	if (!c->pbss)
+		return;
 	STAILQ_FOREACH(inf, c->pbss, next) {
-		ets_uart_printf("BSSID %02x:%02x:%02x:%02x:%02x:%02x channel %02d rssi %02d auth %-12s %s\n", 
+		console_printf("BSSID %02x:%02x:%02x:%02x:%02x:%02x channel %02d rssi %02d auth %-12s %s\n", 
 				MAC2STR(inf->bssid),
 				inf->channel, 
 				inf->rssi, 
@@ -30,7 +32,12 @@ static void  scan_done_cb(void *arg, STATUS status)
 
 static int  do_scan(int argc, const char*argv[])
 {
-	wifi_set_opmode(STATION_MODE);
+	if (wifi_get_opmode() == SOFTAP_MODE)
+	{
+		console_printf("Can't scan, while in softap mode\n");
+		return;
+	}
+
 	wifi_station_scan(NULL, &scan_done_cb);
 	console_lock(1); /* Lock till we've finished scanning */
 }
@@ -41,18 +48,19 @@ static int  do_iwmode(int argc, const char*argv[])
 	int mode, newmode; 
 	mode = wifi_get_opmode();
 	if (argc == 1) {
-		ets_uart_printf("Wireless mode: %s", id_to_wireless_mode(mode));
+		console_printf("Wireless mode: %s", id_to_wireless_mode(mode));
 		return 0;
 	} else {
 		newmode = id_from_wireless_mode(argv[1]);
 		if (-1 == newmode) { 
-			ets_uart_printf("Invalid mode specified: %s\n", argv[1]);
+			console_printf("Invalid mode specified: %s\n", argv[1]);
 			return 1;
 		}
+
 		if (0 == newmode) 
 			wifi_station_disconnect();
 		
-		ets_uart_printf("Wireless mode change: %s -> %s", 
+		console_printf("Wireless mode change: %s -> %s", 
 				id_to_wireless_mode(mode), id_to_wireless_mode(newmode));
 		wifi_set_opmode(newmode);
 	}	
@@ -63,7 +71,7 @@ static int  do_iwconnect(int argc, const char*argv[])
 	int mode, newmode; 
 	mode = wifi_get_opmode();
 	if ((mode != STATION_MODE) && (mode != STATIONAP_MODE)) {
-		ets_uart_printf("Cannot connect while in '%s' mode", id_to_wireless_mode(mode));
+		console_printf("Cannot connect while in '%s' mode", id_to_wireless_mode(mode));
 		return 0;
 	} 
 

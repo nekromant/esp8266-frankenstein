@@ -57,8 +57,6 @@ PORT=/dev/ttyUSB0
 
 flash:
 	$(tobootloader)
-	-esptool.py --port $(PORT) write_flash 0x00000 images/antares-0x00000.bin
-	$(tobootloader)
-	-esptool.py --port $(PORT) write_flash 0x09000 images/antares-0x09000.bin
+	-esptool.py --port $(PORT) write_flash 0x00000 images/antares.rom
 	$(reset)
 	minicom -o -D $(PORT) -b 115200

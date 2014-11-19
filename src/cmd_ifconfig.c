@@ -60,13 +60,22 @@ struct scan_config conf;
 struct station_config sconf;
 static void print_ip_info(int iface)
 {
-	int state = wifi_station_get_connect_status();
+	if (iface == SOFTAP_IF) {
+		print_ip_info_real(iface, 0, 0);
+		return;
+	}
 	
+	if (!wifi_get_opmode() || (wifi_get_opmode() == SOFTAP_MODE))
+		return;
+	
+	
+	int state = wifi_station_get_connect_status();
 	if ((iface != STATION_IF) || 
 	    (state != STATION_GOT_IP)) {
 		print_ip_info_real(iface, 0, 0);
 		return 0;
 	}
+
 	memset(&conf, 0x0, sizeof(conf)); 
 	memset(&sconf, 0x0, sizeof(sconf));
 	if (wifi_station_get_config(&sconf)) {
@@ -97,30 +106,13 @@ static int do_ifconfig(int argc, const char* argv[])
 		return 0;
 	}
 
-	struct ip_info info;
-	wifi_get_ip_info(iface, &info);
-	uint32_t temp; 
-	if (argc>2) /* IP */ 
-		info.ip.addr = ipaddr_addr(argv[2]);
-
-	if (argc>3) /* Netmask */ 
-		info.netmask.addr = ipaddr_addr(argv[3]);
-
-	if (argc>4) /* Gateway */ 
-		info.gw.addr = ipaddr_addr(argv[4]);
-
-	if (!wifi_set_ip_info(iface, &info))
-	{
-		console_printf("Setting new IP info FAILED ;(\n");
-	}
-
 	return 0;
 }
 
 CONSOLE_CMD(ifconfig, -1, 5, 
 	    do_ifconfig, NULL, NULL, 
-	    "Show/setup network interfaces"
-	    HELPSTR_NEWLINE "ifconfig [iface] [ipaddr] [netmask] [gateway]"
-	    HELPSTR_NEWLINE "ifconfig sta0 192.168.0.1 255.255.255.0 192.168.0.8"
+	    "Show network interfaces and their status"
+	    HELPSTR_NEWLINE "ifconfig [iface]"
+	    HELPSTR_NEWLINE "ifconfig sta0"
 );
 

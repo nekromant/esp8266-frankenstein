@@ -1,2 +1,35 @@
-config HELLO_WORLD
-bool "Say hello to the world"
+menu "Modules to build"
+
+config CMD_IW
+bool "wireless"
+
+config CMD_IF
+bool "ifconfig"
+
+config CMD_GPIO
+bool "gpio"
+
+config CMD_FLASH
+bool "flash"
+
+config CMD_LISTEN
+bool "listen"
+
+config CMD_POKE
+bool "poke"
+
+endmenu
+
+
+config ENV_OFFSET
+hex "Environment address in flash (4K aligned)"
+default 0x7b000
+
+config ENV_LEN
+hex "Environment length"
+default 0x1000 
+
+config ADDR_BLOBSETTING
+hex "Adress of blob settings in flash (don't change)"
+default 0x7d000
+

@@ -165,6 +165,7 @@ bailout:
 	if (crc != current_env->crc) { 
 		console_printf("env: Bad CRC (%x vs %x) using defaults\n", crc, current_env->crc);
 		env_reset();
+		/* Hack: Force op mode to STA */
 	}
 	env_dump();
 }

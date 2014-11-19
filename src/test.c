@@ -19,16 +19,19 @@ struct envpair {
 };
 
 struct envpair defaultenv[] = {
-	{ "sta-mode", "dhcp" },
-	{ "sta-ip", "192.168.0.123" },
-	{ "sta-mask", "255.255.255.0" },
-	{ "sta-gw", "192.168.0.1" },
+	{ "sta-mode",     "dhcp" },
+	{ "sta-ip",       "192.168.0.123" },
+	{ "sta-mask",     "255.255.255.0" },
+	{ "sta-gw",       "192.168.0.1" },
 
-	{ "ap-ip", "192.168.1.1" },
-	{ "ap-mask", "255.255.255.0" },
-	{ "ap-gw", "192.168.1.1" },
-	{ "hostname", "frankenstein" },
-	{ "bootdelay", "5" },
+	{ "ap-ip",        "192.168.1.1" },
+	{ "ap-mask",      "255.255.255.0" },
+	{ "ap-gw",        "192.168.1.1" },
+
+	{ "hostname",     "frankenstein" },
+	{ "bootdelay",    "5" },
+	{ "dhcps-enable", "1" },
+
 };
 
 void request_default_environment()
@@ -87,28 +90,23 @@ void network_init()
 		info.gw.addr = ipaddr_addr(gw);
 
 	wifi_set_ip_info(SOFTAP_IF, &info);
-
+	char *dhcps = env_get("dhcps-enable"); 
+	if (dhcps && (*dhcps == '1')) {
+		dhcps_start(&info);
+		console_printf("dhcpserver: started\n");
+	} else
+		console_printf("dhcpserver: disabled\n");
 
 }
 
 void user_init()
 {
-	/* Reset system timer */
-	/* Configure GPIO for our blinky */
-//	wifi_status_led_install(0, PERIPHS_IO_MUX_GPIO0_U, FUNC_GPIO0);
-
-	/* Reconfigure the timer to call our blinky once per second */
-//	os_timer_disarm(&some_timer);
-//	os_timer_setfn(&some_timer, (os_timer_func_t *)some_timerfunc, NULL);
-//	os_timer_arm(&some_timer, 1000, 1);
-//	os_delay_us(1000);
 	uart_init(115200, 115200);
-	/* TODO: Kconfig */
 	print_hello_banner();
-	env_init((512 - 16) * 1024, 4*1024);
+
+	env_init(CONFIG_ENV_OFFSET, CONFIG_ENV_LEN);
 	network_init();
 	console_init(32);
-
 
 	PIN_FUNC_SELECT(PERIPHS_IO_MUX_GPIO2_U, FUNC_GPIO2);
 	PIN_FUNC_SELECT(PERIPHS_IO_MUX_GPIO0_U, FUNC_GPIO0);

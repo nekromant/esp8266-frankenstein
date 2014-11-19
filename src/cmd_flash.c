@@ -51,7 +51,7 @@ static void 	hex_dump(unsigned long addr, char* data, int len)
 extern void ets_wdt_enable(void);
 extern void ets_wdt_disable(void);
 
-static  int do_wipe(int argc, const char*argv[])
+static  __attribute__ ((section(".iram0.text"))) int do_wipe(int argc, const char*argv[])
 {
 	int sz = 512 * 1024;
 	int i; 
@@ -68,7 +68,19 @@ static  int do_wipe(int argc, const char*argv[])
 CONSOLE_CMD(spi_wipe, 3, -1, 
 	    do_wipe, NULL, NULL,
 	    "Wipe the whole spi flash blank"
-	    HELPSTR_NEWLINE "wipe");
+	    HELPSTR_NEWLINE "wipe any three arguments");
+
+static  int do_wipeparams(int argc, const char*argv[])
+{
+	spi_flash_erase_sector( (512 / 4) - 1 );	
+	ets_uart_printf("\nComplete\n");
+	system_restart();
+}
+
+CONSOLE_CMD(wipeparams, 3, -1, 
+	    do_wipeparams, NULL, NULL,
+	    "Wipe blob configuration section of flash"
+	    HELPSTR_NEWLINE "wipeparams any three arguments");
 
 static int  do_dump(int argc, const char*argv[])
 {
