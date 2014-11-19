@@ -11,6 +11,6 @@ objects-$(CONFIG_CMD_IF)+=cmd_ifconfig.o
 objects-$(CONFIG_CMD_GPIO)+=cmd_gpio.o
 objects-$(CONFIG_CMD_FLASH)+=cmd_flash.o
 objects-$(CONFIG_CMD_LISTEN)+=cmd_listen.o
-objects-$(CONFIG_CMD_POKE)+=cmd_poke.o
+objects-$(CONFIG_CMD_SEND)+=cmd_send.o
 
 subdirs-y+=netapps/

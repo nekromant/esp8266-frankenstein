@@ -15,8 +15,8 @@ bool "flash"
 config CMD_LISTEN
 bool "listen"
 
-config CMD_POKE
-bool "poke"
+config CMD_SEND
+bool "send"
 
 endmenu
 

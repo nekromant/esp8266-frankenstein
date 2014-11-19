@@ -69,7 +69,7 @@ static void datasent(void *arg)
 }
 
 
-static int   do_poke(int argc, const char* argv[])
+static int   do_send(int argc, const char* argv[])
 {
 	struct pokerface *p = os_malloc(sizeof(struct pokerface));
 	if (!p) {
@@ -97,14 +97,14 @@ static int   do_poke(int argc, const char* argv[])
 	console_lock(1);
 }
 
-static int  do_poke_interrupt()
+static int  do_send_interrupt()
 {
 
 }
 
 
-CONSOLE_CMD(poke, 3, -1, 
-	    do_poke, do_poke_interrupt, NULL, 
+CONSOLE_CMD(send, 3, -1, 
+	    do_send, do_send_interrupt, NULL, 
 	    "Send data to a remote host. "
-	    HELPSTR_NEWLINE "poke hostname port [data]"
+	    HELPSTR_NEWLINE "send hostname port [data]"
 );
