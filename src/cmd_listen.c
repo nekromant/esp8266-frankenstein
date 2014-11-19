@@ -118,7 +118,7 @@ static int  do_listen_interrupt()
 	console_lock(0);
 }
 
-CONSOLE_CMD(listen, -1, -1, 
+CONSOLE_CMD(listen, 2, -1, 
 	    do_listen, do_listen_interrupt, NULL, 
 	    "Listen for incoming data ona port"
 	    HELPSTR_NEWLINE "listen 8080"
