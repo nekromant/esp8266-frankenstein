@@ -1,0 +1,85 @@
+This document describes things required to get started with frankenstein development. 
+You'll need a PC running some flavor of linux (preferably). Mac OS X, windows (cygwin) are untested, 
+so you're on your own. 
+
+First of all, get the following from your repositories:  
+
+* git
+* make, gcc
+* flex, bison, gperf
+
+For debian/ubuntu: 
+apt-get install build-essential git flex bison gperf
+
+For Arch: 
+sudo pacman -S git flex bison gperf
+
+Now grab and unpack latest kconfig-frontends from 
+http://ymorin.is-a-geek.org/projects/kconfig-frontends
+
+
+This is normally installed by:
+
+cd kconfig-frontends
+./configure --prefix=/usr
+make 
+sudo make install
+
+
+Now, we'll need our toolchain. we'll need the awesome esp-open-sdk created by pfalcon: 
+https://github.com/pfalcon/esp-open-sdk
+We'll need to build it in STANDALONE mode. The build takes about an hour on my box, so 
+you can just run:
+
+git clone https://github.com/pfalcon/esp-open-sdk.git
+cd esp-open-sdk
+make STANDALONE=y
+
+And go grab a cup of coffee. 
+
+For the record: frankenstein is based on 0.9.2 SDK. 0.9.3 will likely break some things. 
+I plan to move frankenstein to 0.9.3 as soon an pfalcon bumps esp-open-sdk. 
+
+Once the build is done, you'll have esp-open-sdk/xtensa-lx106-elf directory. You can tarball 
+it for use on other boxes - it's a portable static toolchain that will run on any linux pc. 
+To activate it - xtensa-lx106-elf/bin directory to your PATH. 
+e.g.
+
+export PATH=$PATH:/path/to/xtensa-lx106-elf/bin
+
+We're through with toolchain installation, time for frankenstein. 
+
+Clone it from github: 
+git clone https://github.com/nekromant/esp8266-frankenstein.git
+cd esp8266-frankenstein
+
+make
+
+Frankenstein makefile will fetch antares for you. Antares is the buildsystem for embedded projects 
+it uses internally. You'll now have antares experimental branch cloned in ./antares. 
+
+run make again to build frankenstein. 
+
+
+make menuconfig (or nconfig, whatever) opens up a menu with possible options. 
+
+
+Places of interest are: 
+
+"Target platform settings" 
+
+There's a switch that allows you to place all code into IROM by default, without specifying 
+ICACHE_FLASH_ATTR. It should be active by default. 
+If you want to explicitly place some function in RAM - use:
+
+
+void attribute((section(".iram0.text"))) func()
+{
+	/* code */
+} 
+
+
+Project settings. All stuff from kcnf at the top level shows up here. 
+Here you can select witch parts of frankenstein will be build, set up environment address and
+lengths, etc. 
+
