@@ -105,8 +105,8 @@ static int  do_apconfig(int argc, const char*argv[])
         wifi_get_macaddr(SOFTAP_IF, macaddr);
 
 	if (argc == 1) { 
-		console_printf("SSID: %s AUTH %d BSSID: " MACSTR,
-			       config.ssid, config.authmode, MAC2STR(macaddr));
+		console_printf("SSID: %s AUTH %s BSSID: " MACSTR,
+			       config.ssid, id_to_encryption_mode(config.authmode), MAC2STR(macaddr));
 		return 0;
 	}
 

@@ -26,7 +26,6 @@ void microrl_set_prompt(char* prompt)
 		console_printf("error: prompt too long - inrease CONFIG_PROMPT_BUF\n");
 		return;
 	}	
-
 	ets_sprintf(current_prompt, "\n%s > ", prompt);
 	current_prompt_len = strlen(prompt) + 3;
 }

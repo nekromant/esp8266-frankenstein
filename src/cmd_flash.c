@@ -101,3 +101,33 @@ CONSOLE_CMD(spi_dump, 3, -1,
 	    "Hexdump flash contents"
 	    HELPSTR_NEWLINE "spi_dump start len");
 
+
+
+
+static int  do_scan(int argc, const char*argv[])
+{
+	ets_wdt_disable();
+	uint32_t off = 256 * 1024; 
+	char tmp[4096];
+	int i; 
+	int altered; 
+	while(off < 512 * 1024 - 4096) { 
+		altered = 0;
+		spi_flash_read(off, tmp, 4096);
+		for (i=0; i<4096; i++)
+			if (tmp[i]!=0xff) 
+				altered++;
+
+		if (altered) {
+			console_printf("Sector %d (0x%x) has been tampered by blobs\n",
+				       off / 4096, off);
+		}
+		off += 4096;
+	}			
+}
+
+CONSOLE_CMD(flash_scan, -1, -1, 
+	    do_scan, NULL, NULL,
+	    "Scan the upper portion of FLASH for dirty blocks"
+	    HELPSTR_NEWLINE "Used to find out where the blobs store config"
+	    HELPSTR_NEWLINE "flash_scan");

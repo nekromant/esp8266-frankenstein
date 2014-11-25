@@ -1,29 +1,42 @@
 menu "Modules to build"
 
 config CMD_IW
-bool "wireless"
+bool "Wireless commands"
 
 config CMD_IF
-bool "ifconfig"
+bool "ifconfig/apconfig"
 
 config CMD_GPIO
-bool "gpio"
+bool "GPIO commands"
 
 config CMD_FLASH
-bool "flash"
+bool "FLASH commands"
 
 config CMD_LISTEN
-bool "listen"
+bool "Listen on a port"
 
 config CMD_SEND
-bool "send"
+bool "Send data over TCP"
+
+menuconfig CMD_DS18B20
+bool "DS18B20/DS18S20 Termal Sensor support"
+
+if CMD_DS18B20
+config CMD_DS18B20_DEBUG
+bool "DS18B20 Debugging"
+help
+	Show debugging messages
+
+endif
 
 endmenu
 
 
+menu "Environment Settings"
+
 config ENV_OFFSET
 hex "Environment address in flash (4K aligned)"
-default 0x7b000
+default 0x7f000
 
 config ENV_LEN
 hex "Environment length"
@@ -33,3 +46,8 @@ config ADDR_BLOBSETTING
 hex "Adress of blob settings in flash (don't change)"
 default 0x7d000
 
+config ENV_NOWRITE
+bool "Simulate writes of environment data in flash"
+default n
+
+endmenu

@@ -117,11 +117,15 @@ bailout:
 
  void env_save()
 {
+#ifndef CONFIG_ENV_NOWRITE
 	current_env->crc = crc16(&current_env->occupied, current_env_size + sizeof(uint16_t) );
 	spi_flash_erase_sector(current_env_flash_addr / SPI_FLASH_SEC_SIZE);
 	spi_flash_write(current_env_flash_addr, current_env, 
 			current_env_size + sizeof(uint16_t));
-	
+#else
+	console_printf("Saving environment to flash disabled by config\n");
+	console_printf("Recompile with CONFIG_ENV_NOWRITE=n\n");
+#endif	
 }
 
  const char* env_get(char* key)

@@ -23,6 +23,13 @@
 #include <stdlib.h>
 #include <generic/macros.h>
 
+
+#ifdef CONFIG_CMD_DS18B20_DEBUG
+#define dbg(fmt, ...) console_printf(fmt, ##__VA_ARGS__)
+#else
+#define dbg(fmt, ...)
+#endif
+
 /*
  * static function prototypes
  */
@@ -56,12 +63,12 @@ static int do_ds18b20(int argc, const char* argv[])
 
 	ds_init( gpio );
 
-	console_printf( "After init.\n" );
+	dbg( "After init.\n" );
 
 	r = ds_search( addr );
 	if( r )
 	{
-		console_printf( "Found Device @ %02x %02x %02x %02x %02x %02x %02x %02x\n", 
+		dbg( "Found Device @ %02x %02x %02x %02x %02x %02x %02x %02x\n", 
 				addr[0], addr[1], addr[2], addr[3], addr[4], addr[5], 
 				addr[6], addr[7] );
 		if( crc8( addr, 7 ) != addr[7] )
@@ -71,20 +78,22 @@ static int do_ds18b20(int argc, const char* argv[])
 		switch( addr[0] )
 		{
 		case 0x10:
-			console_printf( "Device is DS18S20 family.\n" );
+			dbg( "Device is DS18S20 family.\n" );
 			break;
 
 		case 0x28:
-			console_printf( "Device is DS18B20 family.\n" );
+			dbg( "Device is DS18B20 family.\n" );
 			break;
 
 		default:
 			console_printf( "Device is unknown family.\n" );
+			return 1;
 		}
 	}
-	else
-		console_printf( "Did not find DS18B20\n" );
-
+	else { 
+		console_printf( "No DS18B20 detected, sorry\n" );
+		return 1;
+	}
 	// perform the conversion
 	reset();
 	select( addr );
@@ -93,7 +102,7 @@ static int do_ds18b20(int argc, const char* argv[])
 
 	os_delay_us( 1000000 );
 
-	console_printf( "Scratchpad: " );
+	dbg( "Scratchpad: " );
 	reset();
 	select( addr );
 	write( 0xbe, 0 ); // read scratchpad
@@ -101,9 +110,9 @@ static int do_ds18b20(int argc, const char* argv[])
 	for( i = 0; i < 9; i++ )
 	{
 		data[i] = read();
-		console_printf( "%2x ", data[i] );
+		dbg( "%2x ", data[i] );
 	}
-	console_printf( "\n" );
+	dbg( "\n" );
 
 	int HighByte, LowByte, TReading, SignBit, Tc_100, Whole, Fract;
 	LowByte = data[0];
@@ -116,7 +125,7 @@ static int do_ds18b20(int argc, const char* argv[])
 	Whole = TReading >> 4;  // separate off the whole and fractional portions
 	Fract = (TReading & 0xf) * 100 / 16;
 
-	console_printf( "%c%d.%d Celsius\n", SignBit ? '-' : '+', 
+	console_printf( "Temperature: %c%d.%d Celsius\n", SignBit ? '-' : '+', 
 			Whole, Fract < 10 ? 0 : Fract);
 	return r;
 }

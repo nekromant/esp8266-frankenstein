@@ -23,6 +23,12 @@ static microrl_t rl;
 static microrl_t * prl = &rl;
 static int console_locked = 0;
 
+struct console {
+	char name[16];
+	void (*write)(char* buf, int len);	
+};
+
+
 void console_lock(int l)
 {
 	console_locked = l;
@@ -30,10 +36,22 @@ void console_lock(int l)
 		microrl_print_prompt(prl);
 }
 
+void console_insert(char c)
+{
+	if (!console_locked || (c) == KEY_ETX)
+		microrl_insert_char (prl, c);
+}
+
+void console_write(char *buf, int len)
+{
+	while (len--)
+		console_insert(*buf++);
+	
+}
+
 static void  task_console(os_event_t *evt)
 {
-	if (!console_locked || ((char) evt->par) == KEY_ETX)
-		microrl_insert_char (prl, (char) evt->par);
+	console_insert(evt->par);
 }
 
 
@@ -147,6 +165,8 @@ char ** completion(int argc, const char* const* argv)
 }
 */
 
+
+#include <stdio.h>
 
 void console_init(int qlen) {
 	/* Microrl init */
