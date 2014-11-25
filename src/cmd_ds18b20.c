@@ -41,18 +41,12 @@ static uint8_t crc8(const uint8_t *addr, uint8_t len);
 /*
  * Parameter: <gpio>
  */
-static int ICACHE_FLASH_ATTR do_ds18b20(int argc, const char* argv[])
+static int do_ds18b20(int argc, const char* argv[])
 {
   const char *tmp = argv[1];
   int gpio; // = skip_atoi(&tmp);
   int r, i;
   uint8_t addr[8], data[12];
-
-	if( argc != 2 )
-	{
-	  console_printf( "Specify GPIO that DS18B20 is connected to.\n" );
-	  return 0;
-	}
 	
 	gpio = skip_atoi( &tmp );
 
@@ -134,7 +128,7 @@ static uint8_t LastFamilyDiscrepancy;
 static uint8_t LastDeviceFlag;
 static int gpioPin;
 
-void ICACHE_FLASH_ATTR ds_init( int gpio )
+void ds_init( int gpio )
 {
   //set gpio2 as gpio pin
   PIN_FUNC_SELECT(PERIPHS_IO_MUX_GPIO2_U, FUNC_GPIO2);
@@ -155,7 +149,7 @@ void ICACHE_FLASH_ATTR ds_init( int gpio )
   reset_search();
 }
 
-static void ICACHE_FLASH_ATTR reset_search()
+static void reset_search()
 {
   // reset the search state
   LastDiscrepancy = 0;
@@ -210,7 +204,7 @@ static uint8_t reset(void)
 }
 
 /* pass array of 8 bytes in */
-static int ICACHE_FLASH_ATTR ds_search( uint8_t *newAddr )
+static int ds_search( uint8_t *newAddr )
 {
    uint8_t id_bit_number;
    uint8_t last_zero, rom_byte_number;
