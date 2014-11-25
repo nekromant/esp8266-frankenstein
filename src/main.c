@@ -90,7 +90,9 @@ void network_init()
 	if (gw)
 		info.gw.addr = ipaddr_addr(gw);
 	
-	wifi_set_ip_info(SOFTAP_IF, &info);
+	if (wifi_get_opmode() != STATION_MODE)
+		wifi_set_ip_info(SOFTAP_IF, &info);
+
 	char *dhcps = env_get("dhcps-enable"); 
 	if (dhcps && (*dhcps == '1')) {
 		dhcps_start(&info);
@@ -98,8 +100,8 @@ void network_init()
 	} else
 		console_printf("dhcpserver: disabled\n");
 
-
 }
+
 
 void user_init()
 {
