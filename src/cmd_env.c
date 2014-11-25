@@ -43,6 +43,15 @@ static int   do_setenv(int argc, const char* argv[])
 	}
 }
 
+static int do_getenv(int argc, const char* argv[])
+{
+	char *v = env_get(argv[1]);
+	if (v)
+		console_printf(v);
+	else
+		console_printf("\n");
+}
+
 static int   do_saveenv(int argc, const char* argv[])
 {
 	console_printf("Writing environment to flash...");
@@ -58,6 +67,12 @@ CONSOLE_CMD(printenv, -1, -1,
 CONSOLE_CMD(setenv, -1, -1, 
 	    do_setenv, NULL, NULL, 
 	    "Set an environment variable" 
+	    HELPSTR_NEWLINE "setenv var value"
+);
+
+CONSOLE_CMD(getenv, -1, -1, 
+	    do_getenv, NULL, NULL, 
+	    "Get an environment variable" 
 	    HELPSTR_NEWLINE "setenv var value"
 );
 
