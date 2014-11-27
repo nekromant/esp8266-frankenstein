@@ -69,7 +69,7 @@ static int  do_iwmode(int argc, const char*argv[])
 
 static int conntimes = 0;
 static volatile os_timer_t conn_checker;
-void conn_checker_handler(void *arg)
+static void conn_checker_handler(void *arg)
 {
 	int state = wifi_station_get_connect_status();
 	switch (state) {
@@ -146,18 +146,17 @@ static int  do_apconfig(int argc, const char*argv[])
 		return 0;
 	}
 
-	if (argc < 4) {
-		console_printf("Need more arguments. See help.\n");
-		return 1;
-	}
 
 	strcpy(config.ssid, argv[1]);
-
-
 
 	int authmode = id_from_encryption_mode(argv[2]);
 	if (authmode == -1) { 
 		console_printf("Invalid encryption mode: %s. See help.\n", argv[2]);
+		return 1;
+	}
+
+	if ((authmode != AUTH_OPEN) && (argc < 4)) {
+		console_printf("This authorisation mode needs a password\n");
 		return 1;
 	}
 
@@ -189,7 +188,7 @@ CONSOLE_CMD(iwconnect, -1, 3,
 	    "Join a network/Display connection status. "
 	    HELPSTR_NEWLINE "iwconnect ssid password");
 
-CONSOLE_CMD(apconfig, -1, 4, 
+CONSOLE_CMD(apconfig, -1, 3, 
 	    do_apconfig, NULL, NULL, 
 	    "Setup Access Point. "
 	    HELPSTR_NEWLINE "apconfig name OPEN/WEP/WPA_PSK/WPA2_PSK/WPA_WPA2_PSK [password]");

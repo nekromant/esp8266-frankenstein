@@ -60,3 +60,9 @@ flash:
 	-esptool.py --port $(PORT) write_flash 0x00000 images/antares.rom
 	$(reset)
 	minicom -o -D $(PORT) -b 115200
+
+flashidata:
+	$(tobootloader)
+	-esptool.py --port $(PORT) write_flash 0x7c000 esp_iot_sdk_v0.9.2/bin/esp_init_data_default.bin
+	$(reset)
+	minicom -o -D $(PORT) -b 115200

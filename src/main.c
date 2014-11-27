@@ -112,8 +112,13 @@ void user_init()
 	env_init(CONFIG_ENV_OFFSET, CONFIG_ENV_LEN);
 	network_init();
 	console_init(32);
+/*
+	char tmp[128];
+	snprintf(tmp, 128, "hello");
+	ets_uart_printf(tmp);
+	printf("hello\n");
+*/
 
-	
 	PIN_FUNC_SELECT(PERIPHS_IO_MUX_GPIO2_U, FUNC_GPIO2);
 	PIN_FUNC_SELECT(PERIPHS_IO_MUX_GPIO0_U, FUNC_GPIO0);
 	gpio_output_set(0, BIT2, BIT2, 0);

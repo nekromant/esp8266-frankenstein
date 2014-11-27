@@ -35,7 +35,7 @@ struct env_element {
 	char* value;
 };
 
- uint16_t crc16(const unsigned char *buf, int sz)
+uint16_t crc16(const unsigned char *buf, int sz)
 {
         uint16_t crc = 0;
         while (--sz >= 0)
@@ -52,7 +52,7 @@ struct env_element {
 }
 
 
- struct env_element env_next(char **ptr)
+struct env_element env_next(char **ptr)
 {
 	struct env_element ret;
 	ret.key = NULL;
@@ -69,7 +69,7 @@ bailout:
 	return ret;
 }
 
-  int env_delete(char* key)
+int env_delete(char* key)
 {
 
 	char *ptr = current_env->data;
@@ -92,7 +92,7 @@ bailout:
 	} while (e.key);	
 }
 
- int env_insert(char* key, char *value)
+int env_insert(char* key, char *value)
 {
 	int klen = strlen(key) + 1;
 	int vlen = strlen(value) + 1;
@@ -106,7 +106,7 @@ bailout:
 	current_env->data[current_env->occupied]=0xff;
 }
 
- void env_reset()
+void env_reset()
 {
 	current_env->occupied=0;
 	current_env_end=0;
@@ -115,7 +115,7 @@ bailout:
 	env_save();	
 }
 
- void env_save()
+void env_save()
 {
 #ifndef CONFIG_ENV_NOWRITE
 	current_env->crc = crc16(&current_env->occupied, current_env_size + sizeof(uint16_t) );
@@ -128,7 +128,7 @@ bailout:
 #endif	
 }
 
- const char* env_get(char* key)
+const char* env_get(char* key)
 {
 	char *ptr = current_env->data;
 	struct env_element e;
@@ -140,7 +140,7 @@ bailout:
 	return NULL;
 }
 
- void env_dump()
+void env_dump()
 {
 	char *ptr = current_env->data;
 	struct env_element e;
@@ -156,7 +156,7 @@ bailout:
 }
 
 
- void env_init(uint32_t flashaddr, uint32_t envsize)
+void env_init(uint32_t flashaddr, uint32_t envsize)
 {
 	current_env = os_malloc(envsize);
 	current_env_flash_addr = flashaddr;
@@ -169,7 +169,6 @@ bailout:
 	if (crc != current_env->crc) { 
 		console_printf("env: Bad CRC (%x vs %x) using defaults\n", crc, current_env->crc);
 		env_reset();
-		/* Hack: Force op mode to STA */
 	}
 	env_dump();
 }

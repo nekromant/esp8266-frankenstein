@@ -72,8 +72,16 @@ CONSOLE_CMD(spi_wipe, 3, -1,
 
 static  int do_wipeparams(int argc, const char*argv[])
 {
-	spi_flash_erase_sector( (512 / 4) - 1 );	
-	ets_uart_printf("\nComplete\n");
+	console_printf("\nWiping configuration area: ");
+
+	spi_flash_erase_sector(CONFIG_ADDR_BLOBSETTING1 / SPI_FLASH_SEC_SIZE);	
+	console_printf(" %p ", CONFIG_ADDR_BLOBSETTING1 / SPI_FLASH_SEC_SIZE);
+
+	spi_flash_erase_sector(CONFIG_ADDR_BLOBSETTING2 / SPI_FLASH_SEC_SIZE);	
+	console_printf(" %p ", CONFIG_ADDR_BLOBSETTING2 / SPI_FLASH_SEC_SIZE);
+
+	console_printf("\nDone, rebooting\n\n\n\n\n\n\n");
+
 	system_restart();
 }
 
@@ -111,7 +119,7 @@ static int  do_scan(int argc, const char*argv[])
 	char tmp[4096];
 	int i; 
 	int altered; 
-	while(off < 512 * 1024 - 4096) { 
+	while(off <= 512 * 1024 - 4096) { 
 		altered = 0;
 		spi_flash_read(off, tmp, 4096);
 		for (i=0; i<4096; i++)

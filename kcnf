@@ -42,9 +42,13 @@ config ENV_LEN
 hex "Environment length"
 default 0x1000 
 
-config ADDR_BLOBSETTING
-hex "Adress of blob settings in flash (don't change)"
+config ADDR_BLOBSETTING1
+hex "Adress of blob settings in flash (copy 1)"
 default 0x7d000
+
+config ADDR_BLOBSETTING2
+hex "Adress of blob settings in flash (copy 2)"
+default 0x7e000
 
 config ENV_NOWRITE
 bool "Simulate writes of environment data in flash"

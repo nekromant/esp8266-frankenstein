@@ -90,9 +90,8 @@ static void print_ip_info(int iface)
 static int do_ifconfig(int argc, const char* argv[])
 {
 	if (argc==1) {
-		print_ip_info(SOFTAP_IF);
-		print_ip_info(STATION_IF);
-		
+		print_ip_info_real(STATION_IF, 0, 0);
+		print_ip_info_real(SOFTAP_IF, 0, 0);		
 		return 0;
 	}
 

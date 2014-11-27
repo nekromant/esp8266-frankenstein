@@ -113,7 +113,12 @@ static int  do_listen_interrupt()
 {
 	console_printf("BUG: How on earth to properly stop listening???\n");
 	espconn_disconnect(&esp_conn);
-	esp_conn.state = ESPCONN_NONE;
+	
+	void *p; 
+	bool value = espconn_find_connection(&esp_conn, &p);
+	console_printf("===>%d \n", value);
+	espconn_tcp_disconnect(p);
+
 //	os_free(linebuffer);
 	console_lock(0);
 }
