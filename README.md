@@ -39,12 +39,12 @@ technical stuff for you:
 Now that we're clear with that, let's start the device and open up terminal.
 You'll see something like this: 
 
+```
 Frankenstein ESP8266 Firmware
 Powered by Antares 0.2-rc1, Insane Mushroom
 (c) Andrew 'Necromant' Andrianov 2014 <andrew@ncrmnt.org>
 This is free software (where possible), published under the terms of GPLv2
 
-```
 Memory Layout:
 data  : 0x3ffe8000 ~ 0x3ffe8f60, len: 3936
 rodata: 0x3ffe8f60 ~ 0x3ffeae58, len: 7928
@@ -139,7 +139,7 @@ BSSID c0:4a:00:c7:9d:8e channel 11 rssi -80 auth WPA_WPA2_PSK Home_TP-LINK
 #Connecting to an AP
 
 ```
-frankenstein > iwconnect apname WPA2_PSK password
+frankenstein > iwconnect apname password
 Connected
 ```
 
@@ -213,6 +213,7 @@ disconnected!
 
 #A full list of scary commands is below. 
 
+```
 help       - Show this message
 argtest    - Print out argc/argv
 deepsleep  - Enter deep sleep for some microseconds
@@ -257,5 +258,17 @@ send       - Send data to a remote host.
 ds18b20    - Read temperature from DS18B20 chip.
              ds18b20 <gpio>
  
+```
 
+# Known bugs
 
+* iwscan just hangs and iwconnect never connects to an access point
+
+This happens right after flashing Frankenstein for the first time. Power-cycle 
+(e.g remove and apply power, not just soft-reset) and it will work. This is a known 
+bug, I'm working on a fix. 
+
+* Firmware is unstable and randomly reboots.
+
+Just after flashing run wipeparams. Stored setting from older SDK tend to confuse 
+Espressif's blobs and make them go nuts
