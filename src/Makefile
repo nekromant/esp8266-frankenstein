@@ -7,6 +7,7 @@ objects-y+=env.o
 objects-y+=cmd_common.o cmd_env.o
 
 objects-$(CONFIG_CMD_IW)+=cmd_iw.o
+objects-$(CONFIG_CMD_IW)+=cmd_uart.o
 objects-$(CONFIG_CMD_IF)+=cmd_ifconfig.o
 objects-$(CONFIG_CMD_GPIO)+=cmd_gpio.o
 objects-$(CONFIG_CMD_FLASH)+=cmd_flash.o

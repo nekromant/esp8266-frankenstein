@@ -18,8 +18,6 @@
 
 
 
-
-
 // UartDev is defined and initialized in rom code.
 extern UartDevice UartDev;
 
@@ -194,17 +192,26 @@ uart0_tx_buffer(uint8 *buf, uint16 len)
  *                UartBautRate uart1_br - uart1 bautrate
  * Returns      : NONE
 *******************************************************************************/
-void 
-uart_init(UartBautRate uart0_br, UartBautRate uart1_br)
-{
-    // rom use 74880 baut_rate, here reinitialize
-    UartDev.baut_rate = uart0_br;
-    uart_config(UART0);
-    UartDev.baut_rate = uart1_br;
-    uart_config(UART1);
-    ETS_UART_INTR_ENABLE();
 
-    // install uart1 putc callback
-    os_install_putc1((void *)uart0_write_char);
+
+void 
+uart_init(int port, UartBautRate br)
+{
+	UartDev.baut_rate = br;
+	switch(port) { 
+	case 0:
+		uart_config(UART0);
+		break;
+	case 1:
+		uart_config(UART1);
+		break;
+		
+	}
 }
 
+
+void uart_init_io()
+{
+    ETS_UART_INTR_ENABLE();
+    os_install_putc1((void *)uart0_write_char);	
+}

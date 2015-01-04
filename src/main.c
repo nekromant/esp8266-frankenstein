@@ -32,7 +32,6 @@ struct envpair defaultenv[] = {
 	{ "hostname",     "frankenstein" },
 	{ "bootdelay",    "5" },
 	{ "dhcps-enable", "1" },
-
 };
 
 void request_default_environment()
@@ -99,25 +98,21 @@ void network_init()
 		console_printf("dhcpserver: started\n");
 	} else
 		console_printf("dhcpserver: disabled\n");
-
 }
 
 #include <stdio.h>
 
 void user_init()
 {
-	uart_init(115200, 115200);
-	print_hello_banner();
+	uart_init(0, 115200);
+	uart_init(1, 115200);
+	uart_init_io();
 
+	print_hello_banner();
 	env_init(CONFIG_ENV_OFFSET, CONFIG_ENV_LEN);
+
 	network_init();
 	console_init(32);
-/*
-	char tmp[128];
-	snprintf(tmp, 128, "hello");
-	ets_uart_printf(tmp);
-	printf("hello\n");
-*/
 
 	PIN_FUNC_SELECT(PERIPHS_IO_MUX_GPIO2_U, FUNC_GPIO2);
 	PIN_FUNC_SELECT(PERIPHS_IO_MUX_GPIO0_U, FUNC_GPIO0);
