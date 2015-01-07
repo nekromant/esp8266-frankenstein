@@ -71,8 +71,11 @@ static void telnet_close(struct tcp_pcb *pcb)
 	tcp_sent(pcb, NULL);
 	tcp_recv(pcb, NULL);
 	tcp_close(pcb);
-	console_printf = ts->prev_printf;
-	console_printf("\ntelnet: client disconnected\n");
+	if (pcb == ts->client) { 
+		ts->client = NULL;
+		console_printf = ts->prev_printf;
+		console_printf("\ntelnet: console restored\n");
+	}
 }
 
 void sendopt(u8_t option, u8_t value)
@@ -287,7 +290,9 @@ void telnet_stop()
 		return;
 	telnet_close(ts->client);
 	telnet_close(ts->server);
-	console_printf = ts->prev_printf;
+	os_free(ts);
+	ts = NULL;
+	console_printf("telnet: stopped!\n");
 }
 
 
@@ -304,8 +309,10 @@ static int  do_telnet(int argc, const char*argv[])
 	if (strcmp(argv[1], "stop") == 0)
 		telnet_stop();
 
-	if (strcmp(argv[1], "drop") == 0)
+	if (strcmp(argv[1], "quit") == 0) {
+		console_printf("telnet: See you!\n");
 		telnet_close(ts->client);
+	}
 }
 
 
@@ -313,6 +320,6 @@ CONSOLE_CMD(telnet, 2, 2,
 	    do_telnet, NULL, NULL, 
 	    "start/stop telnet server"
 	    HELPSTR_NEWLINE "telnet start - start it"
-	    HELPSTR_NEWLINE "telnet start - stop it"
-	    HELPSTR_NEWLINE "telnet start - drop current client");
+	    HELPSTR_NEWLINE "telnet stop  - stop it"
+	    HELPSTR_NEWLINE "telnet quit  - drop current client");
 

@@ -122,9 +122,18 @@ void user_init()
 	env_init(CONFIG_ENV_OFFSET, CONFIG_ENV_LEN);
 
 	network_init();
+
+	char *enabled = env_get("telnet-autostart"); 
+	if (enabled && (*enabled=='1')) { 
+		int port = 23; 
+		char *tmp = env_get("telnet-port");
+		if (tmp)
+			port = atoi(tmp);
+		telnet_start(port);
+	}
+
 	console_init(32);
 
-	telnet_start(23);
 
 	PIN_FUNC_SELECT(PERIPHS_IO_MUX_GPIO2_U, FUNC_GPIO2);
 	PIN_FUNC_SELECT(PERIPHS_IO_MUX_GPIO0_U, FUNC_GPIO0);
