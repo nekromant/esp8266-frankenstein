@@ -194,8 +194,7 @@ uart0_tx_buffer(uint8 *buf, uint16 len)
 *******************************************************************************/
 
 
-void 
-uart_init(int port, UartBautRate br)
+void uart_init(int port, UartBautRate br)
 {
 	UartDev.baut_rate = br;
 	switch(port) { 

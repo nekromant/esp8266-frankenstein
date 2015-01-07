@@ -15,23 +15,6 @@
 #include <generic/macros.h>
 
 
-/*
-
-static void  webserver_discon(void *arg)
-{
-    struct espconn *pesp_conn = arg;
-
-    console_printf("disconnect | %d.%d.%d.%d:%d \n",
-		   pesp_conn->proto.tcp->remote_ip[0],
-		   pesp_conn->proto.tcp->remote_ip[1],
-		   pesp_conn->proto.tcp->remote_ip[2],
-		   pesp_conn->proto.tcp->remote_ip[3],
-		   pesp_conn->proto.tcp->remote_port);
-}
-
-*/
-
-
 struct pokerface {
 	struct espconn esp_conn;
 	esp_tcp esptcp;
@@ -45,6 +28,7 @@ static void conn_checker_handler(void *arg)
 	struct pokerface *p = arg;
 	/* Lazy gc */
 	os_free(p);
+	console_printf("free!\n");
 	
 }
 
@@ -66,6 +50,8 @@ static void  disconnected(void *arg)
 static void  reconnect(struct pokerface *p, sint8 err)
 {
 	console_printf("Error %d\n", err);
+	espconn_disconnect(&p->esp_conn);
+	console_lock(0);
 }
 
 static void datasent(void *arg)

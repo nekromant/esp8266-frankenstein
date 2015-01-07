@@ -16,9 +16,6 @@ int (*console_printf)(const char *fmt, ...) = ets_uart_printf;
 
 #define CONSOLE_PRIO 1
 
-
-#define CONSOLE_PRIO 1
-
 static microrl_t rl;
 static microrl_t * prl = &rl;
 static int console_locked = 0;

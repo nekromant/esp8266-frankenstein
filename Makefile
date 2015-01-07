@@ -9,6 +9,11 @@ ANTARES_DIR:=./antares
 ANTARES_INSTALL_DIR:=$(abspath ./antares)
 
 CFLAGS+=-I$(abspath ./include/lwip-esp8266/)
+CFLAGS+=-D__ets__ \
+	-DICACHE_FLASH \
+	-DLWIP_OPEN_SRC \
+	-DPBUF_RSV_FOR_WLAN \
+	-DEBUF_LWIP
 
 
 ifeq ($(ANTARES_INSTALL_DIR2),)

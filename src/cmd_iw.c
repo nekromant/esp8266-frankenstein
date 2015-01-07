@@ -188,7 +188,7 @@ CONSOLE_CMD(iwconnect, -1, 3,
 	    "Join a network/Display connection status. "
 	    HELPSTR_NEWLINE "iwconnect ssid password");
 
-CONSOLE_CMD(apconfig, -1, 3, 
+CONSOLE_CMD(apconfig, 3, 4, 
 	    do_apconfig, NULL, NULL, 
 	    "Setup Access Point. "
 	    HELPSTR_NEWLINE "apconfig name OPEN/WEP/WPA_PSK/WPA2_PSK/WPA_WPA2_PSK [password]");

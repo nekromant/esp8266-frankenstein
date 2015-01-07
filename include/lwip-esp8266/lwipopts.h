@@ -242,7 +242,7 @@
  * (requires the LWIP_TCP option)
  */
 #ifndef MEMP_NUM_TCP_PCB
-#define MEMP_NUM_TCP_PCB                5
+#define MEMP_NUM_TCP_PCB                (*(volatile uint32*)0x600011FC)
 #endif
 
 /**
@@ -894,14 +894,28 @@
  * TCP_MAXRTX: Maximum number of retransmissions of data segments.
  */
 #ifndef TCP_MAXRTX
-#define TCP_MAXRTX                      5
+#define TCP_MAXRTX                      3
 #endif
 
 /**
  * TCP_SYNMAXRTX: Maximum number of retransmissions of SYN segments.
  */
 #ifndef TCP_SYNMAXRTX
-#define TCP_SYNMAXRTX                   5
+#define TCP_SYNMAXRTX                   3
+#endif
+
+/**
+ * TCP_MAXRTO: Maximum retransmission timeout of data segments.
+ */
+#ifndef TCP_MAXRTO
+#define TCP_MAXRTO                      10
+#endif
+
+/**
+ * TCP_MINRTO: Minimum retransmission timeout of data segments.
+ */
+#ifndef TCP_MINRTO
+#define TCP_MINRTO                      2
 #endif
 
 /**

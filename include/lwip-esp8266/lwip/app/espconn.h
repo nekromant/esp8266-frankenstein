@@ -120,6 +120,7 @@ typedef struct _comon_pkt{
 typedef struct _espconn_msg{
 	struct espconn *pespconn;
 	comon_pkt pcommon;
+	uint8 count_opt;
 	void *preverse;
 	void *pssl;
 	struct _espconn_msg *pnext;
@@ -216,6 +217,41 @@ extern sint8 espconn_accept(struct espconn *espconn);
 *******************************************************************************/
 
 extern sint8 espconn_create(struct espconn *espconn);
+
+/******************************************************************************
+ * FunctionName : espconn_tcp_get_max_con
+ * Description  : get the number of simulatenously active TCP connections
+ * Parameters   : none
+ * Returns      : none
+*******************************************************************************/
+
+extern uint8 espconn_tcp_get_max_con(void);
+
+/******************************************************************************
+ * FunctionName : espconn_tcp_set_max_con
+ * Description  : set the number of simulatenously active TCP connections
+ * Parameters   : num -- total number
+ * Returns      : none
+*******************************************************************************/
+
+extern sint8 espconn_tcp_set_max_con(uint8 num);
+/******************************************************************************
+ * FunctionName : espconn_tcp_get_max_con_allow
+ * Description  : get the count of simulatenously active connections on the server
+ * Parameters   : espconn -- espconn to get the count
+ * Returns      : result
+*******************************************************************************/
+
+extern sint8 espconn_tcp_get_max_con_allow(struct espconn *espconn);
+
+/******************************************************************************
+ * FunctionName : espconn_tcp_set_max_con_allow
+ * Description  : set the count of simulatenously active connections on the server
+ * Parameters   : espconn -- espconn to set the count
+ * Returns      : result
+*******************************************************************************/
+
+extern sint8 espconn_tcp_set_max_con_allow(struct espconn *espconn, uint8 num);
 
 /******************************************************************************
  * FunctionName : espconn_regist_time

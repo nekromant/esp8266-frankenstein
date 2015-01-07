@@ -20,6 +20,26 @@ typedef struct dhcps_msg {
         uint8_t options[312];
 }dhcps_msg;
 
+//#ifndef LWIP_OPEN_SRC
+struct dhcps_lease {
+	uint32 start_ip;
+	uint32 end_ip;
+};
+//#endif
+
+struct dhcps_pool{
+	struct ip_addr ip;
+	uint8 mac[6];
+	uint32 lease_timer;
+};
+
+typedef struct _list_node{
+	void *pnode;
+	struct _list_node *pnext;
+}list_node;
+
+#define DHCPS_LEASE_TIMER 0x05A0
+#define DHCPS_MAX_LEASE 0x64
 #define BOOTP_BROADCAST 0x8000
 
 #define DHCP_REQUEST        1
@@ -63,6 +83,7 @@ typedef struct dhcps_msg {
 #define DHCPS_STATE_IDLE 5
 
 void dhcps_start(struct ip_info *info);
+void dhcps_stop(void);
 
 #endif
 

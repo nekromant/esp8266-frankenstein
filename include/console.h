@@ -1,6 +1,7 @@
 #ifndef CONSOLE_H
 #define CONSOLE_H
 
+
 struct console_cmd {
 	const char *name; 
 	const char *help;
@@ -29,20 +30,6 @@ extern int (*console_printf)(const char *fmt, ...);
 
 #define HELPSTR_NEWLINE "\n             "
 
-
-
-struct console_shell {
-	int (*execute)(int argc, const char * const * argv);
-	void (*sigint)(void);
-};
-
-
-/* Represents a console device*/
-
-struct console_device {
-	int (*activate)(int status);
-	int (*write)(char *buf, int len);
-};
 
 
 #endif

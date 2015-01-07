@@ -111,16 +111,6 @@ static int   do_listen(int argc, const char* argv[])
 
 static int  do_listen_interrupt()
 {
-	console_printf("BUG: How on earth to properly stop listening???\n");
-	espconn_disconnect(&esp_conn);
-	
-	void *p; 
-	bool value = espconn_find_connection(&esp_conn, &p);
-	console_printf("===>%d \n", value);
-	espconn_tcp_disconnect(p);
-
-//	os_free(linebuffer);
-	console_lock(0);
 }
 
 CONSOLE_CMD(listen, 2, -1, 
