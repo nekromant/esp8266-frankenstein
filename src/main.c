@@ -36,6 +36,9 @@ struct envpair defaultenv[] = {
 	{ "telnet-port",       "23" },
 	{ "telnet-autostart",  "1" },
 	{ "telnet-drop",       "60" },
+	{ "tftp-server",       "192.168.1.215"}, 
+	{ "tftp-dir",          "/"}, 
+	{ "tftp-file",         "antares.rom"}    
 };
 
 void request_default_environment()

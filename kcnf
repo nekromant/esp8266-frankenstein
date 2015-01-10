@@ -18,6 +18,9 @@ bool "Listen on a port"
 config CMD_SEND
 bool "Send data over TCP"
 
+config CMD_TFTP
+bool "TFTP firmware update support"
+
 menuconfig CMD_DS18B20
 bool "DS18B20/DS18S20 Termal Sensor support"
 

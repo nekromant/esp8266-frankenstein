@@ -207,6 +207,7 @@ static err_t server_err(void *arg, err_t err)
 static err_t tcp_data_sent(void *arg, struct tcp_pcb *pcb, u16_t len) {
 	if (pcb != ts->client) { 
 		tcp_sent(pcb, 0);
+		tcp_output(pcb);
 		tcp_close(pcb);
 	}
 }

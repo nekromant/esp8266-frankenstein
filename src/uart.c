@@ -86,8 +86,7 @@ uart1_tx_one_char(uint8 TxChar)
 	return OK;
 }
 
-LOCAL STATUS 
-uart0_tx_one_char(uint8 TxChar)
+static  __attribute__ ((section(".iram0.text"))) STATUS uart0_tx_one_char(uint8 TxChar)
 {
     while (true)
 	{
@@ -121,8 +120,7 @@ uart1_write_char(char c)
     }
 }
 
-LOCAL void 
-uart0_write_char(char c)
+ __attribute__ ((section(".iram0.text")))  void  uart0_write_char(char c)
 {
     if (c == '\n') {
         uart0_tx_one_char('\r');
@@ -144,8 +142,7 @@ uart0_write_char(char c)
 *******************************************************************************/
 extern void handle_byte(char b);
 
-LOCAL void
-uart0_rx_intr_handler(void *para)
+static  __attribute__ ((section(".iram0.text"))) uart0_rx_intr_handler(void *para)
 {
     /* uart0 and uart1 intr combine togther, when interrupt occur, see reg 0x3ff20020, bit2, bit0 represents
      * uart1 and uart0 respectively
