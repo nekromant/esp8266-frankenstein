@@ -24,6 +24,9 @@ bool "TFTP firmware update support"
 config CMD_AT
 bool "AT to say OK"
 
+config CMD_ADC
+bool "use adc"
+
 menuconfig CMD_DS18B20
 bool "DS18B20/DS18S20 Termal Sensor support"
 
