@@ -1,8 +1,9 @@
 
 #include <stdlib.h>
 #include "console.h"
+#include "user_interface.h"
 
-static int do_at (int argc, const char* argv[])
+static int do_at (int argc, const char* const* argv)
 {
 	console_printf("OK %s\n", system_get_sdk_version());
 	return 0;
