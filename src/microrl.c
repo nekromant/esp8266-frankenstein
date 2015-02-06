@@ -8,10 +8,14 @@ BUGS and TODO:
 #include <string.h>
 #include <ctype.h>
 #include <stdlib.h>
+#include <osapi.h>
+
 #include "microrl.h"
 #ifdef _USE_LIBC_STDIO
 #include <stdio.h>
 #endif
+
+#include "console.h"
 
 //#define DBG(...) fprintf(stderr, "\033[33m");fprintf(stderr,__VA_ARGS__);fprintf(stderr,"\033[0m");
 
@@ -20,7 +24,7 @@ BUGS and TODO:
 static char current_prompt[CONFIG_PROMPT_BUF] = "\nnone > ";
 static int current_prompt_len = 7;
 
-void microrl_set_prompt(char* prompt)
+void microrl_set_prompt(const char* prompt)
 {
 	if (strlen(prompt) + 4 > CONFIG_PROMPT_BUF) {
 		console_printf("error: prompt too long - inrease CONFIG_PROMPT_BUF\n");

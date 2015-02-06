@@ -27,6 +27,9 @@ bool "AT to say OK"
 config CMD_ADC
 bool "use adc"
 
+config ENABLE_PASSTHROUGH
+bool "enable tcp(10101)<->serial passthrough"
+
 menuconfig CMD_DS18B20
 bool "DS18B20/DS18S20 Termal Sensor support"
 

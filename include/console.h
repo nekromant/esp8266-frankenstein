@@ -1,6 +1,8 @@
 #ifndef CONSOLE_H
 #define CONSOLE_H
 
+#define ESC_SPACE	300000
+#define ESC_COUNT	3
 
 struct console_cmd {
 	const char *name; 
@@ -29,6 +31,11 @@ struct console_cmd {
 extern int (*console_printf)(const char *fmt, ...);
 
 #define HELPSTR_NEWLINE "\n             "
+
+void console_init(int qlen);
+void console_insert(char c);
+
+void enable_passthrough(int v);
 
 
 

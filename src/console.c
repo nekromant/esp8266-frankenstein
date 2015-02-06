@@ -9,22 +9,23 @@
 #include "driver/uart.h" 
 #include "microrl.h"
 #include "console.h"
+#include "env.h"
 
-extern int ets_uart_printf(const char *fmt, ...);
 int (*console_printf)(const char *fmt, ...) = ets_uart_printf;
 
 
 #define CONSOLE_PRIO 1
 
 static microrl_t rl;
-static microrl_t * prl = &rl;
+//static microrl_t * prl = &rl;
+#define prl (&rl)
 static int console_locked = 0;
+static int passthrough = 0;
 
 struct console {
 	char name[16];
 	void (*write)(char* buf, int len);	
 };
-
 
 void console_lock(int l)
 {
@@ -33,9 +34,43 @@ void console_lock(int l)
 		microrl_print_prompt(prl);
 }
 
+void enable_passthrough(int v)
+{
+	passthrough = v;
+	console_lock(v);
+}
+
 void console_insert(char c)
 {
-	if (!console_locked || (c) == KEY_ETX)
+	static uint32 esc_time = 0;
+	static int esc_count = 0;
+	
+	if (passthrough)
+	{
+		//console_printf("%c", c);
+		ets_uart_printf("@%c,%d", c,c);
+		
+		if (c != KEY_ESC)
+			esc_count = 0;
+		else
+		{
+			uint32 now = system_get_time();
+			if (++esc_count > 1)
+			{
+				if (now - esc_time < ESC_SPACE)
+					esc_count = 0;
+				else if (esc_count == ESC_COUNT)
+				{
+					// disable passthrough
+					enable_passthrough(0);
+					esc_count = 0;
+				}
+			}
+//ets_uart_printf("[%d,%d]",(int)(now - esc_time), esc_count);
+			esc_time = now;
+		}
+	}
+	else if (!console_locked || (c) == KEY_ETX)
 		microrl_insert_char (prl, c);
 }
 
@@ -43,7 +78,6 @@ void console_write(char *buf, int len)
 {
 	while (len--)
 		console_insert(*buf++);
-	
 }
 
 static void  task_console(os_event_t *evt)
@@ -57,7 +91,7 @@ void console_exec(char *str) {
 		microrl_insert_char (prl, (char) *str++);
 }
 
-static void  rl_print(char *str)
+static void  rl_print(const char *str)
 {
 	if (!console_locked)
 		console_printf(str);
@@ -65,7 +99,7 @@ static void  rl_print(char *str)
 
 
 
-static int do_help(int argc, const char*argv[]);
+static int do_help(int argc, const char* const* argv);
 
 static struct console_cmd  cmd_first  __attribute__((section(".console_firstcmd"))) = {
 	.name = "help",
@@ -82,13 +116,14 @@ static struct console_cmd  cmd_last  __attribute__((section(".console_lastcmd"))
 #define FOR_EACH_CMD(iterator) for (iterator=&cmd_first; iterator<&cmd_last; iterator++) 
 
 
-static int do_help(int argc, const char*argv[])
+static int do_help(int argc, const char* const* argv)
 {
 	struct console_cmd *cmd;
 	console_printf("\n");
 	FOR_EACH_CMD(cmd) {
 		console_printf("%-10s - %s\n", cmd->name, cmd->help);
 	}
+	return 0;
 }
 
 static void sigint(void)
@@ -171,7 +206,7 @@ void console_init(int qlen) {
 	microrl_set_execute_callback (prl, execute);
 	microrl_set_sigint_callback(prl, sigint);
 
-	char *p = env_get("hostname");
+	const char *p = env_get("hostname");
 	if (p)
 		microrl_set_prompt(p);
 

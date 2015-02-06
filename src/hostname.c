@@ -16,7 +16,7 @@
 
 void set_dhcp_hostname(char *hname)
 {
-	unsigned char name[4] = "if1";
+	char name[4] = "if1";
 	ets_uart_printf(name);
 
 	struct netif *i = netif_find("ew0");

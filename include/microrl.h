@@ -1,10 +1,15 @@
 #ifndef _MICRORL_H_
 #define _MICRORL_H_
 
-#include "config.h"
+#include "microrl-config.h"
 
+#ifndef true
 #define true  1
+#endif
+
+#ifndef false
 #define false 0
+#endif
 
  /* define the Key codes */
 #define KEY_NUL 0 /**< ^@ Null character */
@@ -113,5 +118,9 @@ void microrl_set_sigint_callback (microrl_t * pThis, void (*sigintf)(void));
 
 // insert char to cmdline (for example call in usart RX interrupt)
 void microrl_insert_char (microrl_t * pThis, int ch);
+
+void microrl_print_prompt (microrl_t * pThis);
+void microrl_set_prompt(const char* prompt);
+
 
 #endif

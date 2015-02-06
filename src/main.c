@@ -1,3 +1,6 @@
+
+#include <stdlib.h>
+
 #include "ets_sys.h"
 #include "os_type.h"
 #include "mem.h"
@@ -11,9 +14,10 @@
 #include "console.h"
 #include <generic/macros.h>
 #include <lwip/netif.h>
+#include <lwip/app/dhcpserver.h>
 
-
-extern int ets_uart_printf(const char *fmt, ...);
+#include "env.h"
+#include "telnet.h"
 
 struct envpair {
 	char *key, *value;
@@ -41,14 +45,14 @@ struct envpair defaultenv[] = {
 	{ "tftp-file",         "antares.rom"}    
 };
 
-void request_default_environment()
+void request_default_environment(void)
 {
 	int i;
 	for (i=0; i<ARRAY_SIZE(defaultenv); i++)
 		env_insert(defaultenv[i].key, defaultenv[i].value);
 }
 
-void print_hello_banner()
+void print_hello_banner(void)
 {
 	console_printf("\n\n\nFrankenstein ESP8266 Firmware\n");
 	console_printf("Powered by Antares " CONFIG_VERSION_STRING "\n");	
@@ -68,8 +72,8 @@ void network_init()
 	struct ip_info info;
 
 	wifi_get_ip_info(STATION_IF, &info);
-	char *dhcp = env_get("sta-mode"); 
-	char *ip, *mask, *gw;
+	const char *dhcp = env_get("sta-mode"); 
+	const char *ip, *mask, *gw;
 	if (!dhcp || strcmp(dhcp, "dhcp") != 0)
 	{
 		ip = env_get("sta-ip"); 
@@ -99,7 +103,7 @@ void network_init()
 	if (wifi_get_opmode() != STATION_MODE)
 		wifi_set_ip_info(SOFTAP_IF, &info);
 
-	char *dhcps = env_get("dhcps-enable"); 
+	const char *dhcps = env_get("dhcps-enable"); 
 	if (dhcps && (*dhcps == '1')) {
 		dhcps_start(&info);
 		console_printf("dhcpserver: started\n");
@@ -121,15 +125,19 @@ void user_init()
 	uart_init(1, 115200);
 	uart_init_io();
 
-	print_hello_banner();
 	env_init(CONFIG_ENV_OFFSET, CONFIG_ENV_LEN);
+#if 0
+	enable_passthrough(1);
+#else
+	print_hello_banner();
+#endif
 
 	network_init();
 
-	char *enabled = env_get("telnet-autostart"); 
+	const char *enabled = env_get("telnet-autostart"); 
 	if (enabled && (*enabled=='1')) { 
 		int port = 23; 
-		char *tmp = env_get("telnet-port");
+		const char *tmp = env_get("telnet-port");
 		if (tmp)
 			port = atoi(tmp);
 		telnet_start(port);
