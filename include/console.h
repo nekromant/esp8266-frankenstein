@@ -34,6 +34,9 @@ extern int (*console_printf)(const char *fmt, ...);
 
 void console_init(int qlen);
 void console_insert(char c);
+void console_lock(int l);
+void console_write(char *buf, int len);
+void console_exec(char *str);
 
 void enable_passthrough(int v);
 

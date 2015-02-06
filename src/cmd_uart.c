@@ -15,22 +15,24 @@
 #include <generic/macros.h>
 
 
-static int   do_baud(int argc, const char* argv[])
+static int   do_baud(int argc, const char* const* argv)
 {
 	int port = atoi(argv[1]);
 	int speed = atoi(argv[2]);
 	if (port > 1) {
 		console_printf("We only have UART0 and UART1, sorry\n");
-		return;
+		return -1;
 	}
 	
 	console_printf("Setting UART%d speed to %d bps\n", port, speed);
 	uart_init(port, speed);
+	
+	return 0;
 }
 
-CONSOLE_CMD(baud, 2, -1, 
+CONSOLE_CMD(baud, 3, 3, 
 	    do_baud, NULL, NULL, 
 	    "Configure serial port speed" 
-	    HELPSTR_NEWLINE "baudrate {port} {speed}"
+	    HELPSTR_NEWLINE "baudrate {port:0/1} {speed}"
 	    HELPSTR_NEWLINE "baudrate 0 57600"
 );

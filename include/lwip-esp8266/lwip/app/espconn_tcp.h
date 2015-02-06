@@ -39,5 +39,8 @@ extern sint8 espconn_tcp_client(struct espconn* espconn);
 
 extern sint8 espconn_tcp_server(struct espconn *espconn);
 
+void ICACHE_FLASH_ATTR espconn_tcp_sent(void *arg, uint8 *psent, uint16 length);
+sint8 ICACHE_FLASH_ATTR espconn_tcp_delete(struct espconn *pdeletecon);
+
 #endif /* __CLIENT_TCP_H__ */
 

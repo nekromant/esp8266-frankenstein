@@ -15,22 +15,20 @@
 #include <generic/macros.h>
 
 
-static int  do_gpio(int argc, const char* argv[])
+static int  do_gpio(int argc, const char* const* argv)
 {
-	char *tmp = argv[2];
-	int gpio = skip_atoi(&tmp);
+	int gpio = atoi(argv[2]);
 	
 	if (strcmp(argv[1], "in") == 0) {
 		GPIO_DIS_OUTPUT(gpio);
 		console_printf("GP%d==%d\n", gpio, GPIO_INPUT_GET(gpio));
 	} else 	if (strcmp(argv[1], "out") == 0) {
 		if (argc < 4)
-			return;
-		tmp = argv[3];
-		int v = skip_atoi(&tmp);
+			return -1;
+		int v = atoi(argv[3]);
 		GPIO_OUTPUT_SET(gpio, v);
 	}
-	
+	return 0;
 }
 
 CONSOLE_CMD(gpio, 3, 4, 

@@ -6,6 +6,7 @@
 //#include "crypto/common.h"
 #include "osapi.h"
 #include "lwip/app/dhcpserver.h"
+#include "user_interface.h"
 
 #ifndef LWIP_OPEN_SRC
 #include "net80211/ieee80211_var.h"
@@ -296,6 +297,8 @@ static void ICACHE_FLASH_ATTR send_offer(struct dhcps_msg *m)
         SendOffer_err_t = udp_sendto( pcb_dhcps, p, &broadcast_dhcps, DHCPS_CLIENT_PORT );
 #if DHCPS_DEBUG
 	        os_printf("dhcps: send_offer>>udp_sendto result %x\n",SendOffer_err_t);
+#else
+		(void)SendOffer_err_t;
 #endif
 	    if(p->ref != 0){	
 #if DHCPS_DEBUG
@@ -362,6 +365,8 @@ static void ICACHE_FLASH_ATTR send_nak(struct dhcps_msg *m)
         SendNak_err_t = udp_sendto( pcb_dhcps, p, &broadcast_dhcps, DHCPS_CLIENT_PORT );
 #if DHCPS_DEBUG
 	        os_printf("dhcps: send_nak>>udp_sendto result %x\n",SendNak_err_t);
+#else
+		(void)SendNak_err_t;
 #endif
  	    if(p->ref != 0){
 #if DHCPS_DEBUG			
@@ -429,6 +434,8 @@ static void ICACHE_FLASH_ATTR send_ack(struct dhcps_msg *m)
         SendAck_err_t = udp_sendto( pcb_dhcps, p, &broadcast_dhcps, DHCPS_CLIENT_PORT );
 #if DHCPS_DEBUG
 	        os_printf("dhcps: send_ack>>udp_sendto result %x\n",SendAck_err_t);
+#else
+		(void)SendAck_err_t;
 #endif
 	    
 	    if(p->ref != 0){
@@ -604,7 +611,7 @@ static sint16_t ICACHE_FLASH_ATTR parse_msg(struct dhcps_msg *m, u16_t len)
 								station = next_station;
 							}
 
-							if (wifi_softap_set_station_info(m->chaddr, &client_address_plus) == false) {
+							if (wifi_softap_set_station_info(m->chaddr, &client_address_plus) == 0) {
 								return 0;
 							}
 

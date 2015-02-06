@@ -8,6 +8,7 @@
 #include "gpio.h"
 #include "driver/uart.h" 
 #include "microrl.h"
+#include "env.h"
 #include "console.h"
 #include <stdarg.h>
 #include <generic/macros.h>
@@ -25,20 +26,21 @@ struct update_server {
 	uint32_t numbytes;
 	uint32_t fblock;
 	int ready; 
-	volatile os_timer_t commit_timer;
+	/*volatile*/ os_timer_t commit_timer;
 };
 
-static struct update_server *u;
+static struct update_server *u = NULL;
 
-static  __attribute__ ((section(".iram0.text"))) isr_dummy(void *a)
+#if 0
+static  __attribute__ ((section(".iram0.text"))) void isr_dummy(void *a)
 {
 	ets_uart_printf("%p\n", a);
 }
+#endif
 
 static  __attribute__ ((section(".iram0.text"))) void commit_handler(void* a)
 {
 	int i; 
-	char tmp[SPI_FLASH_SEC_SIZE];
 
 	/* Inhibit any interrupts */
 
@@ -51,13 +53,13 @@ static  __attribute__ ((section(".iram0.text"))) void commit_handler(void* a)
 	for (i=0; i < numsect; i++) { 
 		console_printf("#");
 		spi_flash_erase_sector( i );
-		spi_flash_read((64 + i) * SPI_FLASH_SEC_SIZE,  (uint32_t *) u->buffer, SPI_FLASH_SEC_SIZE);
-		spi_flash_write((i * SPI_FLASH_SEC_SIZE), (uint32_t *)u->buffer, SPI_FLASH_SEC_SIZE);
+		spi_flash_read((64 + i) * SPI_FLASH_SEC_SIZE,  (uint32*) u->buffer, SPI_FLASH_SEC_SIZE);
+		spi_flash_write((i * SPI_FLASH_SEC_SIZE), (uint32*)u->buffer, SPI_FLASH_SEC_SIZE);
 		spi_flash_erase_sector( 64 + i );
 	}
 
 
-	ets_uart_printf("\nFirmware update completed, rebooting\n", i);
+	ets_uart_printf("\nFirmware update completed (%d sectors), rebooting\n", i);
 	ets_wdt_enable();
 	while (1);
 }
@@ -98,11 +100,9 @@ void recv_cb(struct tftp_server *ts, int num_block, char* buf, int len)
 	}
 }
 
-static int  do_tftp(int argc, const char*argv[])
+static int  do_tftp(int argc, const char* const* argv)
 {
-
-	int port = 69;
-	int ret; 
+	//int port = 69;
 	if (u) {
 		console_printf("tftp: Update server already started\n");
 		return 0;
@@ -146,13 +146,14 @@ static int  do_tftp(int argc, const char*argv[])
 	u->ready = 0;
 	console_printf("\n ");
 	console_lock(1);
-	return;
+	return 0;
 
 errfreets:
 	os_free(u->ts);
 errfreeu:
 	os_free(u);
 	u=NULL;
+	return -1;
 }
 
 CONSOLE_CMD(tftp, 1, 1, 

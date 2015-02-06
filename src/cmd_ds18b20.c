@@ -48,7 +48,7 @@ static uint8_t crc8(const uint8_t *addr, uint8_t len);
 /*
  * Parameter: <gpio>
  */
-static int do_ds18b20(int argc, const char* argv[])
+static int do_ds18b20(int argc, const char* const* argv)
 {
 	const char *tmp = argv[1];
 	int gpio; // = skip_atoi(&tmp);
@@ -114,7 +114,7 @@ static int do_ds18b20(int argc, const char* argv[])
 	}
 	dbg( "\n" );
 
-	int HighByte, LowByte, TReading, SignBit, Tc_100, Whole, Fract;
+	int HighByte, LowByte, TReading, SignBit, /*Tc_100,*/ Whole, Fract;
 	LowByte = data[0];
 	HighByte = data[1];
 	TReading = (HighByte << 8) + LowByte;

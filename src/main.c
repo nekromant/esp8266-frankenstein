@@ -114,7 +114,7 @@ void network_init()
 #include <stdio.h>
 
 
-const char* fr_request_hostname() {
+const char* fr_request_hostname(void) {
 
 	return env_get("hostname");
 }

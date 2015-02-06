@@ -12,12 +12,10 @@
 #include <generic/macros.h>
 
 
-static void 	hex_dump(unsigned long addr, char* data, int len)
+static void 	hex_dump(uint32 addr, const char* data, int len)
 {
 	int				ii;
-	char			textString[16];
 	char			asciiDump[24];
-	unsigned long	myAddressPointer;
 
 	while (len >0)
 	{
@@ -51,7 +49,7 @@ static void 	hex_dump(unsigned long addr, char* data, int len)
 extern void ets_wdt_enable(void);
 extern void ets_wdt_disable(void);
 
-static  __attribute__ ((section(".iram0.text"))) int do_wipe(int argc, const char*argv[])
+static  __attribute__ ((section(".iram0.text"))) int do_wipe(int argc, const char* const* argv)
 {
 	int sz = 512 * 1024;
 	int i; 
@@ -61,8 +59,9 @@ static  __attribute__ ((section(".iram0.text"))) int do_wipe(int argc, const cha
 		if (0 ==(i % 16)) 
 			ets_uart_printf(".");
 	}
-	ets_uart_printf("\nSuicide complete\n", i);
+	ets_uart_printf("\nSuicide complete (%d records)\n", i);
 	system_restart();
+	return 0;
 }
 
 CONSOLE_CMD(spi_wipe, 3, -1, 
@@ -70,7 +69,7 @@ CONSOLE_CMD(spi_wipe, 3, -1,
 	    "Wipe the whole spi flash blank"
 	    HELPSTR_NEWLINE "wipe any three arguments");
 
-static  int do_wipeparams(int argc, const char*argv[])
+static  int do_wipeparams(int argc, const char* const* argv)
 {
 	console_printf("\nWiping configuration area: ");
 
@@ -83,6 +82,8 @@ static  int do_wipeparams(int argc, const char*argv[])
 	console_printf("\nDone, rebooting\n\n\n\n\n\n\n");
 
 	system_restart();
+	
+	return 0;
 }
 
 CONSOLE_CMD(wipeparams, 3, -1, 
@@ -90,18 +91,19 @@ CONSOLE_CMD(wipeparams, 3, -1,
 	    "Wipe blob configuration section of flash"
 	    HELPSTR_NEWLINE "wipeparams any three arguments");
 
-static int  do_dump(int argc, const char*argv[])
+static int  do_dump(int argc, const char* const* argv)
 {
-	uint32_t tmp[16];
-	uint32_t start = skip_atoi(&argv[1]);
-	int len   = skip_atoi(&argv[2]);
+	uint32 tmp[16];
+	uint32 start = atoi(argv[1]);
+	int len   = atoi(argv[2]);
 	while(len > 0) { 
 		spi_flash_read(start, tmp, 16);
-		hex_dump(start, tmp, 16);
+		hex_dump(start, (char*)tmp, 16);
 		len-=16;
 		start+=16;
 		wdt_feed();
-	}			
+	}	
+	return 0;		
 }
 
 CONSOLE_CMD(spi_dump, 3, -1, 
@@ -112,7 +114,7 @@ CONSOLE_CMD(spi_dump, 3, -1,
 
 
 
-static int  do_scan(int argc, const char*argv[])
+static int  do_scan(int argc, const char* const* argv)
 {
 	ets_wdt_disable();
 	uint32_t off = 256 * 1024; 
@@ -121,7 +123,7 @@ static int  do_scan(int argc, const char*argv[])
 	int altered; 
 	while(off <= 512 * 1024 - 4096) { 
 		altered = 0;
-		spi_flash_read(off, tmp, 4096);
+		spi_flash_read(off, (uint32*)tmp, 4096);
 		for (i=0; i<4096; i++)
 			if (tmp[i]!=0xff) 
 				altered++;
@@ -132,6 +134,7 @@ static int  do_scan(int argc, const char*argv[])
 		}
 		off += 4096;
 	}			
+	return 0;
 }
 
 CONSOLE_CMD(flash_scan, -1, -1, 

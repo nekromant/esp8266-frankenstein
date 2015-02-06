@@ -94,9 +94,9 @@ static void  webserver_listen(void *arg)
 static struct espconn esp_conn;
 static esp_tcp esptcp;
 
-static int   do_listen(int argc, const char* argv[])
+static int   do_listen(int argc, const char* const* argv)
 {
-	int port = skip_atoi(&argv[1]);
+	int port = atoi(argv[1]);
 	console_printf("Listening (TCP) on port %d\n", port);
 	esp_conn.type = ESPCONN_TCP;
 	esp_conn.state = ESPCONN_NONE;
@@ -107,13 +107,14 @@ static int   do_listen(int argc, const char* argv[])
 	linebuffer = os_malloc(LINEBUFFER_SIZE);
 	lineptr = 0;
 	console_lock(1);
+	return 0;
 }
 
-static int  do_listen_interrupt()
+static void do_listen_interrupt(void)
 {
 }
 
-CONSOLE_CMD(listen, 2, -1, 
+CONSOLE_CMD(listen, 2, 2, 
 	    do_listen, do_listen_interrupt, NULL, 
 	    "Listen for incoming data ona port"
 	    HELPSTR_NEWLINE "listen 8080"

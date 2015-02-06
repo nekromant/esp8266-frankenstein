@@ -28,7 +28,7 @@
 #define SWAP16(num) ((num>>8) | (num<<8))
 
 
-static err_t tftp_send_message(struct udp_pcb *upcb, struct ip_addr *to_ip, int to_port, char *buf, int buflen) {
+static err_t tftp_send_message(struct udp_pcb *upcb, struct ip_addr *to_ip, int to_port, const char *buf, int buflen) {
 
 	err_t err;
 	struct pbuf *pkt_buf;
@@ -45,7 +45,7 @@ static err_t tftp_send_message(struct udp_pcb *upcb, struct ip_addr *to_ip, int 
 	return err;
 }
 
-void tftp_request(struct tftp_server *ts, char* host, char* dir, char *fname)
+void tftp_request(struct tftp_server *ts, const char* host, const char* dir, const char *fname)
 {
 	char tftp_buffer[512+4];
 	uint32_t length;
@@ -74,7 +74,7 @@ static void tftp_ack(struct tftp_server *ts, uint16_t pck, uint16_t port)
 	struct tftp_packet ack; 
 	ack.op = SWAP16(OP_ACK);
 	ack.block = SWAP16(pck);
-	tftp_send_message(ts->out, &ts->addr, port, &ack, sizeof(ack));
+	tftp_send_message(ts->out, &ts->addr, port, (const char*)&ack, sizeof(ack));
 }
 
 
@@ -88,9 +88,9 @@ static void udp_tftp_recv(void * arg, struct udp_pcb * upcb,
 		return;
 
 	char tmp[1024];
-	pbuf_copy_partial(p, tmp, p->tot_len, 0);
+	pbuf_copy_partial(p, tmp, sizeof tmp, 0);
 
-	struct tftp_packet *pck = tmp;
+	struct tftp_packet *pck = (struct tftp_packet*)tmp;
 
 	pck->op = SWAP16(pck->op);
 	pck->block = SWAP16(pck->block);

@@ -23,7 +23,7 @@ void tftp_recv(struct tftp_server *ts,
 void tftp_err(struct tftp_server *ts, 
 	      void (*err)(struct tftp_server *ts, int errcode, char* text));
 
-void tftp_request(struct tftp_server *ts, char* host, char* dir, char *fname);
+void tftp_request(struct tftp_server *ts, const char* host, const char* dir, const char *fname);
 
 
 #endif

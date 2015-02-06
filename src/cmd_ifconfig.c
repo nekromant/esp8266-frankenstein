@@ -9,6 +9,7 @@
 #include "driver/uart.h" 
 #include "microrl.h"
 #include "console.h"
+#include "helpers.h"
 
 #include <stdlib.h>
 #include <stdlib.h>
@@ -73,7 +74,7 @@ static void print_ip_info(int iface)
 	if ((iface != STATION_IF) || 
 	    (state != STATION_GOT_IP)) {
 		print_ip_info_real(iface, 0, 0);
-		return 0;
+		return;
 	}
 
 	memset(&conf, 0x0, sizeof(conf)); 
@@ -87,7 +88,7 @@ static void print_ip_info(int iface)
 		print_ip_info_real(iface, 0, 0);
 }
 
-static int do_ifconfig(int argc, const char* argv[])
+static int do_ifconfig(int argc, const char* const* argv)
 {
 	if (argc==1) {
 		print_ip_info_real(STATION_IF, 0, 0);
