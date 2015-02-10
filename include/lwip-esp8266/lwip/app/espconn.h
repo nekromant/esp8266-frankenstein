@@ -3,11 +3,14 @@
 
 #include "lwip/dns.h"
 #include "os_type.h"
+#include "console.h"
 
 #if 0
 #define espconn_printf(fmt, args...) os_printf(fmt,## args)
-#else 
-#define espconn_printf(fmt, args...)
+#endif
+
+#if 1
+#define espconn_printf(fmt...) LOGSERIAL(LOG_DEBUG2, fmt)
 #endif
 
 

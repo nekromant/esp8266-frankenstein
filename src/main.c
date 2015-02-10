@@ -65,8 +65,6 @@ void print_hello_banner(void)
 }
 
 
-extern void env_init(uint32_t flashaddr, uint32_t envsize);
-
 void network_init()
 {
 	struct ip_info info;
@@ -126,11 +124,7 @@ void user_init()
 	uart_init_io();
 
 	env_init(CONFIG_ENV_OFFSET, CONFIG_ENV_LEN);
-#if 0
-	enable_passthrough(1);
-#else
 	print_hello_banner();
-#endif
 
 	network_init();
 

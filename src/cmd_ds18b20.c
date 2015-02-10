@@ -25,7 +25,7 @@
 
 
 #ifdef CONFIG_CMD_DS18B20_DEBUG
-#define dbg(fmt, ...) console_printf(fmt, ##__VA_ARGS__)
+#define dbg(fmt, ...) LOG(LOG_DEBUG, fmt, ##__VA_ARGS__)
 #else
 #define dbg(fmt, ...)
 #endif

@@ -55,7 +55,7 @@ static  int do_deepsleep(int argc, const char* const* argv)
 {
 	const char *tmp = argv[1];
 	unsigned long n = skip_atoul(&tmp); 
-	console_printf("Deep sleep mode for %ul microseconds\n", n);
+	console_printf("Deep sleep mode for %lu microseconds\n", n);
 	system_deep_sleep(n);
 	return 0;
 }

@@ -50,6 +50,48 @@ struct telnet_server
 
 static struct telnet_server *ts;
 
+// double output buffer
+//static strbuf sb[2];
+
+
+void tcp_log_err (err_t err)
+{
+	LOGSERIAL(LOG_ERR, "\nTCP: Fatal error %d(%s)\n", (int)err, lwip_strerr(err));
+}
+
+
+#if 1
+#define TCP_WRITE smart_tcp_write
+err_t smart_tcp_write (struct tcp_pcb *pcb, const void *dataptr, u16_t len, u8_t apiflags)
+{
+	u16_t sent = 0;
+	const char* data = dataptr;
+	err_t err = ERR_OK;
+	
+	while (sent < len)
+	{
+		u16_t sendmax = tcp_sndbuf(pcb);
+		if (sendmax)
+		{
+			u16_t sendnow = len - sent;
+			if (sendnow > sendmax)
+				sendnow = sendmax;
+			if ((err = tcp_write(pcb, data + sent, sendnow, apiflags)) != ERR_OK)
+			{
+				tcp_log_err(err);
+				return err;
+			}
+			sent += sendnow;
+
+			tcp_output(pcb); // flush
+		}
+	}
+	return err;
+}
+#else
+#define TCP_WRITE tcp_write
+#endif
+
 
 int telnet_printf(const char *fmt, ...) 
 {
@@ -61,7 +103,7 @@ int telnet_printf(const char *fmt, ...)
 	va_start(ap, fmt);
 	ret = vsnprintf(p, sizeof p, fmt, ap);
 	va_end(ap);
-	tcp_write(ts->client, p, ret, 0);
+	TCP_WRITE(ts->client, p, ret, 0);
 	ts->idle = 0;
 	return ret; 
 }
@@ -78,6 +120,7 @@ static void telnet_close(struct tcp_pcb *pcb)
 		ts->client = NULL;
 		console_printf = ts->prev_printf;
 		console_printf("\ntelnet: console restored\n");
+		microrl_set_echo(1);
 	}
 }
 
@@ -88,7 +131,7 @@ void sendopt(u8_t option, u8_t value)
 	tmp[1] = option;
 	tmp[2] = value;
 	tmp[3] = 0;
-	tcp_write(ts->client, tmp, 4, 0);
+	TCP_WRITE(ts->client, tmp, 4, 0);
 }
 
 static err_t server_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err)
@@ -164,8 +207,7 @@ static err_t server_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t e
 				break;
 			}
 		}
-		//if (p) //XXX? always !NULL
-			pbuf_free(p);
+		pbuf_free(p);
 
 	}
 	else
@@ -196,19 +238,23 @@ static err_t server_poll(void *arg, struct tcp_pcb *pcb)
 static void server_err(void *arg, err_t err)
 {
 	LWIP_UNUSED_ARG(arg);
-	LWIP_UNUSED_ARG(err);
+//	LWIP_UNUSED_ARG(err);
 
-	console_printf("\nserver_err(): Fatal error (%s), exiting...\n", lwip_strerr(err));
+	tcp_log_err(err);
 }
 
 
 static err_t tcp_data_sent(void *arg, struct tcp_pcb *pcb, u16_t len)
 {
 	if (pcb != ts->client) { 
+	
+		// close other than telnet tcp connection as soon as data have been sent
+		
 		tcp_sent(pcb, NULL);	// suppress callback
 		tcp_output(pcb);	// flush output
 		tcp_close(pcb);
 	}
+	
 	return ERR_OK;
 }
 
@@ -226,7 +272,7 @@ static err_t tcp_conn_accepted(void * arg, struct tcp_pcb * pcb, err_t err)
 	
 	static const char busy[] = "Sorry, but this telnet console is already in use by someone\n";
 	if (ts->client) { /* Someone already connected */
-		tcp_write(pcb, busy, strlen(busy), 0);
+		TCP_WRITE(pcb, busy, strlen(busy), 0);
 		tcp_recv(pcb, NULL);
 		tcp_poll(pcb, NULL, 4);
 		tcp_err(pcb, NULL);		
@@ -239,6 +285,7 @@ static err_t tcp_conn_accepted(void * arg, struct tcp_pcb * pcb, err_t err)
 
 	ts->prev_printf = console_printf;
 	console_printf = telnet_printf;
+	microrl_set_echo(0);
 
 	/* Send in a welcome message */
 	console_printf("Welcome to %s!\n", env_get("hostname"));

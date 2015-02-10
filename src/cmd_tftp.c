@@ -34,7 +34,7 @@ static struct update_server *u = NULL;
 #if 0
 static  __attribute__ ((section(".iram0.text"))) void isr_dummy(void *a)
 {
-	ets_uart_printf("%p\n", a);
+	console_printf("%p\n", a);
 }
 #endif
 
@@ -48,7 +48,7 @@ static  __attribute__ ((section(".iram0.text"))) void commit_handler(void* a)
 	uint32_t numsect = (u->numbytes >> (ffs(SPI_FLASH_SEC_SIZE) - 1));
 	numsect++;
 
-	ets_uart_printf("\nCommiting update, %ld sectors %ld bytes\n", numsect, u->numbytes);
+	console_printf("\nCommiting update, %ld sectors %ld bytes\n", numsect, u->numbytes);
 	
 	for (i=0; i < numsect; i++) { 
 		console_printf("#");
@@ -59,7 +59,7 @@ static  __attribute__ ((section(".iram0.text"))) void commit_handler(void* a)
 	}
 
 
-	ets_uart_printf("\nFirmware update completed (%d sectors), rebooting\n", i);
+	console_printf("\nFirmware update completed (%d sectors), rebooting\n", i);
 	ets_wdt_enable();
 	while (1);
 }
@@ -92,7 +92,7 @@ void recv_cb(struct tftp_server *ts, int num_block, char* buf, int len)
 		return recv_cb(ts, num_block, &buf[tocopy], len);
 	
 	if (islast) { 
-		console_printf("\n TFTP done, %d bytes transferred\n", u->numbytes);
+		console_printf("\n TFTP done, %d bytes transferred\n", (int)u->numbytes);
 		console_printf("Committing update in 2 seconds\n");
 		os_timer_disarm(&u->commit_timer);
 		os_timer_setfn(&u->commit_timer, (os_timer_func_t *) commit_handler, ts);

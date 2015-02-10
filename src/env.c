@@ -165,8 +165,8 @@ void env_init(uint32_t flashaddr, uint32_t envsize)
 	current_env = os_malloc(envsize);
 	current_env_flash_addr = flashaddr;
 	current_env_size=envsize - sizeof(struct environment);
-	console_printf("env: Environment @ %p size %p bytes (%p real) \n", 
-		       flashaddr, envsize, current_env_size);
+	console_printf("env: Environment @ %p size %d bytes (%d real) \n", 
+		       (void*)flashaddr, (int)envsize, (int)current_env_size);
 
 	spi_flash_read(flashaddr, (uint32*)current_env, envsize);
 	uint16_t crc = crc16((const unsigned char*)&current_env->occupied, envsize - sizeof(uint16_t));

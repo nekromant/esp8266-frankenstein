@@ -57,9 +57,9 @@ static  __attribute__ ((section(".iram0.text"))) int do_wipe(int argc, const cha
 	for (i=0; i < (sz / SPI_FLASH_SEC_SIZE); i++) { 
 		spi_flash_erase_sector( i );
 		if (0 ==(i % 16)) 
-			ets_uart_printf(".");
+			console_printf(".");
 	}
-	ets_uart_printf("\nSuicide complete (%d records)\n", i);
+	console_printf("\nSuicide complete (%d records), rebooting\n", i);
 	system_restart();
 	return 0;
 }
@@ -74,10 +74,10 @@ static  int do_wipeparams(int argc, const char* const* argv)
 	console_printf("\nWiping configuration area: ");
 
 	spi_flash_erase_sector(CONFIG_ADDR_BLOBSETTING1 / SPI_FLASH_SEC_SIZE);	
-	console_printf(" %p ", CONFIG_ADDR_BLOBSETTING1 / SPI_FLASH_SEC_SIZE);
+	console_printf(" %p ", (void*)(CONFIG_ADDR_BLOBSETTING1 / SPI_FLASH_SEC_SIZE));
 
 	spi_flash_erase_sector(CONFIG_ADDR_BLOBSETTING2 / SPI_FLASH_SEC_SIZE);	
-	console_printf(" %p ", CONFIG_ADDR_BLOBSETTING2 / SPI_FLASH_SEC_SIZE);
+	console_printf(" %p ", (void*)(CONFIG_ADDR_BLOBSETTING2 / SPI_FLASH_SEC_SIZE));
 
 	console_printf("\nDone, rebooting\n\n\n\n\n\n\n");
 
@@ -129,7 +129,7 @@ static int  do_scan(int argc, const char* const* argv)
 				altered++;
 
 		if (altered) {
-			console_printf("Sector %d (0x%x) has been tampered by blobs\n",
+			console_printf("Sector %ld (0x%lx) has been tampered by blobs\n",
 				       off / 4096, off);
 		}
 		off += 4096;

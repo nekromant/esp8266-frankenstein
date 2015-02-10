@@ -688,7 +688,7 @@ espconn_server_poll(void *arg, struct tcp_pcb *pcb)
         return ERR_OK;
     }
 
-    espconn_printf("espconn_server_poll %d %d\n", pspoll_cb ->recv_check, pcb->state);
+    espconn_printf("espconn_server_poll %d %d\n", pspoll_cb->pcommon.recv_check, pcb->state);
     pspoll_cb->pcommon.pcb = pcb;
     if (pcb->state == ESTABLISHED) {
 		pspoll_cb->pcommon.recv_check++;

@@ -3,7 +3,7 @@ objects-y+=microrl.o
 objects-y+=console.o
 objects-y+=hostname.o
 objects-y+=env.o
-#objects-y+=cb.o
+objects-y+=strbuf.o
 
 objects-y+=telnet.o
 
