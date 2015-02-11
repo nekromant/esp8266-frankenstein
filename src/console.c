@@ -15,6 +15,7 @@
 #include "strbuf.h"
 
 #include "telnet.h"
+#include "lwip/mem.h" // mem_realloc
 
 int (*console_printf)(const char *fmt, ...) = SERIAL_PRINTF;
 
@@ -141,7 +142,7 @@ int execute (int argc, const char * const * argv)
 	struct console_cmd *cmd; 
 	console_printf("\n");
 	FOR_EACH_CMD(cmd) {
-		if (strcmp(cmd->name, argv[0])==0) { 
+		if (strcasecmp(cmd->name, argv[0])==0) { 
 			if ((cmd->required_args != -1) && argc < cmd->required_args)
 				goto err_more_args; 
 			if ((cmd->maximum_args != -1) && (argc > cmd->maximum_args))
@@ -178,12 +179,12 @@ const char ** completion(int argc, const char* const* argv)
 
 		int ncompl = 0;
 		FOR_EACH_CMD(cmd)
-			if (strncmp(cmd->name, part, partlen) == 0)
+			if (strncasecmp(cmd->name, part, partlen) == 0)
 				ncompl++;
 
 		if (ncompl + 1 > complsize)
 		{
-			compl = (char**)realloc(compl, (ncompl + 1) * sizeof(const char*));
+			compl = (char**)mem_realloc(compl, (ncompl + 1) * sizeof(const char*));
 			if (!compl)
 				return noroom;
 			complsize = ncompl + 1;
@@ -192,7 +193,7 @@ const char ** completion(int argc, const char* const* argv)
 		strbuf_clear(&sb);
 		int i = 0;
 		FOR_EACH_CMD(cmd)
-			if (strncmp(cmd->name, part, partlen) == 0)
+			if (strncasecmp(cmd->name, part, partlen) == 0)
 			{
 				const char* src = cmd->name + (i == 0 && ncompl > 1? partlen: 0);
 				size_t srcsize = strlen(src) + 1;

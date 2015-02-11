@@ -139,7 +139,6 @@ void user_init()
 
 	console_init(32);
 
-
 	PIN_FUNC_SELECT(PERIPHS_IO_MUX_GPIO2_U, FUNC_GPIO2);
 	PIN_FUNC_SELECT(PERIPHS_IO_MUX_GPIO0_U, FUNC_GPIO0);
 	gpio_output_set(0, BIT2, BIT2, 0);

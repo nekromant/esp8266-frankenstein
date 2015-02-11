@@ -19,7 +19,7 @@
 #include "telnet.h"
 #include "env.h"
 
-
+#define USE_TCPBUF 1
 
 #define TELNET_IAC   255
 #define TELNET_WILL  251
@@ -50,48 +50,36 @@ struct telnet_server
 
 static struct telnet_server *ts;
 
-// double output buffer
-//static strbuf sb[2];
-
-
 void tcp_log_err (err_t err)
 {
-	LOGSERIAL(LOG_ERR, "\nTCP: Fatal error %d(%s)\n", (int)err, lwip_strerr(err));
+	LOGSERIAL(LOG_ERR, "TCP: Fatal error %d(%s)", (int)err, lwip_strerr(err));
 }
 
+int telnet_printf(const char *fmt, ...) __attribute__ ((format (printf, 1, 2)));
 
-#if 1
-#define TCP_WRITE smart_tcp_write
-err_t smart_tcp_write (struct tcp_pcb *pcb, const void *dataptr, u16_t len, u8_t apiflags)
+#if USE_TCPBUF
+
+#include "tcpbuf.h"
+
+tcpbuf telnetbuf = TCPBUF_INIT;
+
+#define TCP_WRITE(pcb,data,len,flags) tcpbuf_write(&telnetbuf,pcb,data,len,flags)
+
+int telnet_printf (const char *fmt, ...)
 {
-	u16_t sent = 0;
-	const char* data = dataptr;
-	err_t err = ERR_OK;
-	
-	while (sent < len)
-	{
-		u16_t sendmax = tcp_sndbuf(pcb);
-		if (sendmax)
-		{
-			u16_t sendnow = len - sent;
-			if (sendnow > sendmax)
-				sendnow = sendmax;
-			if ((err = tcp_write(pcb, data + sent, sendnow, apiflags)) != ERR_OK)
-			{
-				tcp_log_err(err);
-				return err;
-			}
-			sent += sendnow;
-
-			tcp_output(pcb); // flush
-		}
-	}
-	return err;
+	if (!ts)
+		return -1;
+		
+	va_list ap;
+	va_start(ap, fmt);
+	int ret = strbuf_vprintf(tcpbuf_wbuf(&telnetbuf), fmt, ap);
+	va_end(ap);
+	return ret;
 }
-#else
-#define TCP_WRITE tcp_write
-#endif
 
+#else // !USE_TCPBUF
+
+#define TCP_WRITE(pcb,data,len,flags) tcp_write(pcb,data,len,flags)
 
 int telnet_printf(const char *fmt, ...) 
 {
@@ -103,10 +91,12 @@ int telnet_printf(const char *fmt, ...)
 	va_start(ap, fmt);
 	ret = vsnprintf(p, sizeof p, fmt, ap);
 	va_end(ap);
-	TCP_WRITE(ts->client, p, ret, 0);
+	tcp_write(ts->client, p, ret, TCP_WRITE_FLAG_COPY);
 	ts->idle = 0;
 	return ret; 
 }
+
+#endif // !USE_TCPBUF
 
 static void telnet_close(struct tcp_pcb *pcb)
 {
@@ -209,17 +199,21 @@ static err_t server_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t e
 		}
 		pbuf_free(p);
 
+#if USE_TCPBUF
+		return tcpbuf_send(&telnetbuf, pcb);
+#else
+		return ERR_OK;
+#endif
 	}
 	else
 	{
 		if (p)
 			pbuf_free(p);
 		telnet_close(pcb);
+
+		return ERR_OK;
 	}
-
-	return ERR_OK;
 }
-
 
 static err_t server_poll(void *arg, struct tcp_pcb *pcb)
 {
@@ -238,7 +232,6 @@ static err_t server_poll(void *arg, struct tcp_pcb *pcb)
 static void server_err(void *arg, err_t err)
 {
 	LWIP_UNUSED_ARG(arg);
-//	LWIP_UNUSED_ARG(err);
 
 	tcp_log_err(err);
 }
@@ -255,7 +248,11 @@ static err_t tcp_data_sent(void *arg, struct tcp_pcb *pcb, u16_t len)
 		tcp_close(pcb);
 	}
 	
+#if USE_TCPBUF
+	return tcpbuf_send(&telnetbuf, pcb);
+#else
 	return ERR_OK;
+#endif	
 }
 
 static err_t tcp_conn_accepted(void * arg, struct tcp_pcb * pcb, err_t err)
@@ -282,7 +279,6 @@ static err_t tcp_conn_accepted(void * arg, struct tcp_pcb * pcb, err_t err)
 	ts->client = pcb;
 
 	console_printf("\ntelnet: Incoming connection, switching to telnet console...\n"); 
-
 	ts->prev_printf = console_printf;
 	console_printf = telnet_printf;
 	microrl_set_echo(0);
@@ -375,4 +371,5 @@ CONSOLE_CMD(telnet, 2, 2,
 	    HELPSTR_NEWLINE "telnet start - start it"
 	    HELPSTR_NEWLINE "telnet stop  - stop it"
 	    HELPSTR_NEWLINE "telnet quit  - drop current client");
+
 

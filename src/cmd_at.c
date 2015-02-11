@@ -5,7 +5,9 @@
 
 static int do_at (int argc, const char* const* argv)
 {
-	console_printf("OK %s\n", system_get_sdk_version());
+        unsigned char macaddr[6];
+        wifi_get_macaddr(SOFTAP_IF, macaddr);
+	console_printf("OK sdk=%s chipid=0x%x mac=" MACSTR "\n", system_get_sdk_version(), system_get_chip_id(), MAC2STR(macaddr));
 	return 0;
 }
 
