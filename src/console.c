@@ -50,6 +50,8 @@ void enable_passthrough(int v)
 
 void console_insert(char c)
 {
+#if 0
+WIP direct link serial<->wifi
 	static uint32 esc_time = 0;
 	static int esc_count = 0;
 	
@@ -78,8 +80,10 @@ void console_insert(char c)
 			esc_time = now;
 		}
 	}
-	else if (!console_locked || (c) == KEY_ETX)
-		microrl_insert_char (prl, c);
+	else
+#endif
+		if (!console_locked || (c) == KEY_ETX)
+			microrl_insert_char (prl, c);
 }
 
 void console_write(char *buf, int len)
