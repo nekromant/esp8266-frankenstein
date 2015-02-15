@@ -6,11 +6,11 @@ The features:
 
 * A nice and shiny commandline interface that reminds of u-boot. 
   No more sloppy AT commands. 
-* Full command line editing. 
+* Full command line editing and history. 
 * A very easy way of adding new commands to the shell 
+* More or less clean code
 * Highly configurable (sort of)
-(TODO: More boasting here) 
-
+* Supports firmware updates over tftp 
 
 You can start by grabbing a binary and burning it to your device. 
 Remember about backups, for all your data on the flash will be gone. 
@@ -79,7 +79,8 @@ The workflow is simple. You type commands, frankenstein does things. Simple?
 #Environment
 
 You can store come configuration parameters in 'environment'. 
-Environment is a key=value storage. You can list environment with printenv
+Environment is just a key=value storage. Certain variables affect behavior of different commands.  
+You can list environment with printenv
 
 ```
 === Current environment ===
@@ -94,7 +95,13 @@ ap-gw       192.168.1.1
 hostname    frankenstein
 bootdelay   5
 dhcps-enable  1
-=== 201/4092 bytes used ===
+telnet-port  23
+telnet-autostart  1
+telnet-drop  60
+tftp-server  192.168.1.215
+tftp-dir    /
+tftp-file   antares.rom
+=== 309/4092 bytes used ===
 ```
 
 You can set environment values with setenv.
@@ -112,7 +119,9 @@ All changes are made in ram. To save them to flash run
 saveenv and they will survive reboot. 
 
 Environment variables hold paramers for the firmware that are
-applied on boot. They are described in README.env. 
+applied on boot or affect certain commands.
+All variables are described in README.env. You can also store arbitary data 
+in environment variables. 
 
 
 #Wireless modes
@@ -211,7 +220,7 @@ disconnected!
 
 ```
 
-#A full list of scary commands is below. 
+#A full list of scary commands available is listed below. 
 
 ```
 help       - Show this message
@@ -260,6 +269,31 @@ ds18b20    - Read temperature from DS18B20 chip.
  
 ```
 
+# Over-the-air firmware updates. 
+
+Frankenstein supports OTA updates via tftp.
+TFTP update requirements: 
+
+* Firmware you're flashing is <=256KiB (SPI_FLASH_SIZE /2 )
+* Firmware is made up of _ONE_ file that will be burned at 0x0000
+
+To update use the following: 
+
+* Set up a tftp server on the host pc. e.g. tftpd-hpa.   
+* Set 'tftp-server' environment variable to the tftp server ip address. 
+* Set 'tftp-dir' and 'tftp-file' to point to your firmware file. 
+e.g. To get /tftpboot/antares.rom you'll need
+
+setenv tftp-dir /tftpboot/
+setenv tftp-file antares.rom
+
+* (optional) saveenv
+
+* tftp
+
+If everything goes well - you'll be running your new firmware in a few seconds.  
+tftp doesn't check what stuff you have in your image, so if 
+
 # Known bugs
 
 * iwscan just hangs and iwconnect never connects to an access point
@@ -270,5 +304,13 @@ bug, I'm working on a fix.
 
 * Firmware is unstable and randomly reboots.
 
-Just after flashing run wipeparams. Stored setting from older SDK tend to confuse 
+Just after flashing run wipeparams. Stored settings from older SDK tend to confuse 
 Espressif's blobs and make them go nuts
+
+* No way to connect to AP that has whitespaces in its name or password/No whitespace escaping 
+
+Known limitation of microrl. Is on the TODO list
+
+* gpio controls only gpio0 and gpio2
+
+Known limitation, since only these are broken out on my modules. It's somewhere on my TODO list.

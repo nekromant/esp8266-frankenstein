@@ -13,5 +13,5 @@ static int do_adc (int argc, const char* const* argv)
 
 CONSOLE_CMD(adc, 1, 1,
 	    do_adc, NULL, NULL, 
-	    "reads ADC"
+	    "Reads system ADC value"
 );
