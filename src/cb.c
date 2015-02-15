@@ -1,10 +1,12 @@
 /* Circular buffer example, keeps one slot open */
+
+NOT COMPILED
+
  
 #include <stdio.h>
 #include <stdlib.h>
 #include "cb.h"
 
-  
 int cb_is_full(struct cbuffer *cb) 
 {
 	return cb->count == cb->size; 

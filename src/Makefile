@@ -2,7 +2,9 @@ objects-y+=main.o stdio.o helpers.o
 objects-y+=microrl.o
 objects-y+=console.o
 objects-y+=hostname.o
-objects-y+=env.o cb.o
+objects-y+=env.o
+objects-y+=strbuf.o
+objects-y+=tcpbuf.o
 
 objects-y+=telnet.o
 
@@ -17,6 +19,9 @@ objects-$(CONFIG_CMD_LISTEN)+=cmd_listen.o
 objects-$(CONFIG_CMD_SEND)+=cmd_send.o
 objects-$(CONFIG_CMD_DS18B20)+=cmd_ds18b20.o
 objects-$(CONFIG_CMD_TFTP)+=cmd_tftp.o tftp.o
+objects-$(CONFIG_CMD_AT)+=cmd_at.o
+objects-$(CONFIG_CMD_ADC)+=cmd_adc.o
+objects-$(CONFIG_ENABLE_PASSTHROUGH)+=cmd_passthrough.o
 
 
 subdirs-y+=netapps/

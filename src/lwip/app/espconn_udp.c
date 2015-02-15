@@ -12,6 +12,7 @@
 #include "ets_sys.h"
 #include "os_type.h"
 //#include "os.h"
+#include "user_interface.h"
 
 #include "lwip/inet.h"
 #include "lwip/err.h"
@@ -19,13 +20,17 @@
 #include "lwip/mem.h"
 #include "lwip/tcp_impl.h"
 #include "lwip/udp.h"
+#include "lwip/igmp.h"
+#include "lwip/timers.h"
 
 #include "lwip/app/espconn_udp.h"
 
 extern espconn_msg *plink_active;
 
-static void ICACHE_FLASH_ATTR espconn_data_sentcb(struct espconn *pespconn)
+//static void ICACHE_FLASH_ATTR espconn_data_sentcb(struct espconn *pespconn)
+static void ICACHE_FLASH_ATTR espconn_data_sentcb(void* data)
 {
+    struct espconn *pespconn = data;
     if (pespconn == NULL) {
         return;
     }
@@ -111,6 +116,7 @@ espconn_udp_sent(void *arg, uint8 *psent, uint16 length)
     LWIP_DEBUGF(ESPCONN_UDP_DEBUG, ("espconn_udp_sent %d %x %d\n", __LINE__, upcb->remote_ip, upcb->remote_port));
     err = udp_send(upcb, p);
     LWIP_DEBUGF(ESPCONN_UDP_DEBUG, ("espconn_udp_sent %d %d\n", __LINE__, err));
+    (void)err;
 
     if (p->ref != 0) {
         LWIP_DEBUGF(ESPCONN_UDP_DEBUG, ("espconn_udp_sent %d %p\n", __LINE__, p));
@@ -182,7 +188,7 @@ espconn_udp_recv(void *arg, struct udp_pcb *upcb, struct pbuf *p,
 
             if (length != 0) {
                 if (precv->pespconn->recv_callback != NULL) {
-                    precv->pespconn->recv_callback(precv->pespconn, pdata, length);
+                    precv->pespconn->recv_callback(precv->pespconn, (char*)pdata, length);
                 }
             }
 

@@ -10,13 +10,16 @@
 #include "microrl.h"
 #include "console.h"
 #include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <generic/macros.h>
 #include <lwip/netif.h>
 #include <lwip/tcp.h>
 
+#include "telnet.h"
+#include "env.h"
 
-
-
+#define USE_TCPBUF 1
 
 #define TELNET_IAC   255
 #define TELNET_WILL  251
@@ -47,21 +50,53 @@ struct telnet_server
 
 static struct telnet_server *ts;
 
+void tcp_log_err (err_t err)
+{
+	LOGSERIAL(LOG_ERR, "TCP: Fatal error %d(%s)", (int)err, lwip_strerr(err));
+}
+
+int telnet_printf(const char *fmt, ...) __attribute__ ((format (printf, 1, 2)));
+
+#if USE_TCPBUF
+
+#include "tcpbuf.h"
+
+tcpbuf telnetbuf = TCPBUF_INIT;
+
+#define TCP_WRITE(pcb,data,len,flags) tcpbuf_write(&telnetbuf,pcb,data,len,flags)
+
+int telnet_printf (const char *fmt, ...)
+{
+	if (!ts)
+		return -1;
+		
+	va_list ap;
+	va_start(ap, fmt);
+	int ret = strbuf_vprintf(tcpbuf_wbuf(&telnetbuf), fmt, ap);
+	va_end(ap);
+	return ret;
+}
+
+#else // !USE_TCPBUF
+
+#define TCP_WRITE(pcb,data,len,flags) tcp_write(pcb,data,len,flags)
 
 int telnet_printf(const char *fmt, ...) 
 {
 	if (!ts)
-		return;
+		return -1;
 	int ret; 
 	va_list ap;
-	char p[256];
+	static char p[256];
 	va_start(ap, fmt);
-	ret = vsnprintf(p, 256, fmt, ap);
+	ret = vsnprintf(p, sizeof p, fmt, ap);
 	va_end(ap);
-	tcp_write(ts->client, p, ret, 0);
+	tcp_write(ts->client, p, ret, TCP_WRITE_FLAG_COPY);
 	ts->idle = 0;
 	return ret; 
 }
+
+#endif // !USE_TCPBUF
 
 static void telnet_close(struct tcp_pcb *pcb)
 {
@@ -75,6 +110,7 @@ static void telnet_close(struct tcp_pcb *pcb)
 		ts->client = NULL;
 		console_printf = ts->prev_printf;
 		console_printf("\ntelnet: console restored\n");
+		microrl_set_echo(1);
 	}
 }
 
@@ -85,7 +121,7 @@ void sendopt(u8_t option, u8_t value)
 	tmp[1] = option;
 	tmp[2] = value;
 	tmp[3] = 0;
-	tcp_write(ts->client, tmp, 4, 0);
+	TCP_WRITE(ts->client, tmp, 4, 0);
 }
 
 static err_t server_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err)
@@ -161,55 +197,62 @@ static err_t server_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t e
 				break;
 			}
 		}
-		if (p)
-			pbuf_free(p);
+		pbuf_free(p);
 
+#if USE_TCPBUF
+		return tcpbuf_send(&telnetbuf, pcb);
+#else
+		return ERR_OK;
+#endif
 	}
 	else
 	{
 		if (p)
 			pbuf_free(p);
 		telnet_close(pcb);
+
+		return ERR_OK;
 	}
-
 }
-
 
 static err_t server_poll(void *arg, struct tcp_pcb *pcb)
 {
    LWIP_UNUSED_ARG(arg);
    LWIP_UNUSED_ARG(pcb);
 
-   if (ts->max_idle == -1)
-	   return; 
-
-   ts->idle++;
-   if (ts->idle >= ts->max_idle) { 
+   if (ts->max_idle != -1 && ++ts->idle >= ts->max_idle) { 
 	   telnet_printf("\nYou have been idle for a while, goodbye\n");
 	   telnet_close(ts->client);
+	   return ERR_TIMEOUT;
    }
 
    return ERR_OK;
 }
 
-static err_t server_err(void *arg, err_t err)
+static void server_err(void *arg, err_t err)
 {
-
 	LWIP_UNUSED_ARG(arg);
-	LWIP_UNUSED_ARG(err);
 
-	console_printf("\nserver_err(): Fatal error, exiting...\n");
-
-	return ERR_OK;
+	tcp_log_err(err);
 }
 
 
-static err_t tcp_data_sent(void *arg, struct tcp_pcb *pcb, u16_t len) {
+static err_t tcp_data_sent(void *arg, struct tcp_pcb *pcb, u16_t len)
+{
 	if (pcb != ts->client) { 
-		tcp_sent(pcb, 0);
-		tcp_output(pcb);
+	
+		// close other than telnet tcp connection as soon as data have been sent
+		
+		tcp_sent(pcb, NULL);	// suppress callback
+		tcp_output(pcb);	// flush output
 		tcp_close(pcb);
 	}
+	
+#if USE_TCPBUF
+	return tcpbuf_send(&telnetbuf, pcb);
+#else
+	return ERR_OK;
+#endif	
 }
 
 static err_t tcp_conn_accepted(void * arg, struct tcp_pcb * pcb, err_t err)
@@ -224,22 +267,21 @@ static err_t tcp_conn_accepted(void * arg, struct tcp_pcb * pcb, err_t err)
 	tcp_poll(pcb, server_poll, 4); //every two seconds of inactivity of the TCP connection
 	tcp_sent(pcb, tcp_data_sent);
 	
-
-	char busy[] = "Sorry, but this telnet console is already in use by someone\n";
+	static const char busy[] = "Sorry, but this telnet console is already in use by someone\n";
 	if (ts->client) { /* Someone already connected */
-		tcp_write(pcb, busy, strlen(busy), 0);
+		TCP_WRITE(pcb, busy, strlen(busy), 0);
 		tcp_recv(pcb, NULL);
 		tcp_poll(pcb, NULL, 4);
 		tcp_err(pcb, NULL);		
-		return; /* accept it till the error message is sent */
+		return ERR_OK; /* accept it till the error message is sent */
 	}
 
 	ts->client = pcb;
 
 	console_printf("\ntelnet: Incoming connection, switching to telnet console...\n"); 
-
 	ts->prev_printf = console_printf;
 	console_printf = telnet_printf;
+	microrl_set_echo(0);
 
 	/* Send in a welcome message */
 	console_printf("Welcome to %s!\n", env_get("hostname"));
@@ -248,7 +290,7 @@ static err_t tcp_conn_accepted(void * arg, struct tcp_pcb * pcb, err_t err)
 	ts->idle = 0;
 	ts->max_idle = 60;
 
-	char *tmp = env_get("telnet-drop");
+	const char *tmp = env_get("telnet-drop");
 	if (tmp)
 		ts->max_idle = atoi(tmp);
 
@@ -270,18 +312,22 @@ void telnet_start(int port)
 	ts->server = tcp_new();
 	if (!ts->server) {
 		console_printf("telnet: Unable to allocate pcb\n");
+		os_free(ts);
+		ts = NULL;
 		return;
 	}
 	
 	tcp_bind(ts->server, IP_ADDR_ANY, 23);
 	ts->server = tcp_listen(ts->server);
-	if (!ts->server)
+	if (!ts->server) {
+		os_free(ts);
+		ts = NULL;
 		return;
+	}
 	tcp_accept(ts->server, tcp_conn_accepted);
 	ts->client = NULL;
 	ts->state  = STATE_NORMAL;	
 	console_printf("telnet: server accepting connections on port %d\n", port);
-
 }
 
 void telnet_stop()
@@ -297,10 +343,10 @@ void telnet_stop()
 }
 
 
-static int  do_telnet(int argc, const char*argv[])
+static int  do_telnet(int argc, const char* const* argv)
 {
 	int port = 23;
-	char *tmp = env_get("telnet-port");
+	const char *tmp = env_get("telnet-port");
 	if (tmp)
 		port = atoi(tmp);
 	
@@ -310,10 +356,12 @@ static int  do_telnet(int argc, const char*argv[])
 	if (strcmp(argv[1], "stop") == 0)
 		telnet_stop();
 
-	if (strcmp(argv[1], "quit") == 0) {
+	if (ts && strcmp(argv[1], "quit") == 0) {
 		console_printf("telnet: See you!\n");
 		telnet_close(ts->client);
 	}
+	
+	return 0;
 }
 
 
@@ -323,4 +371,5 @@ CONSOLE_CMD(telnet, 2, 2,
 	    HELPSTR_NEWLINE "telnet start - start it"
 	    HELPSTR_NEWLINE "telnet stop  - stop it"
 	    HELPSTR_NEWLINE "telnet quit  - drop current client");
+
 

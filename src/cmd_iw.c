@@ -9,6 +9,7 @@
 #include "driver/uart.h" 
 #include "microrl.h"
 #include "console.h"
+#include "helpers.h"
 
 static void  scan_done_cb(void *arg, STATUS status)
 {
@@ -30,26 +31,26 @@ static void  scan_done_cb(void *arg, STATUS status)
 }
 
 
-static int  do_scan(int argc, const char*argv[])
+static int  do_scan(int argc, const char* const* argv)
 {
 	if (wifi_get_opmode() == SOFTAP_MODE)
 	{
 		console_printf("Can't scan, while in softap mode\n");
-		return;
+		return -1;
 	}
 
 	wifi_station_scan(NULL, &scan_done_cb);
 	console_lock(1); /* Lock till we've finished scanning */
+	return 0;
 }
 
 
-static int  do_iwmode(int argc, const char*argv[])
+static int  do_iwmode(int argc, const char* const* argv)
 {
 	int mode, newmode; 
 	mode = wifi_get_opmode();
 	if (argc == 1) {
 		console_printf("Wireless mode: %s", id_to_wireless_mode(mode));
-		return 0;
 	} else {
 		newmode = id_from_wireless_mode(argv[1]);
 		if (-1 == newmode) { 
@@ -64,11 +65,13 @@ static int  do_iwmode(int argc, const char*argv[])
 				id_to_wireless_mode(mode), id_to_wireless_mode(newmode));
 		wifi_set_opmode(newmode);
 	}	
+	
+	return 0;
 }
 
 
 static int conntimes = 0;
-static volatile os_timer_t conn_checker;
+static /*volatile*/ os_timer_t conn_checker;
 static void conn_checker_handler(void *arg)
 {
 	int state = wifi_station_get_connect_status();
@@ -97,9 +100,9 @@ bailout:
 	return;
 }
 
-static int  do_iwconnect(int argc, const char*argv[])
+static int  do_iwconnect(int argc, const char* const* argv)
 {
-	int mode, newmode; 
+	int mode;
 	mode = wifi_get_opmode();
 	if ((mode != STATION_MODE) && (mode != STATIONAP_MODE)) {
 		console_printf("Cannot connect while in '%s' mode", id_to_wireless_mode(mode));
@@ -112,11 +115,11 @@ static int  do_iwconnect(int argc, const char*argv[])
 	} 
 
 	struct station_config sta_conf;
-	os_strncpy(&sta_conf.ssid, argv[1], 32);
+	os_strncpy((char*)sta_conf.ssid, argv[1], sizeof sta_conf.ssid);
 
 	sta_conf.password[0] = 0x0;
 	if (argc == 3)
-		os_strncpy(&sta_conf.password, argv[2], 32);
+		os_strncpy((char*)&sta_conf.password, argv[2], 32);
 
 	wifi_station_set_config(&sta_conf);		
 	wifi_station_disconnect();
@@ -131,12 +134,12 @@ static int  do_iwconnect(int argc, const char*argv[])
 	return 0;
 }
 
-static int  do_apconfig(int argc, const char*argv[])
+static int  do_apconfig(int argc, const char* const* argv)
 {
         struct softap_config config;
         wifi_softap_get_config(&config);
         char password[33];
-        char macaddr[6];
+        unsigned char macaddr[6];
 
         wifi_get_macaddr(SOFTAP_IF, macaddr);
 
@@ -147,29 +150,31 @@ static int  do_apconfig(int argc, const char*argv[])
 	}
 
 
-	strcpy(config.ssid, argv[1]);
+	strncpy((char*)config.ssid, argv[1], sizeof config.ssid);
 
 	int authmode = id_from_encryption_mode(argv[2]);
 	if (authmode == -1) { 
 		console_printf("Invalid encryption mode: %s. See help.\n", argv[2]);
-		return 1;
+		return -1;
 	}
 
 	if ((authmode != AUTH_OPEN) && (argc < 4)) {
 		console_printf("This authorisation mode needs a password\n");
-		return 1;
+		return -1;
 	}
 
 	os_memset(config.password, 0, sizeof(config.password));
 	
 	if ((authmode != AUTH_OPEN) && (argc == 4)) {  
 		os_sprintf(password, MACSTR "_%s", MAC2STR(macaddr), argv[3]);
-		os_memcpy(config.password, password, os_strlen(password));
+		os_strncpy((char*)config.password, password, sizeof config.password);
 	}
 	
         config.authmode = authmode;
 
         wifi_softap_set_config(&config);
+
+	return 0;
 }
 
 
@@ -188,7 +193,7 @@ CONSOLE_CMD(iwconnect, -1, 3,
 	    "Join a network/Display connection status. "
 	    HELPSTR_NEWLINE "iwconnect ssid password");
 
-CONSOLE_CMD(apconfig, 3, 4, 
+CONSOLE_CMD(apconfig, 1, 4, 
 	    do_apconfig, NULL, NULL, 
 	    "Setup Access Point. "
 	    HELPSTR_NEWLINE "apconfig name OPEN/WEP/WPA_PSK/WPA2_PSK/WPA_WPA2_PSK [password]");

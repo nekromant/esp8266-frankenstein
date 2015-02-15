@@ -46,7 +46,7 @@ static const char *sta_states[] = {
 };
 
 
-int  lookup_index(char* key, char **tbl, int count)
+int  lookup_index(const char* key, const char **tbl, int count)
 {
 	int i; 
 	for (i=0; i<count; i++) {
@@ -56,7 +56,7 @@ int  lookup_index(char* key, char **tbl, int count)
 	return -1;
 }
 
-const char  *lookup_string(int key, char **tbl, int count)
+const char  *lookup_string(int key, const char **tbl, int count)
 {
 	if (key >= count)
 		return NULL;

@@ -12,6 +12,7 @@
 #include "ets_sys.h"
 #include "osapi.h"
 #include "driver/uart.h"
+#include "user_interface.h"
 
 #define UART0   0
 #define UART1   1
@@ -71,6 +72,7 @@ uart_config(uint8 uart_no)
  * Parameters   : uint8 TxChar - character to tx
  * Returns      : OK
 *******************************************************************************/
+#if 0
 LOCAL STATUS 
 uart1_tx_one_char(uint8 TxChar)
 {
@@ -85,6 +87,7 @@ uart1_tx_one_char(uint8 TxChar)
 	WRITE_PERI_REG(UART_FIFO(UART1) , TxChar);
 	return OK;
 }
+#endif
 
 static  __attribute__ ((section(".iram0.text"))) STATUS uart0_tx_one_char(uint8 TxChar)
 {
@@ -101,6 +104,7 @@ static  __attribute__ ((section(".iram0.text"))) STATUS uart0_tx_one_char(uint8 
 }
 
 
+#if 0
 /******************************************************************************
  * FunctionName : uart1_write_char
  * Description  : Internal used function
@@ -119,6 +123,7 @@ uart1_write_char(char c)
         uart1_tx_one_char(c);
     }
 }
+#endif
 
  __attribute__ ((section(".iram0.text")))  void  uart0_write_char(char c)
 {
@@ -142,12 +147,12 @@ uart1_write_char(char c)
 *******************************************************************************/
 extern void handle_byte(char b);
 
-static  __attribute__ ((section(".iram0.text"))) uart0_rx_intr_handler(void *para)
+static  __attribute__ ((section(".iram0.text"))) void uart0_rx_intr_handler(void *para)
 {
     /* uart0 and uart1 intr combine togther, when interrupt occur, see reg 0x3ff20020, bit2, bit0 represents
      * uart1 and uart0 respectively
      */
-    RcvMsgBuff *pRxBuff = (RcvMsgBuff *)para;
+    //RcvMsgBuff *pRxBuff = (RcvMsgBuff *)para;
     char RcvChar;
 
     if (UART_RXFIFO_FULL_INT_ST != (READ_PERI_REG(UART_INT_ST(UART0)) & UART_RXFIFO_FULL_INT_ST)) {
@@ -165,6 +170,7 @@ static  __attribute__ ((section(".iram0.text"))) uart0_rx_intr_handler(void *par
 }
 
 
+#if 0
 /******************************************************************************
  * FunctionName : uart0_tx_buffer
  * Description  : use uart0 to transfer buffer
@@ -181,6 +187,7 @@ uart0_tx_buffer(uint8 *buf, uint16 len)
         uart_tx_one_char(buf[i]);
     }
 }
+#endif
 
 /******************************************************************************
  * FunctionName : uart_init

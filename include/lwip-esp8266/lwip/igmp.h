@@ -35,6 +35,8 @@
 #ifndef __LWIP_IGMP_H__
 #define __LWIP_IGMP_H__
 
+#include <stdlib.h> //rand
+
 #include "lwip/opt.h"
 #include "lwip/ip_addr.h"
 #include "lwip/netif.h"

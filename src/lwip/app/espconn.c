@@ -24,6 +24,8 @@
 #include "lwip/app/espconn_udp.h"
 #include "lwip/app/espconn.h"
 
+#include "user_interface.h"
+
 espconn_msg *plink_active = NULL;
 espconn_msg *pserver_list = NULL;
 remot_info premot[5];
@@ -163,7 +165,7 @@ bool ICACHE_FLASH_ATTR espconn_find_connection(struct espconn *pespconn, espconn
 sint8 ICACHE_FLASH_ATTR
 espconn_connect(struct espconn *espconn)
 {
-	struct netif *eagle_netif;
+	//struct netif *eagle_netif;
 	struct ip_info ipinfo;
 	sint8 value = ESPCONN_OK;
 	espconn_msg *plist = NULL;
@@ -568,6 +570,8 @@ sint8 ICACHE_FLASH_ATTR espconn_regist_time(struct espconn *espconn, uint32 inte
 		link_timer = interval;
 		os_printf("espconn_regist_time %d\n", link_timer);
 	}
+	
+	return ESPCONN_OK;
 }
 
 /******************************************************************************

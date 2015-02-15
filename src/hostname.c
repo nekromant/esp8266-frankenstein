@@ -16,8 +16,8 @@
 
 void set_dhcp_hostname(char *hname)
 {
-	unsigned char name[4] = "if1";
-	ets_uart_printf(name);
+	char name[4] = "if1";
+	console_printf(name);
 
 	struct netif *i = netif_find("ew0");
 //	i->hostname = hname;
@@ -29,6 +29,6 @@ void set_dhcp_hostname(char *hname)
 		for (name[1] = 'a' ; name[1] < 'z' ; name[1]++) {	
 			i = netif_find(name);
 			if (i)
-				ets_uart_printf("found: %s\n", name);
+				console_printf("found: %s\n", name);
 		}
 }

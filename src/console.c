@@ -1,3 +1,5 @@
+#include <stdlib.h>
+
 #include "ets_sys.h"
 #include "os_type.h"
 #include "mem.h"
@@ -9,22 +11,29 @@
 #include "driver/uart.h" 
 #include "microrl.h"
 #include "console.h"
+#include "env.h"
+#include "strbuf.h"
 
-extern int ets_uart_printf(const char *fmt, ...);
-int (*console_printf)(const char *fmt, ...) = ets_uart_printf;
+#include "telnet.h"
+#include "lwip/mem.h" // mem_realloc
 
+int (*console_printf)(const char *fmt, ...) = SERIAL_PRINTF;
 
 #define CONSOLE_PRIO 1
 
-static microrl_t rl;
-static microrl_t * prl = &rl;
-static int console_locked = 0;
+int log_level = LOG_LEVEL_DEFAULT;
 
+static microrl_t rl;
+#define prl (&rl)
+static int console_locked = 0;
+static int passthrough = ENABLE_PASSTHROUGH_AT_BOOT;
+
+#if 0
 struct console {
 	char name[16];
 	void (*write)(char* buf, int len);	
 };
-
+#endif
 
 void console_lock(int l)
 {
@@ -33,17 +42,54 @@ void console_lock(int l)
 		microrl_print_prompt(prl);
 }
 
+void enable_passthrough(int v)
+{
+	passthrough = v;
+	console_lock(v);
+}
+
 void console_insert(char c)
 {
-	if (!console_locked || (c) == KEY_ETX)
-		microrl_insert_char (prl, c);
+#if 0
+WIP direct link serial<->wifi
+	static uint32 esc_time = 0;
+	static int esc_count = 0;
+	
+	if (passthrough)
+	{
+		//console_printf("%c", c);
+		ets_uart_printf("@%c,%d", c,c);
+		
+		if (c != KEY_ESC)
+			esc_count = 0;
+		else
+		{
+			uint32 now = system_get_time();
+			if (++esc_count > 1)
+			{
+				if (now - esc_time < ESC_SPACE)
+					esc_count = 0;
+				else if (esc_count == ESC_COUNT)
+				{
+					// disable passthrough
+					enable_passthrough(0);
+					console_printf("console on serial line\n");
+					esc_count = 0;
+				}
+			}
+			esc_time = now;
+		}
+	}
+	else
+#endif
+		if (!console_locked || (c) == KEY_ETX)
+			microrl_insert_char (prl, c);
 }
 
 void console_write(char *buf, int len)
 {
 	while (len--)
 		console_insert(*buf++);
-	
 }
 
 static void  task_console(os_event_t *evt)
@@ -51,21 +97,13 @@ static void  task_console(os_event_t *evt)
 	console_insert(evt->par);
 }
 
-
-void console_exec(char *str) {
-	while (*str)
-		microrl_insert_char (prl, (char) *str++);
-}
-
-static void  rl_print(char *str)
+static void  rl_print(const char *str)
 {
 	if (!console_locked)
 		console_printf(str);
 }
 
-
-
-static int do_help(int argc, const char*argv[]);
+static int do_help(int argc, const char* const* argv);
 
 static struct console_cmd  cmd_first  __attribute__((section(".console_firstcmd"))) = {
 	.name = "help",
@@ -81,14 +119,14 @@ static struct console_cmd  cmd_last  __attribute__((section(".console_lastcmd"))
 
 #define FOR_EACH_CMD(iterator) for (iterator=&cmd_first; iterator<&cmd_last; iterator++) 
 
-
-static int do_help(int argc, const char*argv[])
+static int do_help(int argc, const char* const* argv)
 {
 	struct console_cmd *cmd;
 	console_printf("\n");
 	FOR_EACH_CMD(cmd) {
 		console_printf("%-10s - %s\n", cmd->name, cmd->help);
 	}
+	return 0;
 }
 
 static void sigint(void)
@@ -108,7 +146,7 @@ int execute (int argc, const char * const * argv)
 	struct console_cmd *cmd; 
 	console_printf("\n");
 	FOR_EACH_CMD(cmd) {
-		if (strcmp(cmd->name, argv[0])==0) { 
+		if (strcasecmp(cmd->name, argv[0])==0) { 
 			if ((cmd->required_args != -1) && argc < cmd->required_args)
 				goto err_more_args; 
 			if ((cmd->maximum_args != -1) && (argc > cmd->maximum_args))
@@ -129,49 +167,59 @@ err_too_many_args:
 	return 1;
 }
 
-/*
-#define COMPLETION_COUNT 8
-#define COMPLETION_BUF   128
-
-static char *compl_array[COMPLETION_COUNT+1];
-static char compl_buf[COMPLETION_BUF];
-static int compl_ptr; 
-static int compl_buf_ptr;
- 
-int compl_push(char* str)
+const char ** completion(int argc, const char* const* argv)
 {
-	if (compl_ptr >= COMPLETION_COUNT)
-		return -1;
+	static strbuf sb = STRBUF_INIT;
+	static char** compl = NULL;
+	static size_t complsize = 0;
+	static const char* noroom [] = { "completion:", "not", "enough", "memory", NULL };
+	static const char* nocompl [] = { NULL };
 	
-	char* s = &compl_buf[compl_buf_ptr];
-	int sz = strlen(str);
-	if (COMPLETION_BUF)
+	if (argc == 1)
 	{
+		struct console_cmd *cmd;
+		const char* part = argv[0];
+		size_t partlen = strlen(part);
+
+		int ncompl = 0;
+		FOR_EACH_CMD(cmd)
+			if (strncasecmp(cmd->name, part, partlen) == 0)
+				ncompl++;
+
+		if (ncompl + 1 > complsize)
+		{
+			compl = (char**)mem_realloc(compl, (ncompl + 1) * sizeof(const char*));
+			if (!compl)
+				return noroom;
+			complsize = ncompl + 1;
+		}
+
+		strbuf_clear(&sb);
+		int i = 0;
+		FOR_EACH_CMD(cmd)
+			if (strncasecmp(cmd->name, part, partlen) == 0)
+			{
+				const char* src = cmd->name + (i == 0 && ncompl > 1? partlen: 0);
+				size_t srcsize = strlen(src) + 1;
+				strbuf_memcpy(&sb, src, srcsize);
+				compl[i++] = strbuf_endptr(&sb) - srcsize;
+			}
+		compl[i] = NULL;
 		
+		return (const char**)compl;
 	}
+	
+	return nocompl;
 }
-char ** completion(int argc, const char* const* argv)
-{
-	compl_ptr = 0;
-	compl_buf_ptr = 0;
-
-	if (argc == 1) {
-		
-	}
-	// TODO: actual command completion
-}
-*/
-
-
-#include <stdio.h>
 
 void console_init(int qlen) {
 	/* Microrl init */
 	microrl_init (prl, &rl_print);
 	microrl_set_execute_callback (prl, execute);
 	microrl_set_sigint_callback(prl, sigint);
+	microrl_set_complete_callback(prl, completion);
 
-	char *p = env_get("hostname");
+	const char *p = env_get("hostname");
 	if (p)
 		microrl_set_prompt(p);
 

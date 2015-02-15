@@ -8,10 +8,14 @@ BUGS and TODO:
 #include <string.h>
 #include <ctype.h>
 #include <stdlib.h>
+#include <osapi.h>
+
 #include "microrl.h"
 #ifdef _USE_LIBC_STDIO
 #include <stdio.h>
 #endif
+
+#include "console.h"
 
 //#define DBG(...) fprintf(stderr, "\033[33m");fprintf(stderr,__VA_ARGS__);fprintf(stderr,"\033[0m");
 
@@ -19,8 +23,9 @@ BUGS and TODO:
 
 static char current_prompt[CONFIG_PROMPT_BUF] = "\nnone > ";
 static int current_prompt_len = 7;
+static int echo = 1;
 
-void microrl_set_prompt(char* prompt)
+void microrl_set_prompt(const char* prompt)
 {
 	if (strlen(prompt) + 4 > CONFIG_PROMPT_BUF) {
 		console_printf("error: prompt too long - inrease CONFIG_PROMPT_BUF\n");
@@ -37,28 +42,28 @@ void microrl_set_prompt(char* prompt)
 // print buffer content on screen
 static void print_hist (ring_history_t * pThis)
 {
-	printf ("\n");
+	console_printf ("\n");
 	for (int i = 0; i < _RING_HISTORY_LEN; i++) {
 		if (i == pThis->begin)
-			printf ("b");
+			console_printf ("b");
 		else 
-			printf (" ");
+			console_printf (" ");
 	}
-	printf ("\n");
+	console_printf ("\n");
 	for (int i = 0; i < _RING_HISTORY_LEN; i++) {
 		if (isalpha(pThis->ring_buf[i]))
-			printf ("%c", pThis->ring_buf[i]);
+			console_printf ("%c", pThis->ring_buf[i]);
 		else 
-			printf ("%d", pThis->ring_buf[i]);
+			console_printf ("%d", pThis->ring_buf[i]);
 	}
-	printf ("\n");
+	console_printf ("\n");
 	for (int i = 0; i < _RING_HISTORY_LEN; i++) {
 		if (i == pThis->end)
-			printf ("e");
+			console_printf ("e");
 		else 
-			printf (" ");
+			console_printf (" ");
 	}
-	printf ("\n");
+	console_printf ("\n");
 }
 #endif
 
@@ -359,7 +364,7 @@ void microrl_init (microrl_t * pThis, void (*print) (const char *))
 }
 
 //*****************************************************************************
-void microrl_set_complete_callback (microrl_t * pThis, char ** (*get_completion)(int, const char* const*))
+void microrl_set_complete_callback (microrl_t * pThis, const char ** (*get_completion)(int, const char* const*))
 {
 	pThis->get_completion = get_completion;
 }
@@ -444,7 +449,7 @@ static int escape_process (microrl_t * pThis, char ch)
 
 //*****************************************************************************
 // insert len char of text at cursor position
-static int microrl_insert_text (microrl_t * pThis, char * text, int len)
+static int microrl_insert_text (microrl_t * pThis, const char * text, int len)
 {
 	int i;
 	if (pThis->cmdlen + len < _COMMAND_LINE_LEN) {
@@ -484,7 +489,7 @@ static void microrl_backspace (microrl_t * pThis)
 #ifdef _USE_COMPLETE
 
 //*****************************************************************************
-static int common_len (char ** arr)
+static int common_len (const char ** arr)
 {
 	int len = 0;
 	int i = 1;
@@ -505,7 +510,7 @@ static int common_len (char ** arr)
 static void microrl_get_complite (microrl_t * pThis) 
 {
 	char const * tkn_arr[_COMMAND_TOKEN_NMB];
-	char ** compl_token; 
+	const char ** compl_token; 
 	
 	if (pThis->get_completion == NULL) // callback was not set
 		return;
@@ -549,7 +554,8 @@ void new_line_handler(microrl_t * pThis){
 	char const * tkn_arr [_COMMAND_TOKEN_NMB];
 	int status;
 
-	terminal_newline (pThis);
+	if (echo)
+		terminal_newline (pThis);
 #ifdef _USE_HISTORY
 	if (pThis->cmdlen > 0)
 		hist_save_line (&pThis->ring_hist, pThis->cmdline, pThis->cmdlen);
@@ -688,7 +694,7 @@ void microrl_insert_char (microrl_t * pThis, int ch)
 			default:
 			if (((ch == ' ') && (pThis->cmdlen == 0)) || IS_CONTROL_CHAR(ch))
 				break;
-			if (microrl_insert_text (pThis, (char*)&ch, 1))
+			if (microrl_insert_text (pThis, (char*)&ch, 1) && echo)
 				terminal_print_line (pThis, pThis->cursor-1, pThis->cursor);
 			
 			break;
@@ -696,4 +702,9 @@ void microrl_insert_char (microrl_t * pThis, int ch)
 #ifdef _USE_ESC_SEQ
 	}
 #endif
+}
+
+void microrl_set_echo (int e)
+{
+	echo = e;
 }

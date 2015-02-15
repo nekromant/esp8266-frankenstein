@@ -1,10 +1,15 @@
 #ifndef _MICRORL_H_
 #define _MICRORL_H_
 
-#include "config.h"
+#include "microrl-config.h"
 
+#ifndef true
 #define true  1
+#endif
+
+#ifndef false
 #define false 0
+#endif
 
  /* define the Key codes */
 #define KEY_NUL 0 /**< ^@ Null character */
@@ -80,7 +85,7 @@ typedef struct {
 	int cmdlen;                        // last position in command line
 	int cursor;                        // input cursor
 	int (*execute) (int argc, const char * const * argv );            // ptr to 'execute' callback
-	char ** (*get_completion) (int argc, const char * const * argv ); // ptr to 'completion' callback
+	const char ** (*get_completion) (int argc, const char * const * argv ); // ptr to 'completion' callback
 	void (*print) (const char *);                                     // ptr to 'print' callback
 #ifdef _USE_CTLR_C
 	void (*sigint) (void);
@@ -100,7 +105,7 @@ void microrl_set_echo (int);
 //   must return NULL-terminated string, contain complite variant splitted by 'Whitespace'
 //   If complite token found, it's must contain only one token to be complitted
 //   Empty string if complite not found, and multiple string if there are some token
-void microrl_set_complete_callback (microrl_t * pThis, char ** (*get_completion)(int, const char* const*));
+void microrl_set_complete_callback (microrl_t * pThis, const char ** (*get_completion)(int, const char* const*));
 
 // pointer to callback func, that called when user press 'Enter'
 // execute func param: argc - argument count, argv - pointer array to token string
@@ -113,5 +118,9 @@ void microrl_set_sigint_callback (microrl_t * pThis, void (*sigintf)(void));
 
 // insert char to cmdline (for example call in usart RX interrupt)
 void microrl_insert_char (microrl_t * pThis, int ch);
+
+void microrl_print_prompt (microrl_t * pThis);
+void microrl_set_prompt(const char* prompt);
+
 
 #endif

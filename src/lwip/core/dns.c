@@ -956,7 +956,7 @@ dns_gethostbyname(const char *hostname, ip_addr_t *addr, dns_found_callback foun
   ipaddr = ipaddr_addr(hostname);
   if (ipaddr == IPADDR_NONE) {
     /* already have this address cached? */
-//    ipaddr = dns_lookup(hostname);
+    ipaddr = dns_lookup(hostname);
   }
   if (ipaddr != IPADDR_NONE) {
     ip4_addr_set_u32(addr, ipaddr);

@@ -94,11 +94,11 @@ static void ICACHE_FLASH_ATTR
 espconn_tcp_disconnect_successful(void *arg)
 {
 	espconn_msg *pdiscon_cb = arg;
-	sint8 dis_err = 0;
+	//sint8 dis_err = 0;
 	if (pdiscon_cb != NULL) {
 		struct espconn *espconn = pdiscon_cb->preverse;
 
-		dis_err = pdiscon_cb->pcommon.err;
+		//dis_err = pdiscon_cb->pcommon.err;
 		if (pdiscon_cb->pespconn != NULL){
 			struct tcp_pcb *pcb = NULL;
 			if (espconn != NULL){
@@ -347,6 +347,7 @@ espconn_client_sent(void *arg, struct tcp_pcb *pcb, u16_t len)
     return ERR_OK;
 }
 
+#if 0
 /******************************************************************************
  * FunctionName : espconn_client_poll
  * Description  : The poll function is called every 2nd second.
@@ -378,6 +379,7 @@ espconn_client_poll(void *arg, struct tcp_pcb *pcb)
 
     return ERR_OK;
 }
+#endif
 
 /******************************************************************************
  * FunctionName : espconn_client_err
@@ -434,6 +436,10 @@ espconn_client_err(void *arg, err_t err)
 						break;
 					case CLOSED:
 						perr_cb->pcommon.err = ESPCONN_CONN;
+						break;
+					
+					default:
+						perr_cb->pcommon.err = ESPCONN_ARG;
 						break;
 				}
 			} else {
@@ -612,7 +618,7 @@ espconn_server_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err)
         	precv_cb->pespconn ->state = ESPCONN_READ;
         	precv_cb->pcommon.pcb = pcb;
             if (precv_cb->pespconn->recv_callback != NULL) {
-            	precv_cb->pespconn->recv_callback(precv_cb->pespconn, data_ptr, data_cntr);
+            	precv_cb->pespconn->recv_callback(precv_cb->pespconn, (char*)data_ptr, data_cntr);
             }
             precv_cb->pespconn ->state = ESPCONN_CONNECT;
         }
@@ -682,7 +688,7 @@ espconn_server_poll(void *arg, struct tcp_pcb *pcb)
         return ERR_OK;
     }
 
-    espconn_printf("espconn_server_poll %d %d\n", pspoll_cb ->recv_check, pcb->state);
+    espconn_printf("espconn_server_poll %d %d\n", pspoll_cb->pcommon.recv_check, pcb->state);
     pspoll_cb->pcommon.pcb = pcb;
     if (pcb->state == ESTABLISHED) {
 		pspoll_cb->pcommon.recv_check++;
@@ -895,7 +901,7 @@ espconn_tcp_server(struct espconn *espconn)
 *******************************************************************************/
 sint8 ICACHE_FLASH_ATTR espconn_tcp_delete(struct espconn *pdeletecon)
 {
-	err_t err;
+	err_t err = ERR_OK;
 	remot_info *pinfo = NULL;
 	espconn_msg *pdelete_msg = NULL;
 	struct tcp_pcb *pcb = NULL;

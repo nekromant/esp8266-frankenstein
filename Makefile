@@ -1,5 +1,7 @@
 SRCDIR=antares
-GITURL=https://nekromant@github.com/nekromant/antares.git
+#GITURL=https://nekromant@github.com/nekromant/antares.git
+#GITURL=git@github.com:d-a-v/antares.git
+GITURL=https://github.com/d-a-v/antares.git
 BRANCH=experimental
 OBJDIR=.
 TMPDIR=tmp
