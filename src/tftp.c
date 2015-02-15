@@ -57,6 +57,7 @@ void tftp_request(struct tftp_server *ts, const char* host, const char* dir, con
         length += sprintf((char*)&tftp_buffer[length], "%s", "octet");
         tftp_buffer[length] = 0; 
 	length++;
+	ts->addr.addr = ipaddr_addr(host);
 	tftp_send_message(ts->out, &ts->addr, ts->port, tftp_buffer, length);
 	ts->numblock = 1;
 }
@@ -117,8 +118,7 @@ err_t tftp_start(struct tftp_server *ts, struct ip_addr *addr, int port)
 	ts->out = udp_new();
 	if (!ts->out)
 		return ERR_MEM;
-	
-	ts->addr.addr = ipaddr_addr("192.168.1.215");
+
 	ts->port = port;
 
 	err = udp_bind(ts->out, addr, port); 
