@@ -214,14 +214,27 @@ static int split (microrl_t * pThis, int limit, char const ** tkn_arr)
 			ind++;
 		}
 		if (!(ind < limit)) return i;
+		
+		// check quote
+		char quote = 0;
+		if (pThis->cmdline [ind] == '\'' || pThis->cmdline [ind] == '"')
+			quote = pThis->cmdline [ind++];
+		
 		tkn_arr[i++] = pThis->cmdline + ind;
 		if (i >= _COMMAND_TOKEN_NMB) {
 			return -1;
 		}
 		// go to the first NOT whitespace (not zerro for us)
-		while ((pThis->cmdline [ind] != '\0') && (ind < limit)) {
+		while ((pThis->cmdline [ind] != quote) && (ind < limit)) {
+			if (quote && pThis->cmdline [ind] == '\0')
+				// turn \0 back to space if currently quoted
+				pThis->cmdline [ind] = ' ';
 			ind++;
 		}
+		if (quote)
+			// clear quote from cmdline
+			pThis->cmdline [ind] = 0;
+		
 		if (!(ind < limit)) return i;
 	}
 	return i;
