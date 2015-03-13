@@ -8,6 +8,9 @@ objects-y+=tcpbuf.o
 
 objects-y+=telnet.o
 
+
+objects-y+=pin_map.o
+objects-y+=i2c_master.o i2c_bmp180.o i2c_ina219.o i2c_sht21.o i2c_bh1750.o i2c_pcf8591.o i2c_hmc5883l.o i2c_tcs3414cs.o
 objects-y+=cmd_common.o cmd_env.o uart.o
 
 objects-$(CONFIG_CMD_IW)+=cmd_iw.o
@@ -21,6 +24,7 @@ objects-$(CONFIG_CMD_DS18B20)+=cmd_ds18b20.o
 objects-$(CONFIG_CMD_TFTP)+=cmd_tftp.o tftp.o
 objects-$(CONFIG_CMD_AT)+=cmd_at.o
 objects-$(CONFIG_CMD_ADC)+=cmd_adc.o
+objects-$(CONFIG_CMD_IW)+=cmd_i2c.o
 objects-$(CONFIG_ENABLE_PASSTHROUGH)+=cmd_passthrough.o
 
 
