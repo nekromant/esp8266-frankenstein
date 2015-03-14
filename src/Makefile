@@ -6,6 +6,7 @@ objects-y+=env.o
 objects-y+=strbuf.o
 objects-y+=tcpbuf.o
 objects-y+=cb.o
+objects-y+=cbtools.o
 
 objects-y+=telnet.o
 
