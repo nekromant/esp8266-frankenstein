@@ -3,13 +3,26 @@
 
 #include "cb.h"
 
-#if 0
+#if 1
 #define do_flush(cb) cb_flush(cb)	// flushing when empty
 #else
 #define do_flush(cb) do { } while (0)	// doing nothing
 #endif
 
-/////////////////////////////////////////////////////////////////////////////
+size_t cb_write_available (cb_t* cb)
+{
+	if (cb->read < cb->write || (cb->read == cb->write && cb->empty))
+		return (cb->size - cb->write) + cb->read;
+	else
+		return cb->read - cb->write;
+}
+
+static size_t cb_write_available_chunk (cb_t* cb)
+{
+	return (cb->read < cb->write || (cb->read == cb->write && cb->empty))?
+		cb->size - cb->write:
+		cb->read - cb->write;
+}
 
 cbsize_t cb_write (cb_t* cb, const char* data, cbsize_t desired_len)
 {
@@ -17,9 +30,7 @@ cbsize_t cb_write (cb_t* cb, const char* data, cbsize_t desired_len)
 	cbsize_t ret = 0;
 	while (want && !cb_is_full(cb))
 	{
-		cbsize_t writable_len = cb->read <= cb->write?
-				cb->size - cb->write:
-				cb->read - cb->write;
+		cbsize_t writable_len = cb_write_available_chunk(cb);
 		cbsize_t chunk = (want > writable_len)? writable_len: want;
 		memcpy(cb->buf + cb->write, data + ret, chunk);
 		ret += chunk;
@@ -30,6 +41,22 @@ cbsize_t cb_write (cb_t* cb, const char* data, cbsize_t desired_len)
 	return ret;
 }
 
+cbsize_t cb_write_ptr (cb_t* cb, char** buf, cbsize_t desired_len)
+{
+	*buf = cb->buf + cb->write;
+	cbsize_t writable_len = cb_write_available_chunk(cb);
+	if (desired_len > writable_len)
+		desired_len = writable_len;
+	if (desired_len)
+	{
+		cb->write = (cb->write + desired_len) & (cb->size - 1);
+		cb->empty = cb->allread = 0;
+	}
+	return desired_len;
+}
+
+/////////////////////////////////////////////////////////////////////////////
+
 cbsize_t cb_read (cb_t* cb, char* data, cbsize_t desired_len)
 {
 	// cb->read must always be equal when using this function
@@ -39,7 +66,7 @@ cbsize_t cb_read (cb_t* cb, char* data, cbsize_t desired_len)
 	cbsize_t ret = 0;
 	while (want && !cb_is_empty(cb))
 	{
-		cbsize_t readable_len = cb->write <= cb->read?
+		cbsize_t readable_len = cb->read >= cb->write?
 				cb->size - cb->read:
 				cb->write - cb->read;
 		cbsize_t chunk = (want > readable_len)? readable_len: want;
@@ -54,22 +81,6 @@ cbsize_t cb_read (cb_t* cb, char* data, cbsize_t desired_len)
 }
 
 /////////////////////////////////////////////////////////////////////////////
-
-cbsize_t cb_write_ptr (cb_t* cb, char** buf, cbsize_t desired_len)
-{
-	*buf = cb->buf + cb->write;
-	cbsize_t writable_len = (cb->read < cb->write || (cb->read == cb->write && cb->empty))?
-			cb->size - cb->write:
-			cb->read - cb->write;
-	if (desired_len > writable_len)
-		desired_len = writable_len;
-	if (desired_len)
-	{
-		cb->write = (cb->write + desired_len) & (cb->size - 1);
-		cb->empty = cb->allread = 0;
-	}
-	return desired_len;
-}
 
 cbsize_t cb_read_ptr (cb_t* cb, char** buf, cbsize_t desired_len)
 {

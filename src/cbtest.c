@@ -36,11 +36,13 @@ int main (int argc, char* argv[])
 	unsigned long long size;
 	struct timeval start, now, last;
 	
-	if (argc != 2 || (argv[1][0] != 'C' && argv[1][0] != 'N'))
+	if (argc != 2 || (argv[1][0] != 'C' && argv[1][0] != 'N' && argv[1][0] != 'D' && argv[1][0] != 'M'))
 	{
 		fprintf(stderr, "syntax: %s C|N\n", argv[0]);
-		fprintf(stderr, "	C: perf / copy functions\n");
-		fprintf(stderr, "	N: perf / no copy functions\n");
+		fprintf(stderr, "	C: perf / R/W copy functions\n");
+		fprintf(stderr, "	N: perf / R/W no copy functions\n");
+		fprintf(stderr, "	D: perf / R no copy / W copy functions\n");
+		fprintf(stderr, "	M: perf / R copy / W no copy functions\n");
 		exit(1);
 	}
 	
@@ -55,7 +57,7 @@ int main (int argc, char* argv[])
 	
 	while (1)
 	{
-		if (argv[1][0] == 'C')
+		if (argv[1][0] == 'C' || argv[1][0] == 'D')
 		{
 			nw = R(NW);
 			for (i = 0; !cb_is_full(&cb) && i < nw; i++)
@@ -67,7 +69,23 @@ int main (int argc, char* argv[])
 					tot += t[j]; // sum
 				size += ret;
 			}
-			
+		}
+		else 
+		{
+			nw = R(NW);
+			for (i = 0; !cb_is_full(&cb) && i < nw; i++)
+			{
+				char* ptr;
+				sz = (rand() % (SZ - 1)) + 1;
+				ret = cb_write_ptr(&cb, &ptr, sz); // get write ptr
+				for (j = 0; j < ret; j++)
+					tot += (ptr[j] = t[j]); // write data
+				size += ret;
+			}
+		}
+
+		if (argv[1][0] == 'C' || argv[1][0] == 'M')
+		{
 			nr = R(NR);
 			for (i = 0; !cb_all_is_read(&cb) && i < nr; i++)
 			{
@@ -80,17 +98,6 @@ int main (int argc, char* argv[])
 		}
 		else
 		{
-			nw = R(NW);
-			for (i = 0; !cb_is_full(&cb) && i < nw; i++)
-			{
-				char* ptr;
-				sz = (rand() % (SZ - 1)) + 1;
-				ret = cb_write_ptr(&cb, &ptr, sz); // get write ptr
-				for (j = 0; j < ret; j++)
-					tot += (ptr[j] = t[j]); // write data
-				size += ret;
-			}
-			
 			nr = R(NR);
 			ack = 0;
 			for (i = 0; !cb_all_is_read(&cb) && i < nr; i++)

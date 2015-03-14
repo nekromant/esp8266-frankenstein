@@ -32,18 +32,22 @@ typedef struct cb_s
 // for *_ptr(): returned len is desired_len truncated to buffer's border
 // so use cb_all_is_read() to check whether more data is readable
 // and cb_is_full() to check whether more data is writable
-// DO NOT MIX cb_read+cb_write() and cb_read_ptr+cb_write_ptr+cb_ack()
+// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+// DO NOT MIX cb_read() and cb_read_ptr()+cb_ack() (cb_write*() can be mixed)
+// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 ///////////////////////////////////////////////////////////
 // macro always available
 
+// cb_is_empty() can be false while cb_all_is_read is true when using cb_read_ptr()
+// cb_is_empty()=cb_all_is_read() when using cb_read()
 #define cb_is_empty(cb) 		((cb)->empty)
 #define cb_all_is_read(cb)		((cb)->allread)
 #define cb_is_full(cb)  		(((cb)->read == (cb)->write) && !(cb)->empty)
 #define cb_flush(cb)			do { (cb)->read = (cb)->unread = (cb)->write = 0; (cb)->allread = (cb)->empty = 1; } while (0)
 
-// cb_is_empty can be false while cb_all_is_read is true when using *_ptr() functions
-// cb_is_empty=cb_all_is_read when using copy functions
+// return available space for write
+size_t cb_write_available (cb_t* cb);
 
 ///////////////////////////////////////////////////////////
 // functions with copy
@@ -67,7 +71,7 @@ cbsize_t	cb_write_ptr	(cb_t* cb, char** buf, cbsize_t desired_len);
 // return available len <= desired_len
 cbsize_t	cb_read_ptr	(cb_t* cb, char** buf, cbsize_t desired_len);
 
-// acknowledge read data (that can be discarded)
+// acknowledge read data (that can be discarded = overwritten)
 void		cb_ack		(cb_t* cb, cbsize_t len);
 
 #endif

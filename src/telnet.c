@@ -19,7 +19,9 @@
 #include "telnet.h"
 #include "env.h"
 
-#define USE_TCPBUF 1
+#include "cbtools.h"
+
+#define USE_CB 1
 
 #define TELNET_IAC   255
 #define TELNET_WILL  251
@@ -57,13 +59,15 @@ void tcp_log_err (err_t err)
 
 int telnet_printf(const char *fmt, ...) __attribute__ ((format (printf, 1, 2)));
 
-#if USE_TCPBUF
+#if USE_CB
 
-#include "tcpbuf.h"
+#include "cb.h"
 
-tcpbuf telnetbuf = TCPBUF_INIT;
+#define TELNET_BUFFER_SIZE_LOG2	14	// 14: 16KB
+static char telnetbuf [1<<(TELNET_BUFFER_SIZE_LOG2)];
+cb_t telnetcb = CB_INIT(telnetbuf, TELNET_BUFFER_SIZE_LOG2);
 
-#define TCP_WRITE(pcb,data,len,flags) tcpbuf_write(&telnetbuf,pcb,data,len,flags)
+#define TCP_WRITE(pcb,data,len,flags) cb_write(&telnetcb, data, len)
 
 int telnet_printf (const char *fmt, ...)
 {
@@ -72,12 +76,26 @@ int telnet_printf (const char *fmt, ...)
 		
 	va_list ap;
 	va_start(ap, fmt);
-	int ret = strbuf_vprintf(tcpbuf_wbuf(&telnetbuf), fmt, ap);
+	int ret = cb_vprintf(&telnetcb, fmt, ap);
 	va_end(ap);
 	return ret;
 }
 
-#else // !USE_TCPBUF
+err_t tcpcb_send (cb_t* cb, struct tcp_pcb *pcb)
+{
+	err_t err;
+	char* data;
+	size_t sendsize = cb_read_ptr(cb, &data, tcp_sndbuf(pcb) /* = sendmax */);
+	if (   sendsize
+	    && ((err = tcp_write(pcb, data, sendsize, /*tcpflags=0=PUSH,NOCOPY*/0)) != ERR_OK))
+	{
+		tcp_log_err(err);
+		return err;
+	}
+	return ERR_OK;
+}
+
+#else // !USE_CB
 
 #define TCP_WRITE(pcb,data,len,flags) tcp_write(pcb,data,len,flags)
 
@@ -96,7 +114,7 @@ int telnet_printf(const char *fmt, ...)
 	return ret; 
 }
 
-#endif // !USE_TCPBUF
+#endif // !USE_CB
 
 static void telnet_close(struct tcp_pcb *pcb)
 {
@@ -199,8 +217,8 @@ static err_t server_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t e
 		}
 		pbuf_free(p);
 
-#if USE_TCPBUF
-		return tcpbuf_send(&telnetbuf, pcb);
+#if USE_CB
+		return tcpcb_send(&telnetcb, pcb);
 #else
 		return ERR_OK;
 #endif
@@ -248,8 +266,9 @@ static err_t tcp_data_sent(void *arg, struct tcp_pcb *pcb, u16_t len)
 		tcp_close(pcb);
 	}
 	
-#if USE_TCPBUF
-	return tcpbuf_send(&telnetbuf, pcb);
+#if USE_CB
+	cb_ack(&telnetcb, len);
+	return tcpcb_send(&telnetcb, pcb);
 #else
 	return ERR_OK;
 #endif	
@@ -297,6 +316,16 @@ static err_t tcp_conn_accepted(void * arg, struct tcp_pcb * pcb, err_t err)
 	return ERR_OK;
 }
 
+void ts_error (const char* msg)
+{
+	console_printf(msg);
+	if (ts)
+	{
+		os_free(ts);
+		ts = NULL;
+	}
+}
+
 void telnet_start(int port)
 {
 	if (ts) {
@@ -305,6 +334,8 @@ void telnet_start(int port)
 	}
 	ts = os_malloc(sizeof(struct telnet_server));
 	if (!ts) { 
+//XXXtest
+		return ts_error("telnet: out of memory!\n");
 		console_printf("telnet: out of memory!\n");
 		return;
 	}
@@ -317,16 +348,20 @@ void telnet_start(int port)
 		return;
 	}
 	
-	tcp_bind(ts->server, IP_ADDR_ANY, 23);
-	ts->server = tcp_listen(ts->server);
-	if (!ts->server) {
+	tcp_bind(ts->server, IP_ADDR_ANY, port);
+	struct tcp_pcb* ts_server = tcp_listen(ts->server);
+	if (!ts_server) {
+		console_printf("telnet: Unable to listen\n");
+		os_free(ts->server);
 		os_free(ts);
 		ts = NULL;
 		return;
 	}
-	tcp_accept(ts->server, tcp_conn_accepted);
+	ts->server = ts_server;
+	
 	ts->client = NULL;
 	ts->state  = STATE_NORMAL;	
+	tcp_accept(ts->server, tcp_conn_accepted);
 	console_printf("telnet: server accepting connections on port %d\n", port);
 }
 
