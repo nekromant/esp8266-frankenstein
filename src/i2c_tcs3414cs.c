@@ -101,3 +101,16 @@ TCS3414_Init()
 	return true;
 }
 
+/*
+
+			if(onlyread || TCS3414_Init()){
+				console_printf( "yes!\n" );
+				if(TCS3414_Read()){
+					console_printf( "RGBW: %d %d %d %d\n", LAST_TCS3414_COLOR.R, LAST_TCS3414_COLOR.G, LAST_TCS3414_COLOR.B, LAST_TCS3414_COLOR.W);
+				}else{
+					console_printf( "failed read value\n" );
+				}
+			}
+
+
+*/

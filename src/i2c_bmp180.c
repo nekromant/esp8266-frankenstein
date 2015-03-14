@@ -1,6 +1,8 @@
-/* reaper7 */
+/* based on reaper7 code */
 
 #include <math.h>
+#include "console.h"
+
 #include "driver/i2c_master.h"
 #include "driver/i2c_bmp180.h"
 
@@ -90,3 +92,28 @@ BMP180_Init()
 	return 1;
 }
 
+static int do_i2c_bmp180(int argc, const char* const* argv)
+{
+	if(argc == 1 || strcmp(argv[1], "read") == 0){
+
+		if(BMP180_Read()){
+			console_printf( argc == 1 ? "%lu %lu\n" : "Temperature: %lu\nPressure: %lu\n", LAST_BMP_TEMPERATURE, LAST_BMP_REAL_PRESSURE);
+		}else{
+			console_printf( "failed read value\n" );
+		}
+	} else
+
+	if(strcmp(argv[1], "init") == 0){
+
+		console_printf( BMP180_Init() ? "Ok\n":"Failed\n" );
+	} 
+
+	return 0;
+}
+
+CONSOLE_CMD(i2c_bmp180, 0, 2, 
+		do_i2c_bmp180, NULL, NULL, 
+		"I2C pressure sensor BMP180"
+		HELPSTR_NEWLINE "i2c_bmp180 init"
+		HELPSTR_NEWLINE "i2c_bmp180 [read]"
+);

@@ -125,3 +125,32 @@ HMC5883_Init()
 	return true;
 }
 
+static int do_i2c_hmc5883(int argc, const char* const* argv)
+{
+	if(argc == 1 || strcmp(argv[1], "read") == 0){
+
+		if(HMC5883_Read()){
+			if(argc != 1){
+				console_printf( "Compas: %d degress\n", HMC5883_ReadDegrees());
+				console_printf( "X,Y,Z: " );
+			}
+			console_printf( "%d %d %d\n", LAST_HMC5883_VECTOR.X, LAST_HMC5883_VECTOR.Y, LAST_HMC5883_VECTOR.Z);
+		}else{
+			console_printf( "failed read value\n" );
+		}
+	} else
+
+	if(strcmp(argv[1], "init") == 0){
+
+		console_printf( HMC5883_Init() ? "Ok\n":"Failed\n" );
+	} 
+
+	return 0;
+}
+
+CONSOLE_CMD(i2c_hmc5883, 0, 2, 
+		do_i2c_hmc5883, NULL, NULL, 
+		"I2C 3-Axis Digital Compass HMC5883"
+		HELPSTR_NEWLINE "i2c_hmc5883 init"
+		HELPSTR_NEWLINE "i2c_hmc5883 [read]"
+);
