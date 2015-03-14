@@ -1,6 +1,7 @@
 #include "c_types.h"
 #include "ets_sys.h"
 #include "osapi.h"
+#include "console.h"
 
 #include "driver/i2c_master.h"
 #include "driver/i2c_tcs3414cs.h"
@@ -101,16 +102,32 @@ TCS3414_Init()
 	return true;
 }
 
-/*
 
-			if(onlyread || TCS3414_Init()){
-				console_printf( "yes!\n" );
-				if(TCS3414_Read()){
-					console_printf( "RGBW: %d %d %d %d\n", LAST_TCS3414_COLOR.R, LAST_TCS3414_COLOR.G, LAST_TCS3414_COLOR.B, LAST_TCS3414_COLOR.W);
-				}else{
-					console_printf( "failed read value\n" );
-				}
+static int do_i2c_tcs3414(int argc, const char* const* argv)
+{
+	if(argc == 1 || strcmp(argv[1], "read") == 0){
+
+		if(TCS3414_Read()){
+			if(argc != 1){
+				console_printf( "RGBW: " );
 			}
+			console_printf( "%d %d %d %d\n", LAST_TCS3414_COLOR.R, LAST_TCS3414_COLOR.G, LAST_TCS3414_COLOR.B, LAST_TCS3414_COLOR.W);
+		}else{
+			console_printf( "failed read value\n" );
+		}
+	} else
 
+	if(strcmp(argv[1], "init") == 0){
 
-*/
+		console_printf( TCS3414_Init() ? "Ok\n":"Failed\n" );
+	} 
+
+	return 0;
+}
+
+CONSOLE_CMD(i2c_tcs3414, 0, 2, 
+		do_i2c_tcs3414, NULL, NULL, 
+		"I2C Digital Color Sensor TCS3414"
+		HELPSTR_NEWLINE "i2c_tcs3414 init"
+		HELPSTR_NEWLINE "i2c_tcs3414 [read]"
+);
