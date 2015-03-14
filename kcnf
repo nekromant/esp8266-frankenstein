@@ -3,6 +3,9 @@ menu "Modules to build"
 config CMD_IW
 bool "Wireless commands"
 
+config CMD_UART
+bool "UART commands"
+
 config CMD_IF
 bool "ifconfig/apconfig"
 
@@ -26,6 +29,29 @@ bool "AT to say OK"
 
 config CMD_ADC
 bool "System ADC support"
+
+config CMD_I2C
+bool "I2C bus support"
+
+if CMD_I2C
+
+config CMD_I2C_BMP180
+bool "I2C bmp180 pressure sensor"
+
+config CMD_I2C_SHT21
+bool "I2C sht21 humidity sensor"
+
+config CMD_I2C_BH1750
+bool "I2C bh1750 light sensor"
+
+config CMD_I2C_PCF8591
+bool "I2C pcf8591 8-bit ADC DAC"
+
+config CMD_I2C_TCS3414CS
+bool "I2C tcs3414cs color sensor"
+
+
+endif
 
 # Not working right now.
 #config ENABLE_PASSTHROUGH

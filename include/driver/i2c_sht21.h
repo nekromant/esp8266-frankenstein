@@ -1,0 +1,27 @@
+#ifndef __I2C_SHT21_H
+#define	__I2C_SHT21_H
+
+#include "c_types.h"
+#include "ets_sys.h"
+#include "osapi.h"
+
+#define SHT21_ADDRESS 0x80
+
+#define SHT21_CONVERSION_TIME 30
+#define SHT21_SOFT_RESET_TIME 15
+
+#define SHT21_TRIGGER_TEMP_MEASURE_HOLD  0xE3
+#define SHT21_TRIGGER_HUMD_MEASURE_HOLD  0xE5
+#define SHT21_TRIGGER_TEMP_MEASURE_NOHOLD  0xF3
+#define SHT21_TRIGGER_HUMD_MEASURE_NOHOLD  0xF5
+#define SHT21_WRITE_USER_REG  0xE6
+#define SHT21_READ_USER_REG  0xE7
+#define SHT21_SOFT_RESET  0xFE
+
+uint16_t LAST_SHT_TEMPERATURE;
+uint16_t LAST_SHT_HUMIDITY;
+
+bool SHT21_Init(void);
+bool SHT21_Read(void);
+
+#endif
