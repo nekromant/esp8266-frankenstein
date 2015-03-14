@@ -1,13 +1,3 @@
-/*
- * Adaptation of Paul Stoffregen's One wire library to the ESP8266 and
- * Necromant's Frankenstein firmware by Erland Lewin <erland@lewin.nu>
- * 
- * Paul's original library site:
- *   http://www.pjrc.com/teensy/td_libs_OneWire.html
- * 
- * See also http://playground.arduino.cc/Learning/OneWire
- * 
- */
 #include "ets_sys.h"
 #include "os_type.h"
 #include "mem.h"
