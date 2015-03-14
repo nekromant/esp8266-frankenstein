@@ -8,7 +8,6 @@ objects-y+=tcpbuf.o
 
 objects-y+=telnet.o
 
-
 objects-y+=cmd_common.o cmd_env.o uart.o
 
 objects-$(CONFIG_CMD_IW)+=cmd_iw.o
