@@ -30,7 +30,7 @@ SHT21_Read()
 	temp = i2c_master_readRegister16wait(SHT21_ADDRESS, SHT21_TRIGGER_HUMD_MEASURE_NOHOLD, true) & ~3;
 	LAST_SHT_HUMIDITY = (-6.0 + 125.0 / 65536.0 * temp);
 #else
-	int32_t temp = i2c_master_readRegister16wait(SHT21_ADDRESS, SHT21_TRIGGER_TEMP_MEASURE_NOHOLD, true) & ~3;
+	int32 temp = i2c_master_readRegister16wait(SHT21_ADDRESS, SHT21_TRIGGER_TEMP_MEASURE_NOHOLD, true) & ~3;
 	LAST_SHT_TEMPERATURE = (-46.85 + 175.72 / 65536.0 * temp) * 100;
 
 	temp = i2c_master_readRegister16wait(SHT21_ADDRESS, SHT21_TRIGGER_HUMD_MEASURE_NOHOLD, true) & ~3;
@@ -49,7 +49,7 @@ static int do_i2c_sht21(int argc, const char* const* argv)
 	if(argc == 1 || strcmp(argv[1], "read") == 0){
 
 		if(SHT21_Read()){
-			console_printf( argc == 1 ? "%ld %d\n" : "Temperature: %ld C\nHumidity: %d\n", 
+			console_printf( argc == 1 ? "%d %d\n" : "Temperature: %d C\nHumidity: %d %%\n", 
 #ifdef CONFIG_USEFLOAT
 				(int)(LAST_SHT_TEMPERATURE*100),
 				(int)(LAST_SHT_HUMIDITY*100)

@@ -15,7 +15,7 @@
 bool ICACHE_FLASH_ATTR 
 PCF8591_Read()
 {
-	for(uint8_t i = 0; i < 4; i++){
+	for(uint8 i = 0; i < 4; i++){
 		//LAST_PCF8591_A[i] = i2c_master_readRegister16(PCF8591_ADDRESS, i) >> 8;
 		LAST_PCF8591_A[i] = i2c_master_readRegister8(PCF8591_ADDRESS, i);
 	}
@@ -23,7 +23,7 @@ PCF8591_Read()
 }
 
 bool ICACHE_FLASH_ATTR 
-PCF8591_Write(uint8_t value)
+PCF8591_Write(uint8 value)
 {
 	return i2c_master_writeRegister(PCF8591_ADDRESS, PCF8591_REG_DAC, value);
 }

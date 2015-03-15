@@ -14,16 +14,16 @@
 
 #ifdef CONFIG_USEFLOAT
 float ICACHE_FLASH_ATTR 
-MLX90614_ReadTempFrom(uint8_t reg)
+MLX90614_ReadTempFrom(uint8 reg)
 {
 	float result = i2c_master_readRegister16(MLX90614_ADDRESS, reg);
 	return ((result / 50) - 273.15);
 }
 #else
-int32_t ICACHE_FLASH_ATTR 
-MLX90614_ReadTempFrom(uint8_t reg)
+int32 ICACHE_FLASH_ATTR 
+MLX90614_ReadTempFrom(uint8 reg)
 {
-	int32_t result = i2c_master_readRegister16(MLX90614_ADDRESS, reg);
+	int32 result = i2c_master_readRegister16(MLX90614_ADDRESS, reg);
 	return ((result / 50.0) - 273.15)*100;
 }
 #endif
@@ -57,7 +57,7 @@ static int do_i2c_mlx90614(int argc, const char* const* argv)
 	if(argc == 1 || strcmp(argv[1], "read") == 0){
 
 		if(MLX90614_Read()){
-			console_printf( argc == 1 ? "%ld %ld\n" : "Ambient: %ld C\nObject: %ld C\n", 
+			console_printf( argc == 1 ? "%d %d\n" : "Ambient: %d C\nObject: %d C\n", 
 #ifdef CONFIG_USEFLOAT
 				(int)(LAST_MLX90614_AMBIENT_TEMPERATURE*100), 
 				(int)(LAST_MLX90614_OBJECT_TEMPERATURE*100)
