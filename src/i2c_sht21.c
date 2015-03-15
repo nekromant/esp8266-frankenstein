@@ -11,7 +11,8 @@
 bool ICACHE_FLASH_ATTR
 SHT21_Init()
 {
-	if(i2c_master_writeRegister(SHT21_ADDRESS, SHT21_SOFT_RESET, 0))
+	
+	if(i2c_master_writeBytes1(SHT21_ADDRESS, SHT21_SOFT_RESET))
 	{
 		// The soft reset takes less than 15ms.
 		os_delay_us(SHT21_SOFT_RESET_TIME*1000);
@@ -24,18 +25,20 @@ bool ICACHE_FLASH_ATTR
 SHT21_Read()
 {
 #ifdef CONFIG_USEFLOAT
-	float temp = i2c_master_readRegister16wait(SHT21_ADDRESS, SHT21_TRIGGER_TEMP_MEASURE_NOHOLD, true) & ~3;
-	LAST_SHT_TEMPERATURE = (-46.85 + 175.72 / 65536.0 * temp);
-
-	temp = i2c_master_readRegister16wait(SHT21_ADDRESS, SHT21_TRIGGER_HUMD_MEASURE_NOHOLD, true) & ~3;
-	LAST_SHT_HUMIDITY = (-6.0 + 125.0 / 65536.0 * temp);
+#define PRECISION_MULTI 1.0
+	float temp;
 #else
-	int32 temp = i2c_master_readRegister16wait(SHT21_ADDRESS, SHT21_TRIGGER_TEMP_MEASURE_NOHOLD, true) & ~3;
-	LAST_SHT_TEMPERATURE = (-46.85 + 175.72 / 65536.0 * temp) * 100;
-
-	temp = i2c_master_readRegister16wait(SHT21_ADDRESS, SHT21_TRIGGER_HUMD_MEASURE_NOHOLD, true) & ~3;
-	LAST_SHT_HUMIDITY = (-6.0 + 125.0 / 65536.0 * temp) * 100;
+#define PRECISION_MULTI 100
+	uint16 temp;
 #endif
+
+	if(i2c_master_readUint16(SHT21_ADDRESS, SHT21_TRIGGER_TEMP_MEASURE_NOHOLD, &temp)){
+		LAST_SHT_TEMPERATURE = (-46.85 + 175.72 / 65536.0 * (temp & ~3)) * PRECISION_MULTI;
+	} else return false;
+	
+	if(i2c_master_readUint16(SHT21_ADDRESS, SHT21_TRIGGER_HUMD_MEASURE_NOHOLD, &temp)){
+		LAST_SHT_HUMIDITY = (-6.0 + 125.0 / 65536.0 * (temp & ~3)) * PRECISION_MULTI;
+	} else return false;
 
 	//TODO read data in hold mode
 	//LAST_SHT_TEMPERATURE = i2c_master_readRegister16(SHT21_ADDRESS, SHT21_TRIGGER_TEMP_MEASURE_HOLD) & ~3;

@@ -16,8 +16,7 @@ bool ICACHE_FLASH_ATTR
 PCF8591_Read()
 {
 	for(uint8 i = 0; i < 4; i++){
-		//LAST_PCF8591_A[i] = i2c_master_readRegister16(PCF8591_ADDRESS, i) >> 8;
-		LAST_PCF8591_A[i] = i2c_master_readRegister8(PCF8591_ADDRESS, i);
+		i2c_master_readUint8(PCF8591_ADDRESS, i, &LAST_PCF8591_A[i]);
 	}
 	return true;
 }
@@ -25,16 +24,15 @@ PCF8591_Read()
 bool ICACHE_FLASH_ATTR 
 PCF8591_Write(uint8 value)
 {
-	return i2c_master_writeRegister(PCF8591_ADDRESS, PCF8591_REG_DAC, value);
+	return i2c_master_writeBytes2(PCF8591_ADDRESS, PCF8591_REG_DAC, value);
 }
 
 
 bool ICACHE_FLASH_ATTR 
 PCF8591_Init()
 {
-	//TODO: maybe need some check?
 	//TODO: configure for differential input
-	return i2c_master_writeRegister(PCF8591_ADDRESS, 0, 0);
+	return PCF8591_Read();
 }
 
 static int do_i2c_pcf8591(int argc, const char* const* argv)

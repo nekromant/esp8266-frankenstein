@@ -16,6 +16,10 @@
 
 #include "pin_map.h"
 
+#ifdef CONFIG_I2C_MASTER_DEBUG
+#include "console.h"
+#endif
+
 LOCAL uint8 m_nLastSDA;
 LOCAL uint8 m_nLastSCL;
 
@@ -467,4 +471,141 @@ i2c_master_readRegister8(uint8 address, uint8 regaddr)
 	i2c_master_stop();
 	
 	return byte;
+}
+
+
+
+
+bool ICACHE_FLASH_ATTR
+i2c_master_writeBytes(uint8 address, uint8 *values, uint8 length)
+{
+	i2c_master_start();
+
+	i2c_master_writeByte(address);
+	if (!i2c_master_checkAck())
+	{
+		i2c_master_stop();
+#ifdef CONFIG_I2C_MASTER_DEBUG
+		console_printf( "Device not ACKed on address\n" );
+#endif
+		return false;
+	}
+
+	for(uint8 i = 0; i < length; i++){
+
+		i2c_master_writeByte(values[i]);
+		if (!i2c_master_checkAck())
+		{
+#ifdef CONFIG_I2C_MASTER_DEBUG
+			console_printf( "Device not ACKed on write\n" );
+#endif
+			i2c_master_stop();
+			return false;
+		}
+	}
+
+	i2c_master_stop();
+	return true;
+}
+
+
+bool ICACHE_FLASH_ATTR
+i2c_master_writeBytes1(uint8 address, uint8 byte1)
+{
+	uint8 data[1];
+	data[0] = byte1;
+	return i2c_master_writeBytes(address, data, 1);
+}
+
+bool ICACHE_FLASH_ATTR
+i2c_master_writeBytes2(uint8 address, uint8 byte1, uint8 byte2)
+{
+	uint8 data[2];
+	data[0] = byte1;
+	data[1] = byte2;
+	return i2c_master_writeBytes(address, data, 2);
+}
+
+bool ICACHE_FLASH_ATTR
+i2c_master_readBytes(uint8 address, uint8 *values, uint8 length)
+{
+	if(values[0] > 0){
+		if(!i2c_master_writeBytes(address, values, 1)){
+			return false;
+		}
+	}
+
+	uint8 timeout = 100;
+	do{
+		i2c_master_start();
+		i2c_master_writeByte(address+1);
+		if(!i2c_master_checkAck()){
+			i2c_master_stop();
+			i2c_master_wait(1000);
+			continue;
+		}
+		break;
+	}while(--timeout>0);
+
+	if(timeout == 0){
+		return false;
+	}
+
+#ifdef CONFIG_I2C_MASTER_DEBUG
+	console_printf("Read: ");
+#endif
+	uint8 readed = 0;
+	while((readed < length) && (--timeout>0)){
+		uint8 byte = i2c_master_readByte();
+		i2c_master_setAck(1);
+		values[readed++] = byte;
+#ifdef CONFIG_I2C_MASTER_DEBUG
+		console_printf("%d ", byte);
+#endif
+	}
+#ifdef CONFIG_I2C_MASTER_DEBUG
+	console_printf("\n");
+#endif
+	i2c_master_setAck(0);
+	i2c_master_stop();
+	return true;
+}
+
+bool ICACHE_FLASH_ATTR
+i2c_master_readSint16(uint8 address, uint8 regaddr, sint16 *value)
+{
+	uint8 data[2];
+	data[0] = regaddr;
+	if(i2c_master_readBytes(address, data, 2)){
+		*value = (data[0] << 8) | data[1];
+		return true;
+	}
+	value = 0;
+	return false;
+}
+
+bool ICACHE_FLASH_ATTR
+i2c_master_readUint16(uint8 address, uint8 regaddr, uint16 *value)
+{
+	uint8 data[2];
+	data[0] = regaddr;
+	if(i2c_master_readBytes(address, data, 2)){
+		*value = (data[0] << 8) | data[1];
+		return true;
+	}
+	value = 0;
+	return false;
+}
+
+bool ICACHE_FLASH_ATTR
+i2c_master_readUint8(uint8 address, uint8 regaddr, uint8 *value)
+{
+	uint8 data[1];
+	data[0] = regaddr;
+	if(i2c_master_readBytes(address, data, 1)){
+		*value = data[0];
+		return true;
+	}
+	value = 0;
+	return false;
 }
