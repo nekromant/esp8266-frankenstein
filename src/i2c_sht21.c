@@ -23,30 +23,43 @@ SHT21_Init()
 bool ICACHE_FLASH_ATTR
 SHT21_Read()
 {
+#ifdef CONFIG_USEFLOAT
+	float temp = i2c_master_readRegister16wait(SHT21_ADDRESS, SHT21_TRIGGER_TEMP_MEASURE_NOHOLD, true) & ~3;
+	LAST_SHT_TEMPERATURE = (-46.85 + 175.72 / 65536.0 * temp);
 
-	LAST_SHT_TEMPERATURE = i2c_master_readRegister16wait(SHT21_ADDRESS, SHT21_TRIGGER_TEMP_MEASURE_NOHOLD, true) & ~3;
-	LAST_SHT_HUMIDITY = i2c_master_readRegister16wait(SHT21_ADDRESS, SHT21_TRIGGER_HUMD_MEASURE_NOHOLD, true) & ~3;
-	return true;
+	temp = i2c_master_readRegister16wait(SHT21_ADDRESS, SHT21_TRIGGER_HUMD_MEASURE_NOHOLD, true) & ~3;
+	LAST_SHT_HUMIDITY = (-6.0 + 125.0 / 65536.0 * temp);
+#else
+	int32_t temp = i2c_master_readRegister16wait(SHT21_ADDRESS, SHT21_TRIGGER_TEMP_MEASURE_NOHOLD, true) & ~3;
+	LAST_SHT_TEMPERATURE = (-46.85 + 175.72 / 65536.0 * temp) * 100;
+
+	temp = i2c_master_readRegister16wait(SHT21_ADDRESS, SHT21_TRIGGER_HUMD_MEASURE_NOHOLD, true) & ~3;
+	LAST_SHT_HUMIDITY = (-6.0 + 125.0 / 65536.0 * temp) * 100;
+#endif
 
 	//TODO read data in hold mode
 	//LAST_SHT_TEMPERATURE = i2c_master_readRegister16(SHT21_ADDRESS, SHT21_TRIGGER_TEMP_MEASURE_HOLD) & ~3;
 	//LAST_SHT_HUMIDITY = i2c_master_readRegister16(SHT21_ADDRESS, SHT21_TRIGGER_TEMP_MEASURE_NOHOLD) & ~3;
-	//return true;
-}
-/*
-	LAST_SHT_TEMPERATURE = -46.85 + 175.72 / 65536.0 * (float)temp;
-	LAST_SHT_HUMIDITY = -6.0 + 125.0 / 65536.0 * (float)humi;
 
-*/
+	return true;
+}
 
 static int do_i2c_sht21(int argc, const char* const* argv)
 {
 	if(argc == 1 || strcmp(argv[1], "read") == 0){
 
 		if(SHT21_Read()){
-			console_printf( argc == 1 ? "%d %d\n" : "Temperature: %d\nHumidity: %d\n", LAST_SHT_TEMPERATURE, LAST_SHT_HUMIDITY);
+			console_printf( argc == 1 ? "%ld %d\n" : "Temperature: %ld C\nHumidity: %d\n", 
+#ifdef CONFIG_USEFLOAT
+				(int)(LAST_SHT_TEMPERATURE*100),
+				(int)(LAST_SHT_HUMIDITY*100)
+#else
+				LAST_SHT_TEMPERATURE,
+				LAST_SHT_HUMIDITY
+#endif
+			);
 		}else{
-			console_printf( "failed read value\n" );
+			console_printf( "Failed to read value\n" );
 		}
 	} else
 

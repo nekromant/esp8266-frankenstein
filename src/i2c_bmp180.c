@@ -1,5 +1,5 @@
-/* based on reaper7 code */
-
+/*based on reaper7 code*/
+#include <stdlib.h>
 #include <math.h>
 #include "console.h"
 
@@ -14,23 +14,62 @@
 
 #include "console.h"
 
-
+#ifdef CONFIG_USEFLOAT
+static int16_t AC1,AC2,AC3,VB1,VB2,MB,MC,MD;
+static uint16_t AC4,AC5,AC6; 
+static float c5,c6,mc,md,x0,x1,x2,ay0,ay1,ay2,p0,p1,p2;
+#else
 static int16_t ac1, ac2, ac3;
 static uint16_t ac4, ac5, ac6;
 static int16_t b1, b2;
 static int16_t mb, mc, md; 
+#endif
 
-static int16_t ICACHE_FLASH_ATTR
+
+static uint16_t ICACHE_FLASH_ATTR
 BMP180_readRawValue(uint8_t cmd) 
 {
 	i2c_master_writeRegister(BMP180_ADDRESS, BMP180_REG_CONTROL, cmd);
-	os_delay_us(BMP180_CONVERSION_TIME*1000);
+	switch(cmd){
+		case BMP180_COMMAND_TEMPERATURE:
+		case BMP180_COMMAND_PRESSURE0:
+			os_delay_us(BMP180_CONVERSION_TIME*1000);
+			break;
+/*Unsupported yet. Need to read 3 bytes from device.
+		case BMP180_COMMAND_PRESSURE1:
+			os_delay_us(8*1000);
+			break;
+
+		case BMP180_COMMAND_PRESSURE2:
+			os_delay_us(14*1000);
+			break;
+
+		case BMP180_COMMAND_PRESSURE3:
+			os_delay_us(26*1000);
+			break;
+*/
+	}
+	
 	return i2c_master_readRegister16(BMP180_ADDRESS, BMP180_REG_RESULT);
 }
 
 bool ICACHE_FLASH_ATTR
 BMP180_Read()
 {
+#ifdef CONFIG_USEFLOAT
+	float tu,pu,a,s,x,y,z;
+
+	tu = BMP180_readRawValue(BMP180_COMMAND_TEMPERATURE);
+	a = c5 * (tu - c6);
+	LAST_BMP_TEMPERATURE = a + (mc / (a + md));
+
+ 	pu = BMP180_readRawValue(BMP180_COMMAND_PRESSURE0);
+	s = LAST_BMP_TEMPERATURE - 25.0;
+	x = (x2 * pow(s,2)) + (x1 * s) + x0;
+	y = (ay2 * pow(s,2)) + (ay1 * s) + ay0;
+	z = (pu - x) / y;
+	LAST_BMP_REAL_PRESSURE = (((p2 * pow(z,2)) + (p1 * z) + p0) * 0.75);
+#else
 	int32_t UT;
 	uint16_t UP;
 	int32_t B3, B5, B6;
@@ -43,19 +82,19 @@ BMP180_Read()
 	X2 = ((int32_t)mc << 11) / (X1 + (int32_t)md); 
 	B5 = X1 + X2;
 	T  = (B5+8) >> 4;
-	LAST_BMP_TEMPERATURE = T; //div by 10
+	LAST_BMP_TEMPERATURE = T; 
 
 	UP = BMP180_readRawValue(BMP180_COMMAND_PRESSURE0);
 	B6 = B5 - 4000;
 	X1 = ((int32_t)b2 * ((B6 * B6) >> 12)) >> 11;
 	X2 = ((int32_t)ac2 * B6) >> 11;
 	X3 = X1 + X2;
-	B3 = (((int32_t)ac1 * 4 + X3) + 2) / 4;
+	B3 = (((int32_t)ac1 * 4 + X3) + 2) >> 2;
 	X1 = ((int32_t)ac3 * B6) >> 13;
 	X2 = ((int32_t)b1 * ((B6 * B6) >> 12)) >> 16;
 	X3 = ((X1 + X2) + 2) >> 2;
 	B4 = ((uint32_t)ac4 * (uint32_t)(X3 + 32768)) >> 15;
-	B7 = ((uint32_t)UP - B3) * (uint32_t)(50000UL);
+	B7 = ((uint32_t)UP - B3) * (50000);
 	
 	if (B7 < 0x80000000) {
 		P = (B7 * 2) / B4;
@@ -67,7 +106,8 @@ BMP180_Read()
 	X1 = (X1 * 3038) >> 16;
 	X2 = (-7357 * P) >> 16;
 	P  = P + ((X1 + X2 + (int32_t)3791) >> 4);
-	LAST_BMP_REAL_PRESSURE = P * 0.75; //div by 100
+	LAST_BMP_REAL_PRESSURE = P * 0.75;
+#endif
 	return true;
 }
 
@@ -77,6 +117,39 @@ BMP180_Init()
 	if (i2c_master_readRegister8(BMP180_ADDRESS, BMP180_REG_VERSION) != BMP180_MAGIC_VERSION)
 		return 0;
 
+#ifdef CONFIG_USEFLOAT
+	//Read calibration values
+	AC1 = i2c_master_readRegister16(BMP180_ADDRESS, 0xAA);				 
+	AC2 = i2c_master_readRegister16(BMP180_ADDRESS, 0xAC);
+	AC3 = i2c_master_readRegister16(BMP180_ADDRESS, 0xAE);
+	AC4 = i2c_master_readRegister16(BMP180_ADDRESS, 0xB0);
+	AC5 = i2c_master_readRegister16(BMP180_ADDRESS, 0xB2);
+	AC6 = i2c_master_readRegister16(BMP180_ADDRESS, 0xB4);
+	VB1  = i2c_master_readRegister16(BMP180_ADDRESS, 0xB6);
+	VB2  = i2c_master_readRegister16(BMP180_ADDRESS, 0xB8);
+	MB  = i2c_master_readRegister16(BMP180_ADDRESS, 0xBA);
+	MC  = i2c_master_readRegister16(BMP180_ADDRESS, 0xBC);
+	MD  = i2c_master_readRegister16(BMP180_ADDRESS, 0xBE);
+
+	//Compute floating-point polynominals:
+	float c3,c4,b1;
+	c3 = 160.0 * pow(2,-15) * AC3;
+	c4 = pow(10,-3) * pow(2,-15) * AC4;
+	b1 = pow(160,2) * pow(2,-30) * VB1;
+	c5 = (pow(2,-15) / 160) * AC5;
+	c6 = AC6;
+	mc = (pow(2,11) / pow(160,2)) * MC;
+	md = MD / 160.0;
+	x0 = AC1;
+	x1 = 160.0 * pow(2,-13) * AC2;
+	x2 = pow(160,2) * pow(2,-25) * VB2;
+	ay0 = c4 * pow(2,15);
+	ay1 = c4 * c3;
+	ay2 = c4 * b1;
+	p0 = (3791.0 - 8.0) / 1600.0;
+	p1 = 1.0 - 7357.0 * pow(2,-20);
+	p2 = 3038.0 * 100.0 * pow(2,-36);
+#else
 	ac1 = i2c_master_readRegister16(BMP180_ADDRESS, 0xAA);				 
 	ac2 = i2c_master_readRegister16(BMP180_ADDRESS, 0xAC);
 	ac3 = i2c_master_readRegister16(BMP180_ADDRESS, 0xAE);
@@ -88,7 +161,7 @@ BMP180_Init()
 	mb  = i2c_master_readRegister16(BMP180_ADDRESS, 0xBA);
 	mc  = i2c_master_readRegister16(BMP180_ADDRESS, 0xBC);
 	md  = i2c_master_readRegister16(BMP180_ADDRESS, 0xBE);
-	
+#endif
 	return 1;
 }
 
@@ -97,9 +170,17 @@ static int do_i2c_bmp180(int argc, const char* const* argv)
 	if(argc == 1 || strcmp(argv[1], "read") == 0){
 
 		if(BMP180_Read()){
-			console_printf( argc == 1 ? "%lu %lu\n" : "Temperature: %lu\nPressure: %lu\n", LAST_BMP_TEMPERATURE, LAST_BMP_REAL_PRESSURE);
+			console_printf( argc == 1 ? "%ld %ld\n" : "Temperature: %ld C\nPressure: %ld\n", 
+#ifdef CONFIG_USEFLOAT
+				(int)(LAST_BMP_TEMPERATURE*100), 
+				(uint32_t)(LAST_BMP_REAL_PRESSURE*100)
+#else
+				LAST_BMP_TEMPERATURE,
+				LAST_BMP_REAL_PRESSURE
+#endif
+			);
 		}else{
-			console_printf( "failed read value\n" );
+			console_printf( "Failed to read value\n" );
 		}
 	} else
 

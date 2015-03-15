@@ -5,10 +5,10 @@
 #include "ets_sys.h"
 #include "osapi.h"
 
-#define PCF8591_ADDRESS   0x90
+#define PCF8591_ADDRESS	0x90
 
-#define PCF8591_REG_READ_ALL   0x04
-#define PCF8591_REG_DAC   0x40
+#define PCF8591_REG_READ_ALL	0x04
+#define PCF8591_REG_DAC	0x40
 
 uint8_t LAST_PCF8591_A[4];
 

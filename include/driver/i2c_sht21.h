@@ -18,8 +18,13 @@
 #define SHT21_READ_USER_REG  0xE7
 #define SHT21_SOFT_RESET  0xFE
 
-uint16_t LAST_SHT_TEMPERATURE;
+#ifdef CONFIG_USEFLOAT
+float LAST_SHT_TEMPERATURE;
+float LAST_SHT_HUMIDITY;
+#else
+int32_t LAST_SHT_TEMPERATURE;
 uint16_t LAST_SHT_HUMIDITY;
+#endif
 
 bool SHT21_Init(void);
 bool SHT21_Read(void);

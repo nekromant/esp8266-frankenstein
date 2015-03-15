@@ -399,9 +399,9 @@ i2c_master_writeRegister(uint8 address, uint8 regaddr, uint8 wrdata)
  * Parameters   : uint8 address - register address 
  * Parameters   : uint8 regaddr - register address
  * Parameters   : bool waitnack - do not hungup while slave send nack
- * Returns	  : int16_t - result value
+ * Returns	  : uint16_t - result value
 *******************************************************************************/
-int16_t ICACHE_FLASH_ATTR
+uint16_t ICACHE_FLASH_ATTR
 i2c_master_readRegister16wait(uint8 address, uint8 regaddr, bool waitnack)
 {
 	
@@ -439,7 +439,7 @@ i2c_master_readRegister16wait(uint8 address, uint8 regaddr, bool waitnack)
  * Parameters   : uint8 regaddr - register address
  * Returns	  : bool - true if success
 *******************************************************************************/
-int16_t ICACHE_FLASH_ATTR
+uint16_t ICACHE_FLASH_ATTR
 i2c_master_readRegister16(uint8 address, uint8 regaddr)
 {
 	return i2c_master_readRegister16wait(address, regaddr, false);
@@ -450,9 +450,9 @@ i2c_master_readRegister16(uint8 address, uint8 regaddr)
  * Description  : write wrdata value(one byte) into i2c address
  * Parameters   : uint8 address - register address 
  * Parameters   : uint8 regaddr - register address
- * Returns	  : int8_t - result value
+ * Returns	  : uint8_t - result value
 *******************************************************************************/
-int8_t ICACHE_FLASH_ATTR
+uint8_t ICACHE_FLASH_ATTR
 i2c_master_readRegister8(uint8 address, uint8 regaddr)
 {
 	

@@ -67,9 +67,9 @@ uint8 i2c_master_readByte(void);
 void i2c_master_writeByte(uint8 wrdata);
 
 bool i2c_master_writeRegister(uint8 address, uint8 regaddr, uint8 wrdata);
-int16_t i2c_master_readRegister16wait(uint8 address, uint8 regaddr, bool waitnack);
-int16_t i2c_master_readRegister16(uint8 address, uint8 regaddr);
-int8_t i2c_master_readRegister8(uint8 address, uint8 regaddr);
+uint16_t i2c_master_readRegister16wait(uint8 address, uint8 regaddr, bool waitnack);
+uint16_t i2c_master_readRegister16(uint8 address, uint8 regaddr);
+uint8_t i2c_master_readRegister8(uint8 address, uint8 regaddr);
 
 bool i2c_master_checkAck(void);
 void i2c_master_send_ack(void);

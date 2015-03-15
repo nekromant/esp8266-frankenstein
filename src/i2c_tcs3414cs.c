@@ -19,8 +19,6 @@ TCS3414_Read()
 		return false;
 	}
 
-	//TODO migrate to cmd_i2c.c
-
 	i2c_master_start(); 
 	i2c_master_writeByte(TCS3414_ADDRESS+1);
 	if(!i2c_master_checkAck()){
@@ -29,7 +27,6 @@ TCS3414_Read()
 	}
 
 	os_delay_us(15 * 1000);
-
 	for(uint8_t i = 0; i < 4; i++){
 		uint8_t msb = i2c_master_readByte(); 
 		i2c_master_setAck(1);
@@ -55,6 +52,8 @@ TCS3414_Read()
 				break;
 		}
 	}
+
+
 	i2c_master_stop();
 	return true;
 
@@ -92,9 +91,12 @@ TCS3414_Init()
 	if(!TCS3414_SetTimeing(TCS3414_INTEGRATION_TIME_12ms, TCS3414_GAIN_1|TCS3414_PRESCALER_4)){
 		return false;
 	}
-	//TCS3414_SetInterrupt(TCS3414_INT_SOURCE_GREEN, TCS3414_INTR_LEVEL | TCS3414_INTR_PERSIST_EVERY);
 
-	if(!i2c_master_writeRegister(TCS3414_ADDRESS, TCS3414_REG_CTL, TCS3414_CTL_DAT_INIITIATE)){
+	if(!TCS3414_SetInterrupt(TCS3414_INT_SOURCE_CLEAR, TCS3414_INTR_DISABLE)){
+		return false;
+	}
+
+	if(!i2c_master_writeRegister(TCS3414_ADDRESS, TCS3414_REG_CTL, TCS3414_REG_CTL | TCS3414_CTL_DAT_INIITIATE)){
 		return false;
 	}
 
@@ -111,7 +113,9 @@ static int do_i2c_tcs3414(int argc, const char* const* argv)
 			if(argc != 1){
 				console_printf( "RGBW: " );
 			}
-			console_printf( "%d %d %d %d\n", LAST_TCS3414_COLOR.R, LAST_TCS3414_COLOR.G, LAST_TCS3414_COLOR.B, LAST_TCS3414_COLOR.W);
+			console_printf( "%d %d %d %d\n", 
+				(int)LAST_TCS3414_COLOR.R, (int)LAST_TCS3414_COLOR.G, (int)LAST_TCS3414_COLOR.B, (int)LAST_TCS3414_COLOR.W
+			);
 		}else{
 			console_printf( "failed read value\n" );
 		}

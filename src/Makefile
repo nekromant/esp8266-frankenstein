@@ -29,8 +29,10 @@ objects-$(CONFIG_CMD_I2C_INA219)+=i2c_ina219.o
 objects-$(CONFIG_CMD_I2C_SHT21)+=i2c_sht21.o
 objects-$(CONFIG_CMD_I2C_BH1750)+=i2c_bh1750.o
 objects-$(CONFIG_CMD_I2C_PCF8591)+=i2c_pcf8591.o
-objects-$(CONFIG_CMD_I2C_HMC58831)+=i2c_hmc5883l.o
+objects-$(CONFIG_CMD_I2C_HMC5883L)+=i2c_hmc5883l.o
 objects-$(CONFIG_CMD_I2C_TCS3414CS)+=i2c_tcs3414cs.o
+objects-$(CONFIG_CMD_I2C_MLX90614)+=i2c_mlx90614.o
+
 
 
 subdirs-y+=netapps/

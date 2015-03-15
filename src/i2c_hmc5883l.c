@@ -5,8 +5,9 @@
 
 #include "driver/i2c_master.h"
 #include "driver/i2c_hmc5883l.h"
+#include "console.h"
 
-#ifdef CONFIG_CMD_BH1750_DEBUG
+#ifdef CONFIG_CMD_HMC5883_DEBUG
 #define dbg(fmt, ...) LOG(LOG_DEBUG, fmt, ##__VA_ARGS__)
 #else
 #define dbg(fmt, ...)
@@ -134,7 +135,9 @@ static int do_i2c_hmc5883(int argc, const char* const* argv)
 				console_printf( "Compas: %d degress\n", HMC5883_ReadDegrees());
 				console_printf( "X,Y,Z: " );
 			}
-			console_printf( "%d %d %d\n", LAST_HMC5883_VECTOR.X, LAST_HMC5883_VECTOR.Y, LAST_HMC5883_VECTOR.Z);
+			console_printf( "%d %d %d\n", 
+				(int)(LAST_HMC5883_VECTOR.X*100), (int)(LAST_HMC5883_VECTOR.Y*100), (int)(LAST_HMC5883_VECTOR.Z*100)
+			);
 		}else{
 			console_printf( "failed read value\n" );
 		}

@@ -38,7 +38,8 @@ static void i2cdevice_enum(uint8 addr)
 			break;
 
 		case 0x78: 
-			console_printf( "OLED? " );
+		//case 0x7A: 
+			console_printf( "SSD1306 OLED? " );
 			break;
 
 		case 0xA0: 
@@ -68,7 +69,7 @@ static void i2cdevice_enum(uint8 addr)
 			break;
 
 		case 0x46: 
-			console_printf( "BV1750? " );
+			console_printf( "BH1750? " );
 			break;
 
 		case 0x80: 
@@ -130,7 +131,7 @@ static int do_i2c(int argc, const char* const* argv)
 
 CONSOLE_CMD(i2c, 2, 4, 
 		do_i2c, NULL, NULL, 
-		"I2C bus config."
+		"I2C bus config. Pin 3 4 for GPIO 0 and 2"
 		HELPSTR_NEWLINE "i2c init [SDA] [SCL]"
 		HELPSTR_NEWLINE "i2c scan"
 );

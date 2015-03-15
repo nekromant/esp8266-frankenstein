@@ -46,7 +46,7 @@ static int do_i2c_bh1750(int argc, const char* const* argv)
 		if(BH1750_Read()){
 			console_printf( argc == 1 ? "%d\n" : "Light: %d lux\n", LAST_BH_LIGHT);
 		}else{
-			console_printf( "failed read value\n" );
+			console_printf( "Failed to read value\n" );
 		}
 	} else
 
