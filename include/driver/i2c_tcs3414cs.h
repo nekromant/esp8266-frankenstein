@@ -81,7 +81,7 @@ typedef struct
 } Color; 
 
 Color LAST_TCS3414_COLOR;
-
+static bool IS_ALREADY_INITED = false;
 
 bool TCS3414_Init(void);
 bool TCS3414_SetTimeing(uint8_t timeing, uint8_t gain);

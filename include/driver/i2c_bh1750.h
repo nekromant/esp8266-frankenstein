@@ -20,6 +20,7 @@
 #define BH1750_RESET	0x07		// Reset data register value - not accepted in POWER_DOWN mode
 
 uint16_t LAST_BH_LIGHT;
+static bool IS_ALREADY_INITED = false;
 
 bool BH1750_Init(uint8 mode);
 bool BH1750_Read(void);

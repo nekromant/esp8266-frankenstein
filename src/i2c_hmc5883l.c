@@ -123,12 +123,17 @@ HMC5883_Init()
 	}
 
 	os_delay_us(15 * 1000);
+	IS_ALREADY_INITED = true;
 	return true;
 }
 
 static int do_i2c_hmc5883(int argc, const char* const* argv)
 {
 	if(argc == 1 || strcmp(argv[1], "read") == 0){
+
+		if(!IS_ALREADY_INITED){
+			HMC5883_Init();
+		}
 
 		if(HMC5883_Read()){
 			if(argc != 1){

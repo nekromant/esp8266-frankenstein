@@ -53,12 +53,17 @@ MLX90614_Init()
 	);
 #endif
 
+	IS_ALREADY_INITED = true;
 	return true;
 }
 
 static int do_i2c_mlx90614(int argc, const char* const* argv)
 {
 	if(argc == 1 || strcmp(argv[1], "read") == 0){
+
+		if(!IS_ALREADY_INITED){
+			MLX90614_Init();
+		}
 
 		if(MLX90614_Read()){
 			console_printf( argc == 1 ? "%d %d\n" : "Ambient: %d C\nObject: %d C\n", 

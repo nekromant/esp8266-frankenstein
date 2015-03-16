@@ -16,6 +16,7 @@ SHT21_Init()
 	{
 		// The soft reset takes less than 15ms.
 		os_delay_us(SHT21_SOFT_RESET_TIME*1000);
+		IS_ALREADY_INITED = true;
 		return true;
 	}
 	return false;
@@ -50,6 +51,10 @@ SHT21_Read()
 static int do_i2c_sht21(int argc, const char* const* argv)
 {
 	if(argc == 1 || strcmp(argv[1], "read") == 0){
+
+		if(!IS_ALREADY_INITED){
+			SHT21_Init();
+		}
 
 		if(SHT21_Read()){
 			console_printf( argc == 1 ? "%d %d\n" : "Temperature: %d C\nHumidity: %d %%\n", 

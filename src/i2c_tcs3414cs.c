@@ -86,6 +86,7 @@ TCS3414_Init()
 	}
 
 	os_delay_us(15 * 1000);
+	IS_ALREADY_INITED = true;
 	return true;
 }
 
@@ -93,6 +94,10 @@ TCS3414_Init()
 static int do_i2c_tcs3414(int argc, const char* const* argv)
 {
 	if(argc == 1 || strcmp(argv[1], "read") == 0){
+
+		if(!IS_ALREADY_INITED){
+			TCS3414_Init();
+		}
 
 		if(TCS3414_Read()){
 			if(argc != 1){
