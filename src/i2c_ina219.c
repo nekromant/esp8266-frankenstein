@@ -1,5 +1,3 @@
-/* reaper7 */
-
 #include "driver/i2c_master.h"
 #include "driver/i2c_ina219.h"
 
@@ -125,3 +123,31 @@ INA219_GetVal(uint8 mode)
   
   return 0;
 }
+
+//TODO DO
+
+static int do_i2c_ina219(int argc, const char* const* argv)
+{
+	if(argc == 1 || strcmp(argv[1], "read") == 0){
+
+		if(BH1750_Read()){
+			console_printf( argc == 1 ? "%d\n" : "Light: %d lux\n", LAST_BH_LIGHT);
+		}else{
+			console_printf( "failed read value\n" );
+		}
+	} else
+
+	if(strcmp(argv[1], "init") == 0){
+
+		console_printf( BH1750_Init(BH1750_ONE_TIME_HIGH_RES_MODE) ? "Ok\n":"Failed\n" );
+	} 
+
+	return 0;
+}
+
+CONSOLE_CMD(i2c_ina219, 0, 2, 
+		do_i2c_ina219, NULL, NULL, 
+		"I2C light sensor BH1750"
+		HELPSTR_NEWLINE "i2c_ina219 init"
+		HELPSTR_NEWLINE "i2c_ina219 [read]"
+);

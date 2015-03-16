@@ -11,7 +11,8 @@
 bool ICACHE_FLASH_ATTR
 SHT21_Init()
 {
-	if(i2c_master_writeRegister(SHT21_ADDRESS, SHT21_SOFT_RESET, 0))
+	
+	if(i2c_master_writeBytes1(SHT21_ADDRESS, SHT21_SOFT_RESET))
 	{
 		// The soft reset takes less than 15ms.
 		os_delay_us(SHT21_SOFT_RESET_TIME*1000);
@@ -23,30 +24,45 @@ SHT21_Init()
 bool ICACHE_FLASH_ATTR
 SHT21_Read()
 {
+#ifdef CONFIG_USEFLOAT
+#define PRECISION_MULTI 1.0
+	float temp;
+#else
+#define PRECISION_MULTI 100
+	uint16 temp;
+#endif
 
-	LAST_SHT_TEMPERATURE = i2c_master_readRegister16wait(SHT21_ADDRESS, SHT21_TRIGGER_TEMP_MEASURE_NOHOLD, true) & ~3;
-	LAST_SHT_HUMIDITY = i2c_master_readRegister16wait(SHT21_ADDRESS, SHT21_TRIGGER_HUMD_MEASURE_NOHOLD, true) & ~3;
-	return true;
+	if(i2c_master_readUint16(SHT21_ADDRESS, SHT21_TRIGGER_TEMP_MEASURE_NOHOLD, &temp)){
+		LAST_SHT_TEMPERATURE = (-46.85 + 175.72 / 65536.0 * (temp & ~3)) * PRECISION_MULTI;
+	} else return false;
+	
+	if(i2c_master_readUint16(SHT21_ADDRESS, SHT21_TRIGGER_HUMD_MEASURE_NOHOLD, &temp)){
+		LAST_SHT_HUMIDITY = (-6.0 + 125.0 / 65536.0 * (temp & ~3)) * PRECISION_MULTI;
+	} else return false;
 
 	//TODO read data in hold mode
 	//LAST_SHT_TEMPERATURE = i2c_master_readRegister16(SHT21_ADDRESS, SHT21_TRIGGER_TEMP_MEASURE_HOLD) & ~3;
 	//LAST_SHT_HUMIDITY = i2c_master_readRegister16(SHT21_ADDRESS, SHT21_TRIGGER_TEMP_MEASURE_NOHOLD) & ~3;
-	//return true;
-}
-/*
-	LAST_SHT_TEMPERATURE = -46.85 + 175.72 / 65536.0 * (float)temp;
-	LAST_SHT_HUMIDITY = -6.0 + 125.0 / 65536.0 * (float)humi;
 
-*/
+	return true;
+}
 
 static int do_i2c_sht21(int argc, const char* const* argv)
 {
 	if(argc == 1 || strcmp(argv[1], "read") == 0){
 
 		if(SHT21_Read()){
-			console_printf( argc == 1 ? "%d %d\n" : "Temperature: %d\nHumidity: %d\n", LAST_SHT_TEMPERATURE, LAST_SHT_HUMIDITY);
+			console_printf( argc == 1 ? "%d %d\n" : "Temperature: %d C\nHumidity: %d %%\n", 
+#ifdef CONFIG_USEFLOAT
+				(int)(LAST_SHT_TEMPERATURE*100),
+				(int)(LAST_SHT_HUMIDITY*100)
+#else
+				LAST_SHT_TEMPERATURE,
+				LAST_SHT_HUMIDITY
+#endif
+			);
 		}else{
-			console_printf( "failed read value\n" );
+			console_printf( "Failed to read value\n" );
 		}
 	} else
 

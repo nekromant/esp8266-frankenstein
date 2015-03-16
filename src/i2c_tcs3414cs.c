@@ -15,61 +15,47 @@
 bool ICACHE_FLASH_ATTR 
 TCS3414_Read()
 {
-	if(!i2c_master_writeRegister(TCS3414_ADDRESS, TCS3414_REG_BLOCK_READ, 0)){
+	
+	if(!i2c_master_writeBytes1(TCS3414_ADDRESS, TCS3414_REG_BLOCK_READ)){
+		console_printf( "Failed to read colors\n" );
 		return false;
 	}
 
-	//TODO migrate to cmd_i2c.c
+	uint8 GRBW[8];
+	GRBW[0] = TCS3414_REG_BLOCK_READ;
+	if(i2c_master_readBytes(TCS3414_ADDRESS, GRBW, 8)){
+		for(uint8_t i = 0; i < 4; i++){
+			uint16_t color = ((GRBW[i*2] << 8) | GRBW[i*2+1]);
+			switch (i)
+			{
+				case 0: 
+					LAST_TCS3414_COLOR.G = color;
+					break;
 
-	i2c_master_start(); 
-	i2c_master_writeByte(TCS3414_ADDRESS+1);
-	if(!i2c_master_checkAck()){
-		i2c_master_stop();
-		return false;
-	}
+				case 1: 
+					LAST_TCS3414_COLOR.R = color;
+					break;
 
-	os_delay_us(15 * 1000);
+				case 2: 
+					LAST_TCS3414_COLOR.B = color;
+					break;
 
-	for(uint8_t i = 0; i < 4; i++){
-		uint8_t msb = i2c_master_readByte(); 
-		i2c_master_setAck(1);
-		uint8_t lsb = i2c_master_readByte(); 
-		i2c_master_setAck(1);
-		uint16_t color = ((msb << 8) | lsb);
-		switch (i)
-		{
-			case 0: 
-				LAST_TCS3414_COLOR.G = color;
-				break;
-
-			case 1: 
-				LAST_TCS3414_COLOR.R = color;
-				break;
-
-			case 2: 
-				LAST_TCS3414_COLOR.B = color;
-				break;
-
-			case 3: 
-				LAST_TCS3414_COLOR.W = color;
-				break;
+				case 3: 
+					LAST_TCS3414_COLOR.W = color;
+					break;
+			}
 		}
+		return true;
 	}
-	i2c_master_stop();
-	return true;
 
+	return false;
 }
 
 bool ICACHE_FLASH_ATTR 
 TCS3414_SetTimeing(uint8_t timeing, uint8_t gain)
 {
-	if(!i2c_master_writeRegister(TCS3414_ADDRESS, TCS3414_REG_TIMING, timeing)
-	 ||!i2c_master_writeRegister(TCS3414_ADDRESS, TCS3414_REG_GAIN, gain)
-	){
-		return false;
-	}
-
-	return true;
+	return i2c_master_writeBytes2(TCS3414_ADDRESS, TCS3414_REG_TIMING, timeing)
+		&& i2c_master_writeBytes2(TCS3414_ADDRESS, TCS3414_REG_GAIN, gain);
 }
 
 
@@ -77,24 +63,25 @@ bool ICACHE_FLASH_ATTR
 TCS3414_SetInterrupt(uint8_t interruptSource, uint8_t interruptControl)
 {
 
-	if(!i2c_master_writeRegister(TCS3414_ADDRESS, TCS3414_REG_INT_SOURCE, interruptSource)
-	 ||!i2c_master_writeRegister(TCS3414_ADDRESS, TCS3414_REG_INT, interruptControl)
-	){
-		return false;
-	}
-
-	return true;
+	return i2c_master_writeBytes2(TCS3414_ADDRESS, TCS3414_REG_INT_SOURCE, interruptSource)
+		&& i2c_master_writeBytes2(TCS3414_ADDRESS, TCS3414_REG_INT, interruptControl);
 }
 
 bool ICACHE_FLASH_ATTR 
 TCS3414_Init()
 {
 	if(!TCS3414_SetTimeing(TCS3414_INTEGRATION_TIME_12ms, TCS3414_GAIN_1|TCS3414_PRESCALER_4)){
+		console_printf( "Failed to set timeings\n" );
 		return false;
 	}
-	//TCS3414_SetInterrupt(TCS3414_INT_SOURCE_GREEN, TCS3414_INTR_LEVEL | TCS3414_INTR_PERSIST_EVERY);
 
-	if(!i2c_master_writeRegister(TCS3414_ADDRESS, TCS3414_REG_CTL, TCS3414_CTL_DAT_INIITIATE)){
+	if(!TCS3414_SetInterrupt(TCS3414_INT_SOURCE_CLEAR, TCS3414_INTR_DISABLE)){
+		console_printf( "Failed to set interrupt\n" );
+		return false;
+	}
+
+	if(!i2c_master_writeBytes2(TCS3414_ADDRESS, TCS3414_REG_CTL, TCS3414_REG_CTL | TCS3414_CTL_DAT_INIITIATE)){
+		console_printf( "Failed to enable ADC\n" );
 		return false;
 	}
 
@@ -111,7 +98,9 @@ static int do_i2c_tcs3414(int argc, const char* const* argv)
 			if(argc != 1){
 				console_printf( "RGBW: " );
 			}
-			console_printf( "%d %d %d %d\n", LAST_TCS3414_COLOR.R, LAST_TCS3414_COLOR.G, LAST_TCS3414_COLOR.B, LAST_TCS3414_COLOR.W);
+			console_printf( "%d %d %d %d\n", 
+				(int)LAST_TCS3414_COLOR.R, (int)LAST_TCS3414_COLOR.G, (int)LAST_TCS3414_COLOR.B, (int)LAST_TCS3414_COLOR.W
+			);
 		}else{
 			console_printf( "failed read value\n" );
 		}

@@ -50,6 +50,12 @@ bool "I2C pcf8591 8-bit ADC DAC"
 config CMD_I2C_TCS3414CS
 bool "I2C tcs3414cs color sensor"
 
+config CMD_I2C_MLX90614
+bool "I2C mlx90614 temperature sensor"
+
+config CMD_I2C_HMC5883L
+bool "I2C hmc5883l 3-Axis Digital Compass"
+default n
 
 endif
 
