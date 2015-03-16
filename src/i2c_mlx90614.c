@@ -23,11 +23,13 @@ MLX90614_ReadTempFrom(uint8 reg)
 sint16 ICACHE_FLASH_ATTR 
 MLX90614_ReadTempFrom(uint8 reg)
 {
-	uint16 temp;
-	if(i2c_master_readUint16(MLX90614_ADDRESS, reg, &temp)){
+
+	uint8 data[3];
+	data[0] = reg;
+	if(i2c_master_readBytes(MLX90614_ADDRESS, data, 3)){
+		uint16 temp = (data[1] << 8) | data[0];
 		return ((temp / 50.0) - 273.15)*100;
 	}
-
 	return 0;
 }
 #endif
