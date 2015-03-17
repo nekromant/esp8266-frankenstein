@@ -23,10 +23,8 @@ static tcpservice_t* telnet_new_peer (tcpservice_t* s);
 static void telnet_established (tcpservice_t* s);
 static void telnet_closing (tcpservice_t* s);
 static void telnet_recv (tcpservice_t* s, const char* data, size_t len);
-static err_t telnet_poll (tcpservice_t* s);
+static void telnet_poll (tcpservice_t* s);
 
-#define TELNET_BUFFER_SIZE_LOG2	13	// 13: 8KB
-static char telnetbuf [1 << (TELNET_BUFFER_SIZE_LOG2)];
 
 static tcpservice_t telnet_listener =
 {
@@ -42,12 +40,32 @@ static tcpservice_t telnet_listener =
 	.cb_ack = NULL,
 };
 
+#define TELNET_BUFFER_SIZE_LOG2	13	// 13: 8KB
+static char telnetbuf [1 << (TELNET_BUFFER_SIZE_LOG2)];
 static tcpservice_t telnet_peer =
 {
 	.name = "telnet peer",
 	.tcp = NULL,
 	.is_closing = false,
 	.send_buffer = CB_INIT(telnetbuf, TELNET_BUFFER_SIZE_LOG2),
+	.get_new_peer = NULL,
+	.cb_established = telnet_established,
+	.cb_closing = telnet_closing,
+	.cb_recv = telnet_recv,
+	.cb_poll = telnet_poll,
+	.cb_ack = NULL,
+};
+
+
+#define TELNET_BUFFER_NOPE_LOG2	6	// 6: 64B
+static char telnetnope [1 << (TELNET_BUFFER_NOPE_LOG2)];
+static const char* nope = "only one telnet allowed at this time\n";
+static tcpservice_t telnet_nope =
+{
+	.name = "telnet nope",
+	.tcp = NULL,
+	.is_closing = false,
+	.send_buffer = CB_INIT(telnetnope, TELNET_BUFFER_NOPE_LOG2),
 	.get_new_peer = NULL,
 	.cb_established = telnet_established,
 	.cb_closing = telnet_closing,
@@ -78,24 +96,25 @@ static int telnet_printf (const char *fmt, ...)
 static tcpservice_t* telnet_new_peer (tcpservice_t* s)
 {
 	if (telnet_peer.tcp)
-	{
-		return NULL;
-//		return &telnet_deny;
-//		/* Someone already connected */
-//		//static const char busy[] = "Sorry, but this telnet console is already in use by someone\n";
-//		//TCP_WRITE(cli_pcb, busy, strlen(busy), 0);
-//		
-	}
+		return &telnet_nope;
 	
 	return &telnet_peer;
 }
 
 static void telnet_established (tcpservice_t* s)
 {
+	if (s == &telnet_nope)
+	{
+//XXX this is temporary, implementing multiple telnet is easy now
+		cb_write(&telnet_nope.send_buffer, nope, strlen(nope));
+		tcp_service_close(s);
+		return;
+	}
+
 	console_printf("\ntelnet: Incoming connection, switching to telnet console...\n"); 
 	ts.prev_printf = console_printf;
 	console_printf = telnet_printf;
-
+	microrl_set_echo(0);
 
 	/* Send in a welcome message */
 	console_printf("Welcome to %s!\n", env_get("hostname"));
@@ -112,18 +131,20 @@ static void telnet_established (tcpservice_t* s)
 
 static void telnet_closing (tcpservice_t* s)
 {
-	console_printf("bouh\n");
+	if (telnet_peer.is_closing)
+	{
+		microrl_set_echo(1);
+		console_printf = ts.prev_printf;
+	}
 }
 
-static err_t telnet_poll (tcpservice_t* s)
+static void telnet_poll (tcpservice_t* s)
 { 
 	if (ts.max_idle != -1 && ++ts.idle >= ts.max_idle)
 	{
-		telnet_printf("\nYou have been idle for a while, goodbye\n");
-		//XXXtcp_service_close(s);
-		return ERR_TIMEOUT;
+		telnet_printf("\nYou have been idle for %d seconds, goodbye\n", ts.max_idle);
+		tcp_service_close(s);
 	}
-	return ERR_OK;
 }
 
 int sendopt (tcpservice_t* s, u8_t option, u8_t value)
@@ -214,14 +235,18 @@ int telnet_start (int port)
 	return tcp_service_install("telnet", &telnet_listener, port);
 }
 
+int telnet_stop (void)
+{
+	if (telnet_listener.tcp)
+		tcp_service_close(&telnet_listener);
+}
+
 static int  do_telnet(int argc, const char* const* argv)
 {
 	if (strcmp(argv[1], "start") == 0)
 		return telnet_start(-1);
-#if 0
 	else if (strcmp(argv[1], "stop") == 0)
 		telnet_stop();
-#endif
 	else if (telnet_peer.tcp && strcmp(argv[1], "quit") == 0)
 	{
 		console_printf("telnet: See you!\n");

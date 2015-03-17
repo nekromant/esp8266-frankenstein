@@ -11,12 +11,10 @@ typedef struct cb_s
 	const cbsize_t	size;		// buffer size
 	cbsize_t	read;		// index of oldest data
 	cbsize_t	write;		// index at which to write new data
-	char*		buf;		// data buffer
-	char		empty;		// all data are swallowed
-
-	// for *_ptr() functions only:
 	cbsize_t	unread;		// index of next unread data
-	char		allread;	// (read == unread == all is swallowed)
+	char*		buf;		// data buffer
+	char		empty;		// no data
+	char		allread;	// ((read == unread) == all is swallowed)
 } cb_t;
 
 // GIVE log2() of desired size

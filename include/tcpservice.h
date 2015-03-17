@@ -21,8 +21,8 @@ struct tcpservice_s
 	void (*cb_established) (tcpservice_t* s);
 	void (*cb_closing) (tcpservice_t* s);
 	void (*cb_recv) (tcpservice_t* s, const char* data, size_t len);
-	err_t (*cb_poll) (tcpservice_t* s);
-	err_t (*cb_ack) (tcpservice_t* s);
+	void (*cb_poll) (tcpservice_t* s);
+	void (*cb_ack) (tcpservice_t* s);
 	
 	//XXX add generic pointer for per-client data?
 	//XXX (like allowing multi-telnet)
