@@ -239,6 +239,7 @@ int telnet_stop (void)
 {
 	if (telnet_listener.tcp)
 		tcp_service_close(&telnet_listener);
+	return 0;
 }
 
 static int  do_telnet(int argc, const char* const* argv)
