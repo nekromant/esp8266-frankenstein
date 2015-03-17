@@ -45,10 +45,15 @@ static err_t tcp_service_receive (void* svc, struct tcp_pcb *pcb, struct pbuf *p
 	}
 }
 
-static void tcp_service_shutdown (tcpservice_t* s)
+static bool tcp_service_check_shutdown (tcpservice_t* s)
 {
-	tcp_close(s->tcp);
-	s->tcp = NULL;
+	if (s->is_closing && cb_is_empty(&s->send_buffer))
+	{
+		tcp_close(s->tcp);
+		s->tcp = NULL;
+		return 1;
+	}
+	return 0;
 }
 
 static err_t tcp_service_ack (void *svc, struct tcp_pcb *pcb, u16_t len)
@@ -56,18 +61,12 @@ static err_t tcp_service_ack (void *svc, struct tcp_pcb *pcb, u16_t len)
 	tcpservice_t* peer = (tcpservice_t*)svc;
 
 	cb_ack(&peer->send_buffer, len);
-		
-	
 	if (peer->cb_ack)
 		peer->cb_ack(peer);
 	
-	if (cb_is_empty(&peer->send_buffer))
-	{
-		tcp_service_shutdown(peer);
-		return ERR_OK;
-	}
-
-	return cb_tcp_send(&peer->send_buffer, peer->tcp);
+	return tcp_service_check_shutdown(peer)?
+		ERR_OK:
+		cb_tcp_send(&peer->send_buffer, peer->tcp);
 }
 
 static void tcp_service_error (void* svc, err_t err)
@@ -82,7 +81,10 @@ static err_t tcp_service_poll (void* svc, struct tcp_pcb* pcb)
 	tcpservice_t* service = (tcpservice_t*)svc;
 
 	if (service->cb_poll)
-		return service->cb_poll(service);
+		service->cb_poll(service);
+
+	// trigger send buffer if needed
+	tcp_service_ack(service, service->tcp, 0);
 		
 	return ERR_OK;
 }
@@ -97,8 +99,12 @@ static err_t tcp_service_incoming_peer (void* svc, struct tcp_pcb * peer_pcb, er
 	tcpservice_t* peer = listener->get_new_peer(listener);
 	if (!peer)
 		return ERR_MEM; //XXX handle this better
+	peer->tcp = peer_pcb;
+	peer->is_closing = 0;
 	
+	//XXX ??? 
 	tcp_setprio(peer->tcp, TCP_PRIO_MIN);
+
 	tcp_recv(peer->tcp, tcp_service_receive);
 	tcp_err(peer->tcp, tcp_service_error);
 	
@@ -110,7 +116,6 @@ static err_t tcp_service_incoming_peer (void* svc, struct tcp_pcb * peer_pcb, er
 	
 	if (peer->cb_established)
 		peer->cb_established(peer);
-	
 	return ERR_OK;
 }
 
@@ -162,5 +167,6 @@ void tcp_service_close (tcpservice_t* s)
 		s->is_closing = true;
 		if (s->cb_closing)
 			s->cb_closing(s);
+		tcp_service_check_shutdown(s);
 	}
 }
