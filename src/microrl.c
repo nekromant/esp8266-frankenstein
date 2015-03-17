@@ -321,7 +321,7 @@ static void terminal_reset_cursor (microrl_t * pThis)
 }
 
 //*****************************************************************************
-// print cmdline to screen, replace '\0' to wihitespace 
+// print cmdline to screen, replace '\0' to whitespace 
 static void terminal_print_line (microrl_t * pThis, int pos, int cursor)
 {
 	pThis->print ("\033[K");    // delete all from cursor to end
