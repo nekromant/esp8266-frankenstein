@@ -17,7 +17,7 @@
 #include <lwip/app/dhcpserver.h>
 
 #include "env.h"
-#include "telnet.h"
+#include "svc_telnet.h"
 
 struct envpair {
 	char *key, *value;
@@ -129,13 +129,8 @@ void user_init()
 	network_init();
 
 	const char *enabled = env_get("telnet-autostart"); 
-	if (enabled && (*enabled=='1')) { 
-		int port = 23; 
-		const char *tmp = env_get("telnet-port");
-		if (tmp)
-			port = atoi(tmp);
-		telnet_start(port);
-	}
+	if (enabled && (*enabled=='1'))
+		telnet_start(-1); // use env or 23
 
 	console_init(32);
 

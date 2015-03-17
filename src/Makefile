@@ -3,10 +3,12 @@ objects-y+=microrl.o
 objects-y+=console.o
 objects-y+=hostname.o
 objects-y+=env.o
-objects-y+=strbuf.o
-objects-y+=tcpbuf.o
-
-objects-y+=telnet.o
+#objects-y+=strbuf.o
+#objects-y+=tcpbuf.o
+objects-y+=cb.o
+objects-y+=cbtools.o
+objects-y+=tcpservice.o
+objects-y+=svc_telnet.o
 
 objects-y+=cmd_common.o cmd_env.o uart.o
 

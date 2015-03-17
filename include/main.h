@@ -2,6 +2,7 @@
 #ifndef _MAIN_H
 #define _MAIN_H
 
+#include "console.h"
 
 /*
    !!
@@ -13,8 +14,7 @@
    or os_*alloc()...
 */
 
-
-extern int (*console_printf)(const char *fmt, ...);// = ets_uart_printf;
+extern printf_f console_printf; // = ets_uart_printf;
 
 void request_default_environment(void);
 void print_hello_banner(void);
