@@ -350,132 +350,6 @@ i2c_master_writeByte(uint8 wrdata)
 	}
 }
 
-
-/******************************************************************************
- * FunctionName : i2c_master_writeRegister
- * Description  : write wrdata value(one byte) into i2c address
- * Parameters   : uint8 address - register address 
- * Parameters   : uint8 regaddr - register address 
- * Parameters   : uint8 wrdata - value to write
- * Returns	  : bool - true if success
-*******************************************************************************/
-bool ICACHE_FLASH_ATTR
-i2c_master_writeRegister(uint8 address, uint8 regaddr, uint8 wrdata)
-{
-	i2c_master_start();
-
-	i2c_master_writeByte(address);
-	if (!i2c_master_checkAck())
-	{
-		i2c_master_stop();
-		return false;
-	}
-
-	i2c_master_writeByte(regaddr);
-	if (!i2c_master_checkAck())
-	{
-		i2c_master_stop();
-		return false;
-	}
-
-	if(wrdata > 0){
-		i2c_master_writeByte(wrdata);
-		if (!i2c_master_checkAck())
-		{
-			i2c_master_stop();
-			return false;
-		}
-	}
-
-	i2c_master_stop();
-	return true;
-}
-
-
-/******************************************************************************
- * FunctionName : i2c_master_readRegister16wait
- * Description  : write wrdata value(one byte) into i2c address
- * Parameters   : uint8 address - register address 
- * Parameters   : uint8 regaddr - register address
- * Parameters   : bool waitnack - do not hungup while slave send nack
- * Returns	  : uint16 - result value
-*******************************************************************************/
-uint16 ICACHE_FLASH_ATTR
-i2c_master_readRegister16wait(uint8 address, uint8 regaddr, bool waitnack)
-{
-	
-	if(regaddr > 0) {
-		i2c_master_writeRegister(address, regaddr, 0);
-	}
-
-	do{
-		i2c_master_start();
-		i2c_master_writeByte(address+1);
-		if(!i2c_master_checkAck()){
-			i2c_master_stop();
-			if(waitnack){
-				i2c_master_wait(10*1000);
-				continue;
-			}
-			return(0);
-		}
-		break;
-	}while(true);
-
-	uint8 msb = i2c_master_readByte();
-	i2c_master_setAck(1); 		
-	uint8 lsb = i2c_master_readByte();
-	i2c_master_setAck(0); 		
-	i2c_master_stop();
-	
-	return ((msb << 8) | lsb);
-}
-
-/******************************************************************************
- * FunctionName : i2c_master_readRegister16
- * Description  : write wrdata value(one byte) into i2c address
- * Parameters   : uint8 address - register address 
- * Parameters   : uint8 regaddr - register address
- * Returns	  : bool - true if success
-*******************************************************************************/
-uint16 ICACHE_FLASH_ATTR
-i2c_master_readRegister16(uint8 address, uint8 regaddr)
-{
-	return i2c_master_readRegister16wait(address, regaddr, false);
-}
-
-/******************************************************************************
- * FunctionName : i2c_master_readRegister8
- * Description  : write wrdata value(one byte) into i2c address
- * Parameters   : uint8 address - register address 
- * Parameters   : uint8 regaddr - register address
- * Returns	  : uint8 - result value
-*******************************************************************************/
-uint8 ICACHE_FLASH_ATTR
-i2c_master_readRegister8(uint8 address, uint8 regaddr)
-{
-	
-	if(regaddr > 0) {
-		i2c_master_writeRegister(address, regaddr, 0);
-	}
-
-	i2c_master_start();
-	i2c_master_writeByte(address+1);
-	if(!i2c_master_checkAck()){
-		i2c_master_stop();
-		return(0);
-	}
-
-	uint8 byte = i2c_master_readByte();
-	i2c_master_setAck(0); 		
-	i2c_master_stop();
-	
-	return byte;
-}
-
-
-
-
 bool ICACHE_FLASH_ATTR
 i2c_master_writeBytes(uint8 address, uint8 *values, uint8 length)
 {
@@ -524,6 +398,16 @@ i2c_master_writeBytes2(uint8 address, uint8 byte1, uint8 byte2)
 	data[0] = byte1;
 	data[1] = byte2;
 	return i2c_master_writeBytes(address, data, 2);
+}
+
+bool ICACHE_FLASH_ATTR
+i2c_master_writeBytes3(uint8 address, uint8 byte1, uint8 byte2, uint8 byte3)
+{
+	uint8 data[3];
+	data[0] = byte1;
+	data[1] = byte2;
+	data[2] = byte3;
+	return i2c_master_writeBytes(address, data, 3);
 }
 
 bool ICACHE_FLASH_ATTR

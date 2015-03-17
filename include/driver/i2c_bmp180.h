@@ -27,7 +27,7 @@ float LAST_BMP_REAL_PRESSURE;
 sint32 LAST_BMP_TEMPERATURE;
 sint32 LAST_BMP_REAL_PRESSURE;
 #endif
-
+static bool IS_ALREADY_INITED = false;
 
 bool BMP180_Init(void);
 bool BMP180_Read(void);

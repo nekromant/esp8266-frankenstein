@@ -33,6 +33,10 @@ static void i2cdevice_enum(uint8 addr)
 			console_printf( "TCS3414CS? " );
 			break;
 
+		case 0x82: 
+			console_printf( "INA219? " );
+			break;
+
 		case 0x90: 
 			console_printf( "PCF8591? " );
 			break;

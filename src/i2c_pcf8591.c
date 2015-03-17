@@ -32,12 +32,20 @@ bool ICACHE_FLASH_ATTR
 PCF8591_Init()
 {
 	//TODO: configure for differential input
-	return PCF8591_Read();
+	if(PCF8591_Read()){
+		IS_ALREADY_INITED = true;
+		return true;
+	}
+	return false;
 }
 
 static int do_i2c_pcf8591(int argc, const char* const* argv)
 {
 	if(argc == 1 || strcmp(argv[1], "read") == 0){
+
+		if(!IS_ALREADY_INITED){
+			PCF8591_Init();
+		}
 
 		if(PCF8591_Read()){
 			if(argc != 1){

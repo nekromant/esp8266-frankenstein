@@ -184,6 +184,7 @@ BMP180_Init()
 	p0 = (3791.0 - 8.0) / 1600.0;
 	p1 = 1.0 - 7357.0 * pow(2,-20);
 	p2 = 3038.0 * 100.0 * pow(2,-36);
+	IS_ALREADY_INITED = true;
 	return true;
 #else
 
@@ -203,6 +204,7 @@ BMP180_Init()
 	console_printf( "ac1: %d\nac2: %d\nac3: %d\nac4: %d\nac5: %d\nac6: %d\nb1: %d\nb2: %d\nmb: %d\nmc: %d\nmd: %d\n", ac1,ac2,ac3,ac4,ac5,ac6,b1,b2,mb,mc,md);
 #endif
 		
+		IS_ALREADY_INITED = true;
 		return true;
 	}
 	console_printf( "Cant read calibration values\n");
@@ -213,6 +215,10 @@ BMP180_Init()
 static int do_i2c_bmp180(int argc, const char* const* argv)
 {
 	if(argc == 1 || strcmp(argv[1], "read") == 0){
+
+		if(!IS_ALREADY_INITED){
+			BMP180_Init();
+		}
 
 		if(BMP180_Read()){
 			console_printf( argc == 1 ? "%d %d\n" : "Temperature: %d C\nPressure: %d mmHg\n", 

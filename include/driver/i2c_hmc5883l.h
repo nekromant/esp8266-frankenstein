@@ -71,6 +71,7 @@ typedef struct
 } Vector; 
 
 Vector LAST_HMC5883_VECTOR;
+static bool IS_ALREADY_INITED = false;
 
 bool HMC5883_Init(void);
 bool HMC5883_Read(void);

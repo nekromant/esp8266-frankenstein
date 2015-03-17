@@ -13,7 +13,6 @@
 #include "console.h"
 
 #include <stdlib.h>
-#include <stdlib.h>
 #include <generic/macros.h>
 
 #include "main.h"
