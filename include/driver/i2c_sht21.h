@@ -25,6 +25,7 @@ float LAST_SHT_HUMIDITY;
 int32 LAST_SHT_TEMPERATURE;
 uint16 LAST_SHT_HUMIDITY;
 #endif
+static bool IS_ALREADY_INITED = false;
 
 bool SHT21_Init(void);
 bool SHT21_Read(void);

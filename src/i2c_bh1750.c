@@ -40,12 +40,17 @@ BH1750_Init(uint8 mode)
 	}
 
 	currentmode = mode;
+	IS_ALREADY_INITED = true;
 	return true;
 }
 
 static int do_i2c_bh1750(int argc, const char* const* argv)
 {
 	if(argc == 1 || strcmp(argv[1], "read") == 0){
+
+		if(!IS_ALREADY_INITED){
+			BH1750_Init(BH1750_ONE_TIME_HIGH_RES_MODE);
+		}
 
 		if(BH1750_Read()){
 			console_printf( argc == 1 ? "%d\n" : "Light: %d lux\n", LAST_BH_LIGHT);
