@@ -12,12 +12,10 @@
 #include "microrl.h"
 #include "console.h"
 #include "env.h"
-#include "strbuf.h"
 
-#include "telnet.h"
 #include "lwip/mem.h" // mem_realloc
 
-int (*console_printf)(const char *fmt, ...) = SERIAL_PRINTF;
+printf_f console_printf = SERIAL_PRINTF;
 
 #define CONSOLE_PRIO 1
 
@@ -169,10 +167,11 @@ err_too_many_args:
 
 const char ** completion(int argc, const char* const* argv)
 {
-	static strbuf sb = STRBUF_INIT;
-	static char** compl = NULL;
-	static size_t complsize = 0;
-	static const char* noroom [] = { "completion:", "not", "enough", "memory", NULL };
+	#define COMPL_MAX_RESULTS	3
+	#define COMPL_BUF		128
+	static const char* noroom = "(completion: not enough memory)";
+	static char complbuf [COMPL_BUF];
+	static const char* compl [COMPL_MAX_RESULTS + 1];
 	static const char* nocompl [] = { NULL };
 	
 	if (argc == 1)
@@ -185,24 +184,21 @@ const char ** completion(int argc, const char* const* argv)
 		FOR_EACH_CMD(cmd)
 			if (strncasecmp(cmd->name, part, partlen) == 0)
 				ncompl++;
-
-		if (ncompl + 1 > complsize)
-		{
-			compl = (char**)mem_realloc(compl, (ncompl + 1) * sizeof(const char*));
-			if (!compl)
-				return noroom;
-			complsize = ncompl + 1;
-		}
-
-		strbuf_clear(&sb);
 		int i = 0;
+		size_t pos = 0;
 		FOR_EACH_CMD(cmd)
 			if (strncasecmp(cmd->name, part, partlen) == 0)
 			{
-				const char* src = cmd->name + (i == 0 && ncompl > 1? partlen: 0);
-				size_t srcsize = strlen(src) + 1;
-				strbuf_memcpy(&sb, src, srcsize);
-				compl[i++] = strbuf_endptr(&sb) - srcsize;
+				if (i == COMPL_MAX_RESULTS - 2)
+					compl[i++] = noroom;
+				else if (i < COMPL_MAX_RESULTS - 2)
+				{
+					const char* src = cmd->name + (i == 0 && ncompl > 1? partlen: 0);
+					size_t srcsize = strlen(src) + 1;
+					compl[i++] = complbuf + pos;
+					memcpy(complbuf + pos, src, srcsize);
+					pos += srcsize;
+				}
 			}
 		compl[i] = NULL;
 		
