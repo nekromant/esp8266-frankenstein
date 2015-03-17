@@ -30,8 +30,8 @@ bool "AT to say OK"
 config CMD_ADC
 bool "System ADC support"
 
-config CMD_I2C
-bool "I2C bus support"
+menuconfig CMD_I2C
+bool "I2C support (experimental)"
 
 if CMD_I2C
 
@@ -51,16 +51,13 @@ config CMD_I2C_INA219
 bool "I2C ina219 current sensor"
 
 config CMD_I2C_TCS3414CS
-bool "I2C tcs3414cs color sensor"
-default n
+bool "I2C tcs3414cs color sensor (Needs testing)"
 
 config CMD_I2C_MLX90614
-bool "I2C mlx90614 temperature sensor"
-default n
+bool "I2C mlx90614 temperature sensor (Needs testing)"
 
 config CMD_I2C_HMC5883L
-bool "I2C hmc5883l 3-Axis Digital Compass"
-default n
+bool "I2C hmc5883l 3-Axis Digital Compass (Needs testing)"
 
 endif
 
@@ -80,7 +77,7 @@ help
 endif
 
 menuconfig CMD_DHT11
-bool "DHT11/DHT22 Thermal Sensor support"
+bool "DHT11/DHT22 Thermal Sensor support (Needs testing)"
 
 if CMD_DHT11
 config CMD_DHT11_DEBUG
@@ -91,7 +88,6 @@ help
 endif
 
 endmenu
-
 
 menu "Environment Settings"
 
