@@ -69,11 +69,22 @@ endif
 #bool "enable tcp(10101)<->serial passthrough"
 
 menuconfig CMD_DS18B20
-bool "DS18B20/DS18S20 Termal Sensor support"
+bool "DS18B20/DS18S20 Thermal Sensor support"
 
 if CMD_DS18B20
 config CMD_DS18B20_DEBUG
 bool "DS18B20 Debugging"
+help
+	Show debugging messages
+
+endif
+
+menuconfig CMD_DHT11
+bool "DHT11/DHT22 Thermal Sensor support"
+
+if CMD_DHT11
+config CMD_DHT11_DEBUG
+bool "DHT11 Debugging"
 help
 	Show debugging messages
 
