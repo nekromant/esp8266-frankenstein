@@ -64,7 +64,7 @@ endif
 #bool "enable tcp(10101)<->serial passthrough"
 
 menuconfig CMD_DS18B20
-bool "DS18B20/DS18S20 Termal Sensor support"
+bool "DS18B20/DS18S20 Thermal Sensor support"
 
 if CMD_DS18B20
 config CMD_DS18B20_DEBUG
