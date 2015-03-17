@@ -79,6 +79,17 @@ help
 
 endif
 
+menuconfig CMD_DHT11
+bool "DHT11/DHT22 Thermal Sensor support"
+
+if CMD_DHT11
+config CMD_DHT11_DEBUG
+bool "DHT11 Debugging"
+help
+	Show debugging messages
+
+endif
+
 endmenu
 
 
