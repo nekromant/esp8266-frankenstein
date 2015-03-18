@@ -8,8 +8,7 @@
 #define dbg(fmt, ...)
 #endif
 
-bool ICACHE_FLASH_ATTR
-SHT21_Init()
+bool SHT21_Init()
 {
 	
 	if(i2c_master_writeBytes1(SHT21_ADDRESS, SHT21_SOFT_RESET))
@@ -22,8 +21,7 @@ SHT21_Init()
 	return false;
 }
 
-bool ICACHE_FLASH_ATTR
-SHT21_Read()
+bool SHT21_Read()
 {
 #ifdef CONFIG_USEFLOAT
 #define PRECISION_MULTI 1.0
@@ -52,11 +50,7 @@ static int do_i2c_sht21(int argc, const char* const* argv)
 {
 	if(argc == 1 || strcmp(argv[1], "read") == 0){
 
-		if(!IS_ALREADY_INITED){
-			SHT21_Init();
-		}
-
-		if(SHT21_Read()){
+		if((IS_ALREADY_INITED || SHT21_Init()) && SHT21_Read()){
 			console_printf( argc == 1 ? "%d %d\n" : "Temperature: %d C\nHumidity: %d %%\n", 
 #ifdef CONFIG_USEFLOAT
 				(int)(LAST_SHT_TEMPERATURE*100),

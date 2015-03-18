@@ -12,8 +12,7 @@
 #define dbg(fmt, ...)
 #endif
 
-bool ICACHE_FLASH_ATTR 
-TCS3414_Read()
+bool TCS3414_Read()
 {
 	
 	if(!i2c_master_writeBytes1(TCS3414_ADDRESS, TCS3414_REG_BLOCK_READ)){
@@ -51,24 +50,21 @@ TCS3414_Read()
 	return false;
 }
 
-bool ICACHE_FLASH_ATTR 
-TCS3414_SetTimeing(uint8_t timeing, uint8_t gain)
+bool TCS3414_SetTimeing(uint8_t timeing, uint8_t gain)
 {
 	return i2c_master_writeBytes2(TCS3414_ADDRESS, TCS3414_REG_TIMING, timeing)
 		&& i2c_master_writeBytes2(TCS3414_ADDRESS, TCS3414_REG_GAIN, gain);
 }
 
 
-bool ICACHE_FLASH_ATTR 
-TCS3414_SetInterrupt(uint8_t interruptSource, uint8_t interruptControl)
+bool TCS3414_SetInterrupt(uint8_t interruptSource, uint8_t interruptControl)
 {
 
 	return i2c_master_writeBytes2(TCS3414_ADDRESS, TCS3414_REG_INT_SOURCE, interruptSource)
 		&& i2c_master_writeBytes2(TCS3414_ADDRESS, TCS3414_REG_INT, interruptControl);
 }
 
-bool ICACHE_FLASH_ATTR 
-TCS3414_Init()
+bool TCS3414_Init()
 {
 	if(!TCS3414_SetTimeing(TCS3414_INTEGRATION_TIME_12ms, TCS3414_GAIN_1|TCS3414_PRESCALER_4)){
 		console_printf( "Failed to set timeings\n" );
@@ -95,11 +91,7 @@ static int do_i2c_tcs3414(int argc, const char* const* argv)
 {
 	if(argc == 1 || strcmp(argv[1], "read") == 0){
 
-		if(!IS_ALREADY_INITED){
-			TCS3414_Init();
-		}
-
-		if(TCS3414_Read()){
+		if((IS_ALREADY_INITED || TCS3414_Init()) && TCS3414_Read()){
 			if(argc != 1){
 				console_printf( "RGBW: " );
 			}
