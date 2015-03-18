@@ -282,6 +282,23 @@ tftp       - Update firmware over tftp
              tftp
 AT         - says OK
 ```
+# Initial flash
+
+```
+make flash # defaults to /dev/ttyUSB0 ; also requires a pl2303 breakout and the pl2303gpio program
+make flash PORT=/dev/ttyUSB0
+```
+
+If you dont have a pl2303 gpio breakoutboard and have to manually set the programming GPIO:
+
+* Dont be running minicom or other terminal program
+* Connect RST and GPIO#)0 to GND
+* Release RST
+* Release GPIO#2 (at least 300ms after)
+
+```
+make flash PORT=/dev/ttyUSB0 HAVE_PL2303=n
+```
 
 # Over-the-air firmware updates. 
 
