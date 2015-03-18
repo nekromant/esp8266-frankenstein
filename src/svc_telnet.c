@@ -31,8 +31,6 @@ typedef struct telnet_state_s
 	int state;
 	int idle;
 	int max_idle;
-	//void *prev_printf;
-	printf_f prev_printf;
 } telnet_state_t;
 
 // embed tcp_service in a more global telnet specific structure
