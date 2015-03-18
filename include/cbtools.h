@@ -5,7 +5,7 @@
 
 #include "cb.h"
 
-// was 128 but flash_scan help line is greater:
+// was 128 but flash_scan help line is bigger:
 #define SPRINTBUFSIZE 256
 
 extern char sprintbuf [SPRINTBUFSIZE];

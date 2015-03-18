@@ -51,6 +51,8 @@ static bool tcp_service_check_shutdown (tcpservice_t* s)
 	{
 		tcp_close(s->tcp);
 		s->tcp = NULL;
+		if (s->cb_cleanup)
+			s->cb_cleanup(s);
 		return 1;
 	}
 	return 0;
@@ -102,20 +104,19 @@ static err_t tcp_service_incoming_peer (void* svc, struct tcp_pcb * peer_pcb, er
 	peer->tcp = peer_pcb;
 	peer->is_closing = 0;
 	
-	//XXX ??? 
-	tcp_setprio(peer->tcp, TCP_PRIO_MIN);
-
+	tcp_setprio(peer->tcp, TCP_PRIO_MIN); //XXX???
 	tcp_recv(peer->tcp, tcp_service_receive);
 	tcp_err(peer->tcp, tcp_service_error);
-	
 	tcp_poll(peer->tcp, tcp_service_poll, 4); //every two seconds of inactivity of the TCP connection
 	tcp_sent(peer->tcp, tcp_service_ack);
 	
-	// accept client callback returns service structure
+	// peer/tcp_pcb association
 	tcp_arg(peer->tcp, peer);
 	
+	// start fighting
 	if (peer->cb_established)
 		peer->cb_established(peer);
+		
 	return ERR_OK;
 }
 
