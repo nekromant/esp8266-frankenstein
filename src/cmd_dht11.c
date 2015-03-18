@@ -44,22 +44,22 @@ static int do_dht11(int argc, const char* const* argv)
 {
   float temperature, humidity;
   int er;
-	dht11_setup();
+  dht11_setup();
   er = dht11_read_sensor(&temperature, &humidity);
   switch (er) {
   case -1:
-		console_printf( "No DHT family device found\n" );
+    console_printf( "No DHT family device found\n" );
     break;
   case -2:
-		console_printf( "Checksum error\n" );
+    console_printf( "Checksum error\n" );
     break;
   default:
     /* hmm.  seems printf(%f) doesnt work... */
-  	console_printf( "Temperature: %d.%d Celsius, Humidity: %d\n",
+    console_printf( "Temperature: %d.%d Celsius, Humidity: %d\n",
       (int)floorf(temperature), (int)(10.F*(temperature - floorf(temperature))), (int)floor(humidity));
     break;
   }
-	return er;
+  return er;
 }
 
 /* Setup to try and read a DHT11 or DHT22 on the specified gpio pin (currently, hard-coded to 2) */
@@ -79,7 +79,7 @@ static int dht11_read_sensor(float* temperature, float* humidity)
   const int gpio=2;
 
   /* Start off as input... */
-	GPIO_DIS_OUTPUT(gpio);
+  GPIO_DIS_OUTPUT(gpio);
 
   /* Send a start signal.
    * We try and auto-detect the device as follows:
@@ -126,8 +126,7 @@ static int dht11_read_sensor(float* temperature, float* humidity)
      * Next 16 bits == temperature
      */
 
-    dbg("Input\n");
-  	GPIO_DIS_OUTPUT(gpio);
+    GPIO_DIS_OUTPUT(gpio);
     data = 0;
     dbg("Read loop\n");
     for (int edge=-3 ; edge < 2 * 40; edge++ ) { /* LSB bit: 1 0 1 0 1 0 1 0.... */
@@ -203,8 +202,8 @@ read_failed:
 }
 
 CONSOLE_CMD(dht11, 1, 1, 
-	    do_dht11, NULL, NULL, 
-	    "Read temperature and humidity from DHT11 / DHT22 sensor module."
-	    HELPSTR_NEWLINE "dht11 <gpio>"
-	);
+      do_dht11, NULL, NULL, 
+      "Read temperature and humidity from DHT11 / DHT22 sensor module."
+      HELPSTR_NEWLINE "dht11 <gpio>"
+  );
 
