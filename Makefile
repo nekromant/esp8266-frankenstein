@@ -57,7 +57,7 @@ define reset
 endef
 endif
 
-ifeq $($(HAVE_PL2303),y)
+ifeq ($(HAVE_PL2303),y)
 define minicom
 	minicom -o -D $(PORT) -b 115200
 endef
