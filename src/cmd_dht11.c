@@ -25,6 +25,7 @@
 #include "console.h"
 
 #include <stdlib.h>
+#include <math.h>
 #include <generic/macros.h>
 
 #ifdef CONFIG_CMD_DHT11_DEBUG
@@ -53,7 +54,9 @@ static int do_dht11(int argc, const char* const* argv)
 		console_printf( "Checksum error\n" );
     break;
   default:
-  	console_printf( "Temperature: %.1f Celsius, Humidity %.1f\n", temperature, humidity);
+    /* hmm.  seems printf(%f) doesnt work... */
+  	console_printf( "Temperature: %d.%d Celsius, Humidity: %d\n",
+      (int)floorf(temperature), (int)(10.F*(temperature - floorf(temperature))), (int)floor(humidity));
     break;
   }
 	return er;
@@ -92,21 +95,21 @@ static int dht11_read_sensor(float* temperature, float* humidity)
   uint16 readHumidity = 0;
 
   uint8 model;
-  uint16 data;
+  uint16 data = (uint16)-1;
   uint8 checksum;
   for (model=0; model != MODEL_NONE; model++)
   {
-
     switch (model) {
     case MODEL_DHT11: 
-      os_delay_us(MINIMUM_POLL_DHT11);
       dbg("Trying model DTH11\n"); break;
+      os_delay_us(MINIMUM_POLL_DHT11);
     case MODEL_DHT22: 
-      os_delay_us(MINIMUM_POLL_DHT22);
       dbg("Trying model DTH22\n"); break;
+      os_delay_us(MINIMUM_POLL_DHT22);
     }
 
-    /* pin low, then delay */
+    /* ensure input is low, then delay */
+    dbg("Output low\n");
   	GPIO_OUTPUT_SET(gpio, 0);
     switch (model) {
     case MODEL_DHT11: 
@@ -123,18 +126,22 @@ static int dht11_read_sensor(float* temperature, float* humidity)
      * Next 16 bits == temperature
      */
 
+    dbg("Input\n");
   	GPIO_DIS_OUTPUT(gpio);
     data = 0;
-    for (uint8 edge=-3 ; edge < 2 * 40; edge++ ) {
+    dbg("Read loop\n");
+    for (int edge=-3 ; edge < 2 * 40; edge++ ) { /* LSB bit: 1 0 1 0 1 0 1 0.... */
       uint8 retries;
+      dbg("edge=%d\n", (int)edge); 
       for (retries = 45; retries != 0; retries --)  {
         // For odd egdes we need to read 0, for even edges 1
         if (GPIO_INPUT_GET(gpio) == ((edge & 1)?1:0)) break;
         os_delay_us(2);
       }
+      dbg("edge=%d retries=%d\n", edge, 45-(int)retries); 
+
       /* Sometimes you just need to use goto */
       if (retries == 0) goto read_failed;
-
       if (edge >= 0 && (edge & 1) ) {
         /* Shift in the bits so last read bit is LSB */
         data <<= 1;
@@ -150,6 +157,7 @@ static int dht11_read_sensor(float* temperature, float* humidity)
       /* On exit from loop data will contain checksum byte */
       }
     }
+    dbg("All edges\n");
     break;
 read_failed:
     switch (model) {
@@ -157,10 +165,15 @@ read_failed:
       dbg("It is not a DTH11\n"); break;
     case MODEL_DHT22: 
       dbg("It is not a DTH22\n"); break;
+    default:
+      dbg("assert!\n"); break;
     }
+    dbg("Return to output mode\n");
+  	GPIO_OUTPUT_SET(gpio, 0);
   }
 
   if (model == MODEL_NONE) {
+    dbg("No detect\n");
     return -1;
   }
 
@@ -177,17 +190,19 @@ read_failed:
     *humidity = readHumidity >> 8;
     *temperature = readTemperature >> 8;
     break;
-  case MODEL_DHT22: 
+  case MODEL_DHT22:
+    /* untested: I dont have a DHT22 to try */
     *humidity = readHumidity * 0.1;
     if ( readTemperature & 0x8000 ) {
       readTemperature = -(sint16)(readTemperature & 0x7FFF);
     }
     *temperature = ((sint16)readTemperature) * 0.1;
+    break;
   }
   return 0;
 }
 
-CONSOLE_CMD(dht11, 2, 2, 
+CONSOLE_CMD(dht11, 1, 1, 
 	    do_dht11, NULL, NULL, 
 	    "Read temperature and humidity from DHT11 / DHT22 sensor module."
 	    HELPSTR_NEWLINE "dht11 <gpio>"
