@@ -50,6 +50,10 @@ extern int log_level;
 
 typedef int (*printf_f)(const char *fmt, ...) __attribute__ ((format (printf, 1, 2)));
 
+// add this to antares/esp8266 missing includes
+#include <stdarg.h>
+int vsnprintf(char *str, size_t size, const char *format, va_list ap);
+       
 extern printf_f console_printf;
 
 #define HELPSTR_NEWLINE "\n             "
