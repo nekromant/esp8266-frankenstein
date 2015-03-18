@@ -65,10 +65,11 @@ static int do_dht11(int argc, const char* const* argv)
 /* Setup to try and read a DHT11 or DHT22 on the specified gpio pin (currently, hard-coded to 2) */
 void dht11_setup(int gpio)
 {
-	/* set gpio2 as gpio pin, with pullup enabled. */
-	PIN_FUNC_SELECT(PERIPHS_IO_MUX_GPIO2_U, FUNC_GPIO2);
-	PIN_PULLDWN_DIS(PERIPHS_IO_MUX_GPIO2_U);
-	PIN_PULLUP_EN(PERIPHS_IO_MUX_GPIO2_U);  
+  /* set gpio2 as gpio pin, with pullup enabled. */
+  PIN_FUNC_SELECT(PERIPHS_IO_MUX_GPIO2_U, FUNC_GPIO2);
+  PIN_PULLDWN_DIS(PERIPHS_IO_MUX_GPIO2_U);
+  PIN_PULLUP_DIS(PERIPHS_IO_MUX_GPIO2_U); /* we expect an external pullup to Vcc */
+  GPIO_DIS_OUTPUT(2);
 
   dbg("Preparing to read a DHT-family device using gpio 2\n");
 }
@@ -99,26 +100,31 @@ static int dht11_read_sensor(float* temperature, float* humidity)
   uint8 checksum;
   for (model=0; model != MODEL_NONE; model++)
   {
+    int edge;
+    /* Start with output at Vcc */
+    GPIO_OUTPUT_SET(gpio, 1);
+
     switch (model) {
     case MODEL_DHT11: 
       dbg("Trying model DTH11\n"); break;
       os_delay_us(MINIMUM_POLL_DHT11);
+      /* hold low 20ms, then high 30us (see http://embedded-lab.com/blog/?p=4333 )*/
+      GPIO_OUTPUT_SET(gpio, 0);
+      os_delay_us(20000);
+      GPIO_OUTPUT_SET(gpio, 1);
+      os_delay_us(30);
+      break;
     case MODEL_DHT22: 
       dbg("Trying model DTH22\n"); break;
+      GPIO_OUTPUT_SET(gpio, 1);
       os_delay_us(MINIMUM_POLL_DHT22);
+      GPIO_OUTPUT_SET(gpio, 0);
+      os_delay_us(800);
+      GPIO_OUTPUT_SET(gpio, 1);
+      os_delay_us(800);
     }
 
-    /* ensure input is low, then delay */
-    dbg("Output low\n");
-  	GPIO_OUTPUT_SET(gpio, 0);
-    switch (model) {
-    case MODEL_DHT11: 
-      os_delay_us(18000); break;
-    case MODEL_DHT22: 
-      os_delay_us(800); break;
-    };
-
-    /* Read 83 edges:
+    /* Read 83 edges after output was high:
      *   First a FALLING, RISING, and FALLING edge for the start bit
      *   Then 40 bits: RISING and then a FALLING edge per bit
      *   To keep things simple, we accept any HIGH or LOW reading if it's max 85 usecs (~45 x 2us retries) long
@@ -128,16 +134,16 @@ static int dht11_read_sensor(float* temperature, float* humidity)
 
     GPIO_DIS_OUTPUT(gpio);
     data = 0;
-    dbg("Read loop\n");
-    for (int edge=-3 ; edge < 2 * 40; edge++ ) { /* LSB bit: 1 0 1 0 1 0 1 0.... */
+    // dbg("Read loop\n");
+    for (edge=-3 ; edge < 2 * 40; edge++ ) { /* LSB bit: 1 0 1 0 1 0 1 0.... */
       uint8 retries;
-      dbg("edge=%d\n", (int)edge); 
+      // dbg("edge=%d\n", (int)edge);
       for (retries = 45; retries != 0; retries --)  {
-        // For odd egdes we need to read 0, for even edges 1
-        if (GPIO_INPUT_GET(gpio) == ((edge & 1)?1:0)) break;
+        // For odd edges we need to read 0, for even edges 1
+        if (GPIO_INPUT_GET(gpio) == ((edge & 1)?0:1)) break;
         os_delay_us(2);
       }
-      dbg("edge=%d retries=%d\n", edge, 45-(int)retries); 
+      //dbg("edge=%d retries=%d\n", edge, 45-(int)retries); 
 
       /* Sometimes you just need to use goto */
       if (retries == 0) goto read_failed;
@@ -161,15 +167,16 @@ static int dht11_read_sensor(float* temperature, float* humidity)
 read_failed:
     switch (model) {
     case MODEL_DHT11: 
-      dbg("It is not a DTH11\n"); break;
+      dbg("It is not a DTH11. edge=%d\n", edge); break;
     case MODEL_DHT22: 
-      dbg("It is not a DTH22\n"); break;
+      dbg("It is not a DTH22. edge=%d\n", edge); break;
     default:
       dbg("assert!\n"); break;
     }
     dbg("Return to output mode\n");
-  	GPIO_OUTPUT_SET(gpio, 0);
+    GPIO_OUTPUT_SET(gpio, 1);
   }
+  GPIO_OUTPUT_SET(gpio, 1);
 
   if (model == MODEL_NONE) {
     dbg("No detect\n");
