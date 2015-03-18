@@ -23,9 +23,7 @@ struct tcpservice_s
 	void (*cb_recv) (tcpservice_t* s, const char* data, size_t len);
 	void (*cb_poll) (tcpservice_t* s);
 	void (*cb_ack) (tcpservice_t* s);
-	
-	//XXX add generic pointer for per-client data?
-	//XXX (like allowing multi-telnet)
+	void (*cb_cleanup) (tcpservice_t* s);
 };
 
 #define TCP_SERVICE_VOID()			\
@@ -39,6 +37,7 @@ struct tcpservice_s
 	.cb_recv = NULL,			\
 	.cb_poll = NULL,			\
 	.cb_ack = NULL,				\
+	.cb_cleanup = NULL;			\
 }
 
 void tcp_log_err (err_t err);
