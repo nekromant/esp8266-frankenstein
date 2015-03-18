@@ -8,7 +8,7 @@ typedef size_t	cbsize_t;
 // Circular buffer object
 typedef struct cb_s
 {
-	const cbsize_t	size;		// buffer size
+	cbsize_t	size;		// buffer size
 	cbsize_t	read;		// index of oldest data
 	cbsize_t	write;		// index at which to write new data
 	cbsize_t	unread;		// index of next unread data
@@ -46,6 +46,8 @@ typedef struct cb_s
 
 // return available space for write
 size_t cb_write_available (cb_t* cb);
+
+void cb_init (cb_t* cb, char* userbuf, char sizelog2);
 
 ///////////////////////////////////////////////////////////
 // functions with copy

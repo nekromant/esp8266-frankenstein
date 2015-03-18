@@ -17,6 +17,14 @@ size_t cb_write_available (cb_t* cb)
 		return cb->read - cb->write;
 }
 
+void cb_init (cb_t* cb, char* userbuf, char sizelog2)
+{
+	cb->size = ((cbsize_t)1) << sizelog2;
+	cb->buf = userbuf;
+	cb->write = cb->read = cb->unread = 0;
+	cb->empty = cb->allread = 1;
+}
+
 static size_t cb_write_available_chunk (cb_t* cb)
 {
 	return (cb->read < cb->write || (cb->read == cb->write && cb->empty))?
