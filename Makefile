@@ -15,6 +15,10 @@ CFLAGS+=-D__ets__ \
 	-DPBUF_RSV_FOR_WLAN \
 	-DEBUF_LWIP
 
+PORT?=/dev/ttyUSB0
+
+HAVE_PL2303?=y
+
 
 ifeq ($(ANTARES_INSTALL_DIR2),)
 antares:
@@ -41,6 +45,7 @@ endif
 #release reset.
 #sleep 300 ms
 #release boot
+ifeq ($(HAVE_PL2303),y)
 define tobootloader
 	sudo pl2303gpio --gpio=0 --out=0 --gpio=1 --out=0 \
 	--gpio=1 --in --sleep 50 \
@@ -50,24 +55,29 @@ endef
 define reset
 	sudo pl2303gpio --gpio=1 --out=0 --gpio=1 --in
 endef
+endif
+
+ifeq ($(HAVE_PL2303),y)
+define minicom
+	minicom -o -D $(PORT) -b 115200
+endef
+endif
 
 dumpiram:
 	$(tobootloader)
-	esptool.py --port /dev/ttyUSB0 dump_mem 0x40000000 65536 iram0.bin
+	esptool.py --port $(PORT) dump_mem 0x40000000 65536 iram0.bin
 
 reset: 
 	$(reset)
-
-PORT=/dev/ttyUSB0
 
 flash:
 	$(tobootloader)
 	-esptool.py --port $(PORT) write_flash 0x00000 images/antares.rom
 	$(reset)
-	minicom -o -D $(PORT) -b 115200
+	$(minicom)
 
 flashidata:
 	$(tobootloader)
 	-esptool.py --port $(PORT) write_flash 0x7c000 esp_iot_sdk_v0.9.2/bin/esp_init_data_default.bin
 	$(reset)
-	minicom -o -D $(PORT) -b 115200
+	$(minicom)
