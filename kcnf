@@ -77,7 +77,7 @@ help
 endif
 
 menuconfig CMD_DHT11
-bool "DHT11/DHT22 Thermal Sensor support (Needs testing)"
+bool "DHT11 Thermal & Humidity Sensor support (Needs testing)"
 
 if CMD_DHT11
 config CMD_DHT11_DEBUG
