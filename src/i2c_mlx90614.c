@@ -13,13 +13,15 @@
 #endif
 
 #ifdef CONFIG_USEFLOAT
-float MLX90614_ReadTempFrom(uint8 reg)
+float ICACHE_FLASH_ATTR 
+MLX90614_ReadTempFrom(uint8 reg)
 {
 	float result = i2c_master_readRegister16(MLX90614_ADDRESS, reg);
 	return ((result / 50) - 273.15);
 }
 #else
-sint16 MLX90614_ReadTempFrom(uint8 reg)
+sint16 ICACHE_FLASH_ATTR 
+MLX90614_ReadTempFrom(uint8 reg)
 {
 
 	uint8 data[3];
@@ -32,7 +34,8 @@ sint16 MLX90614_ReadTempFrom(uint8 reg)
 }
 #endif
 
-bool MLX90614_Read()
+bool ICACHE_FLASH_ATTR 
+MLX90614_Read()
 {
 	LAST_MLX90614_AMBIENT_TEMPERATURE = MLX90614_ReadTempFrom(MLX90614_TA);
 	LAST_MLX90614_OBJECT_TEMPERATURE = MLX90614_ReadTempFrom(MLX90614_TOBJ1);
@@ -40,7 +43,8 @@ bool MLX90614_Read()
 }
 
 
-bool MLX90614_Init()
+bool ICACHE_FLASH_ATTR 
+MLX90614_Init()
 {
 #ifdef CONFIG_CMD_MLX90614_DEBUG
 	console_printf("Sensor ID: %02x %02x %02x %02x\n",
@@ -59,7 +63,11 @@ static int do_i2c_mlx90614(int argc, const char* const* argv)
 {
 	if(argc == 1 || strcmp(argv[1], "read") == 0){
 
-		if((IS_ALREADY_INITED || MLX90614_Init()) && MLX90614_Read()){
+		if(!IS_ALREADY_INITED){
+			MLX90614_Init();
+		}
+
+		if(MLX90614_Read()){
 			console_printf( argc == 1 ? "%d %d\n" : "Ambient: %d C\nObject: %d C\n", 
 #ifdef CONFIG_USEFLOAT
 				(int)(LAST_MLX90614_AMBIENT_TEMPERATURE*100), 

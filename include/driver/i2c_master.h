@@ -3,9 +3,40 @@
 
 #include "os_type.h"
 
-#define I2C_SLEEP_TIME 5
+#define I2C_MASTER_SDA_MUX (pin_mux[sda])
+#define I2C_MASTER_SCL_MUX (pin_mux[scl])
+#define I2C_MASTER_SDA_GPIO (pinSDA)
+#define I2C_MASTER_SCL_GPIO (pinSCL)
+#define I2C_MASTER_SDA_FUNC (pin_func[sda])
+#define I2C_MASTER_SCL_FUNC (pin_func[scl])
 
-bool i2c_master_gpio_init(uint8 sda, uint8 scl);
+#define I2C_SLEEP_TIME 4
+
+#if 0
+#define I2C_MASTER_GPIO_SET(pin)  \
+	gpio_output_set(1<<pin,0,1<<pin,0)
+
+#define I2C_MASTER_GPIO_CLR(pin) \
+	gpio_output_set(0,1<<pin,1<<pin,0)
+
+#define I2C_MASTER_GPIO_OUT(pin,val) \
+	if(val) I2C_MASTER_GPIO_SET(pin);\
+	else I2C_MASTER_GPIO_CLR(pin)
+#endif
+
+#define I2C_MASTER_SDA_HIGH_SCL_HIGH()  \
+	gpio_output_set(1<<I2C_MASTER_SDA_GPIO | 1<<I2C_MASTER_SCL_GPIO, 0, 1<<I2C_MASTER_SDA_GPIO | 1<<I2C_MASTER_SCL_GPIO, 0)
+
+#define I2C_MASTER_SDA_HIGH_SCL_LOW()  \
+	gpio_output_set(1<<I2C_MASTER_SDA_GPIO, 1<<I2C_MASTER_SCL_GPIO, 1<<I2C_MASTER_SDA_GPIO | 1<<I2C_MASTER_SCL_GPIO, 0)
+
+#define I2C_MASTER_SDA_LOW_SCL_HIGH()  \
+	gpio_output_set(1<<I2C_MASTER_SCL_GPIO, 1<<I2C_MASTER_SDA_GPIO, 1<<I2C_MASTER_SDA_GPIO | 1<<I2C_MASTER_SCL_GPIO, 0)
+
+#define I2C_MASTER_SDA_LOW_SCL_LOW()  \
+	gpio_output_set(0, 1<<I2C_MASTER_SDA_GPIO | 1<<I2C_MASTER_SCL_GPIO, 1<<I2C_MASTER_SDA_GPIO | 1<<I2C_MASTER_SCL_GPIO, 0)
+
+void i2c_master_gpio_init(uint8 sda, uint8 scl);
 void i2c_master_init(void);
 
 #define i2c_master_wait	os_delay_us

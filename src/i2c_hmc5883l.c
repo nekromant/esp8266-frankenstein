@@ -1,5 +1,3 @@
-#error DO NOT TRT USE THIS MODULE. IT WILL BROKE ESP.
-
 #include "c_types.h"
 #include "ets_sys.h"
 #include "osapi.h"
@@ -17,7 +15,8 @@
 
 static float mgPerDigit; 
 
-uint16_t HMC5883_ReadDegrees()
+uint16_t ICACHE_FLASH_ATTR 
+HMC5883_ReadDegrees()
 {
 	float heading = atan2(LAST_HMC5883_VECTOR.X, LAST_HMC5883_VECTOR.Y);
 	heading += (4.0 + (26.0 / 60.0)) / (180 / M_PI); 
@@ -34,20 +33,17 @@ uint16_t HMC5883_ReadDegrees()
 	return (heading * 180/M_PI);
 }
 
-bool HMC5883_Read()
+bool ICACHE_FLASH_ATTR 
+HMC5883_Read()
 {
-	if(i2c_master_readSint16(HMC5883L_ADDRESS, HMC5883L_REG_OUT_X_M, &LAST_HMC5883_VECTOR.X)
-	&& i2c_master_readSint16(HMC5883L_ADDRESS, HMC5883L_REG_OUT_Y_M, &LAST_HMC5883_VECTOR.Y)
-	&& i2c_master_readSint16(HMC5883L_ADDRESS, HMC5883L_REG_OUT_Z_M, &LAST_HMC5883_VECTOR.Z)){
-
-		//TODO convert to mg by *mgPerDigit
-		return true;
-	}
-
-	return false;
+    LAST_HMC5883_VECTOR.X = ((float)i2c_master_readRegister16(HMC5883L_ADDRESS, HMC5883L_REG_OUT_X_M)) * mgPerDigit;
+    LAST_HMC5883_VECTOR.Y = ((float)i2c_master_readRegister16(HMC5883L_ADDRESS, HMC5883L_REG_OUT_Y_M)) * mgPerDigit;
+    LAST_HMC5883_VECTOR.Z = ((float)i2c_master_readRegister16(HMC5883L_ADDRESS, HMC5883L_REG_OUT_Z_M)) * mgPerDigit; 
+	return true;
 }
 
-bool HMC5883_SetConfig(hmc5883l_range_t range, hmc5883l_mode_t mode, hmc5883l_dataRate_t dataRate, hmc5883l_samples_t samples)
+bool ICACHE_FLASH_ATTR 
+HMC5883_SetConfig(hmc5883l_range_t range, hmc5883l_mode_t mode, hmc5883l_dataRate_t dataRate, hmc5883l_samples_t samples)
 {
     switch(range)
     {
@@ -85,41 +81,42 @@ bool HMC5883_SetConfig(hmc5883l_range_t range, hmc5883l_mode_t mode, hmc5883l_da
 
 		default:
 		    break;
-	}
+   }
 
-    if(!i2c_master_writeBytes2(HMC5883L_ADDRESS, HMC5883L_REG_CONFIG_B, range << 5)){
+    if(!i2c_master_writeRegister(HMC5883L_ADDRESS, HMC5883L_REG_CONFIG_B, range << 5)){
 		return false;
 	}
 
     uint8_t value;
-    if(i2c_master_readUint8(HMC5883L_ADDRESS, HMC5883L_REG_MODE, &value)){
-		value = (value & 0b11111100) | mode;
-		if(!i2c_master_writeBytes2(HMC5883L_ADDRESS, HMC5883L_REG_MODE, value)){
-			return false;
-		}
-	}else return false;
+    value = i2c_master_readRegister8(HMC5883L_ADDRESS, HMC5883L_REG_MODE);
+    value = (value & 0b11111100) | mode;
+    if(!i2c_master_writeRegister(HMC5883L_ADDRESS, HMC5883L_REG_MODE, value)){
+		return false;
+	}
 
-    if(i2c_master_readUint8(HMC5883L_ADDRESS, HMC5883L_REG_CONFIG_A, &value)){
-		value = (value & 0b11100011) | (dataRate << 2);
-	    value = (value & 0b10011111) | (samples << 5);
-		if(!i2c_master_writeBytes2(HMC5883L_ADDRESS, HMC5883L_REG_CONFIG_A, value)){
-			return false;
-		}
+    value = i2c_master_readRegister8(HMC5883L_ADDRESS, HMC5883L_REG_CONFIG_A);
+    value = (value & 0b11100011) | (dataRate << 2);
+	if(!i2c_master_writeRegister(HMC5883L_ADDRESS, HMC5883L_REG_CONFIG_A, value)){
+		return false;
+	}
+
+    value = i2c_master_readRegister8(HMC5883L_ADDRESS, HMC5883L_REG_CONFIG_A);
+    value = (value & 0b10011111) | (samples << 5);
+	if(!i2c_master_writeRegister(HMC5883L_ADDRESS, HMC5883L_REG_CONFIG_A, value)){
+		return false;
 	}
 
 	return true;
 }
 
-bool HMC5883_Init()
+bool ICACHE_FLASH_ATTR 
+HMC5883_Init()
 {
-	uint8 IDENT_A, IDENT_B, IDENT_C;
-	if(i2c_master_readUint8(HMC5883L_ADDRESS, HMC5883L_REG_IDENT_A, &IDENT_A)
-	&& i2c_master_readUint8(HMC5883L_ADDRESS, HMC5883L_REG_IDENT_A, &IDENT_B)
-	&& i2c_master_readUint8(HMC5883L_ADDRESS, HMC5883L_REG_IDENT_A, &IDENT_C)){
-		if(IDENT_A != 0x48 || IDENT_B != 0x34 || IDENT_C != 0x33 ){
-			return false;
-		}
-	} else return false;
+	if((i2c_master_readRegister8(HMC5883L_ADDRESS, HMC5883L_REG_IDENT_A) != 0x48)
+	||(i2c_master_readRegister8(HMC5883L_ADDRESS, HMC5883L_REG_IDENT_B) != 0x34)
+	||(i2c_master_readRegister8(HMC5883L_ADDRESS, HMC5883L_REG_IDENT_C) != 0x33)){
+		return false;
+	}
 
 	if(!HMC5883_SetConfig(HMC5883L_RANGE_1_3GA, HMC5883L_CONTINOUS, HMC5883L_DATARATE_15HZ, HMC5883L_SAMPLES_1)){
 		return false;
@@ -144,7 +141,7 @@ static int do_i2c_hmc5883(int argc, const char* const* argv)
 				console_printf( "X,Y,Z: " );
 			}
 			console_printf( "%d %d %d\n", 
-				(int)(LAST_HMC5883_VECTOR.X), (int)(LAST_HMC5883_VECTOR.Y), (int)(LAST_HMC5883_VECTOR.Z)
+				(int)(LAST_HMC5883_VECTOR.X*100), (int)(LAST_HMC5883_VECTOR.Y*100), (int)(LAST_HMC5883_VECTOR.Z*100)
 			);
 		}else{
 			console_printf( "failed read value\n" );

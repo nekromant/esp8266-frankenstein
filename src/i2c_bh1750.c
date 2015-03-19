@@ -14,7 +14,8 @@
 
 static uint8 currentmode = BH1750_ONE_TIME_HIGH_RES_MODE;
 
-bool BH1750_Read()
+bool ICACHE_FLASH_ATTR 
+BH1750_Read()
 {
 	if(!i2c_master_writeBytes1(BH1750_ADDRESS, currentmode)){
 		return false;
@@ -31,7 +32,8 @@ bool BH1750_Read()
 }
 
 
-bool BH1750_Init(uint8 mode)
+bool ICACHE_FLASH_ATTR 
+BH1750_Init(uint8 mode)
 {
 	if(!i2c_master_writeBytes1(BH1750_ADDRESS, mode)){
 		return false;
@@ -46,7 +48,11 @@ static int do_i2c_bh1750(int argc, const char* const* argv)
 {
 	if(argc == 1 || strcmp(argv[1], "read") == 0){
 
-		if((IS_ALREADY_INITED || BH1750_Init(BH1750_ONE_TIME_HIGH_RES_MODE)) && BH1750_Read()){
+		if(!IS_ALREADY_INITED){
+			BH1750_Init(BH1750_ONE_TIME_HIGH_RES_MODE);
+		}
+
+		if(BH1750_Read()){
 			console_printf( argc == 1 ? "%d\n" : "Light: %d lux\n", LAST_BH_LIGHT);
 		}else{
 			console_printf( "Failed to read value\n" );

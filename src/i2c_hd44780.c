@@ -174,7 +174,8 @@ void ICACHE_FLASH_ATTR LCD_backlight(void) {
     LCD_expanderWrite(0);
 }
 
-void LCD_print(char data[])
+void ICACHE_FLASH_ATTR
+LCD_print(char data[])
 {
     uint8 size;
     size = strlen(data);
@@ -184,7 +185,8 @@ void LCD_print(char data[])
     }
 }
 
-uint8 LCD_init(){
+uint8 ICACHE_FLASH_ATTR
+LCD_init(){
 
     i2c_master_start();
     i2c_master_writeByte(LCD_ADDRESS << 1);
