@@ -24,7 +24,7 @@ static sint16 b1, b2;
 static sint16 mb, mc, md; 
 #endif
 
-static uint16 ICACHE_FLASH_ATTR
+static uint16 
 BMP180_readRawValue(uint8 cmd) 
 {
 	i2c_master_writeBytes2(BMP180_ADDRESS, BMP180_REG_CONTROL, cmd);
@@ -56,7 +56,7 @@ BMP180_readRawValue(uint8 cmd)
 	return false;
 }
 
-bool ICACHE_FLASH_ATTR
+bool 
 BMP180_Read()
 {
 #ifdef CONFIG_USEFLOAT
@@ -133,7 +133,7 @@ BMP180_Read()
 	return true;
 }
 
-bool ICACHE_FLASH_ATTR
+bool 
 BMP180_Init()
 {
 

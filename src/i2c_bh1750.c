@@ -14,7 +14,7 @@
 
 static uint8 currentmode = BH1750_ONE_TIME_HIGH_RES_MODE;
 
-bool ICACHE_FLASH_ATTR 
+bool  
 BH1750_Read()
 {
 	if(!i2c_master_writeBytes1(BH1750_ADDRESS, currentmode)){
@@ -32,7 +32,7 @@ BH1750_Read()
 }
 
 
-bool ICACHE_FLASH_ATTR 
+bool  
 BH1750_Init(uint8 mode)
 {
 	if(!i2c_master_writeBytes1(BH1750_ADDRESS, mode)){

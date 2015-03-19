@@ -90,29 +90,14 @@ bool "I2C pcf8591 8-bit ADC DAC"
 config CMD_I2C_INA219
 bool "I2C ina219 current sensor"
 
-<<<<<<< HEAD
-#not tested yet
-#config CMD_I2C_TCS3414CS
-#bool "I2C tcs3414cs color sensor (Needs testing)"
-
-#config CMD_I2C_MLX90614
-#bool "I2C mlx90614 temperature sensor (Needs testing)"
-
-#config CMD_I2C_HMC5883L
-#bool "I2C hmc5883l 3-Axis Digital Compass (Needs testing)"
-=======
 config CMD_I2C_TCS3414CS
-bool "I2C tcs3414cs color sensor"
-default n
+bool "I2C tcs3414cs color sensor (Needs testing)"
 
 config CMD_I2C_MLX90614
-bool "I2C mlx90614 temperature sensor"
-default n
+bool "I2C mlx90614 temperature sensor (Needs testing)"
 
 config CMD_I2C_HMC5883L
-bool "I2C hmc5883l 3-Axis Digital Compass"
-default n
->>>>>>> parent of 2457f44... Change nodemcu pinmap to hardware pinmap. Now pin_mux and pin_func has indexes according to hardware GPIO pin numbers.
+bool "I2C hmc5883l 3-Axis Digital Compass (Needs testing)"
 
 endif
 
