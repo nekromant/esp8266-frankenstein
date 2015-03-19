@@ -22,6 +22,7 @@ objects-$(CONFIG_CMD_LISTEN)+=cmd_listen.o
 objects-$(CONFIG_CMD_SEND)+=cmd_send.o
 objects-$(CONFIG_CMD_DS18B20)+=cmd_ds18b20.o
 objects-$(CONFIG_CMD_DHT11)+=cmd_dht11.o
+objects-$(CONFIG_CMD_DHT22)+=cmd_dht22.o
 objects-$(CONFIG_CMD_TFTP)+=cmd_tftp.o tftp.o
 objects-$(CONFIG_CMD_AT)+=cmd_at.o
 objects-$(CONFIG_CMD_ADC)+=cmd_adc.o

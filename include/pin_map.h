@@ -10,6 +10,8 @@
 #define GPIO_PIN_FUNC_INVALID (uint8_t)(-1)
 #define GPIO_PIN_MUX_INVALID (uint32_t)(-1)
 
+bool is_valid_gpio_pin(uint8 gpiopin);
+
 //extern uint8_t pin_num[GPIO_PIN_NUM];
 extern uint8_t pin_func[GPIO_PIN_NUM];
 extern uint32_t pin_mux[GPIO_PIN_NUM];
