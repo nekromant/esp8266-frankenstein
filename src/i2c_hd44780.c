@@ -24,7 +24,7 @@ uint8 _numlines;
 
 
 /************ low level data pushing commands **********/
-void  LCD_expanderWrite(uint8 _data){                                        
+void ICACHE_FLASH_ATTR LCD_expanderWrite(uint8 _data){                                        
     i2c_master_start();
     i2c_master_writeByte(LCD_ADDRESS << 1);
     if (!i2c_master_checkAck()) 
@@ -38,7 +38,7 @@ void  LCD_expanderWrite(uint8 _data){
     i2c_master_stop();
 }
 
-void  LCD_pulseEnable(uint8 _data){
+void ICACHE_FLASH_ATTR LCD_pulseEnable(uint8 _data){
     LCD_expanderWrite(_data | En);  // En high
     os_delay_us(1);     // enable pulse must be >450ns
     
@@ -46,13 +46,13 @@ void  LCD_pulseEnable(uint8 _data){
     os_delay_us(50);        // commands need > 37us to settle
 }
 
-void  LCD_write4bits(uint8 value) {
+void ICACHE_FLASH_ATTR LCD_write4bits(uint8 value) {
     LCD_expanderWrite(value);
     LCD_pulseEnable(value);
 }
 
 // write either command or data
-void  LCD_send(uint8 value, uint8 mode) {
+void ICACHE_FLASH_ATTR LCD_send(uint8 value, uint8 mode) {
     uint8 highnib = value & 0xF0;
     uint8 lownib = value << 4;
     LCD_write4bits((highnib)|mode);
@@ -61,27 +61,27 @@ void  LCD_send(uint8 value, uint8 mode) {
 
 /*********** mid level commands, for sending data/cmds */
 
-void  LCD_command(uint8 value) {
+void ICACHE_FLASH_ATTR LCD_command(uint8 value) {
     LCD_send(value, 0);
 }
 
-uint8  LCD_write(uint8 value) {
+uint8 ICACHE_FLASH_ATTR LCD_write(uint8 value) {
     LCD_send(value, Rs);
     return 0;
 }
 
 /********** high level commands, for the user! */
-void  LCD_clear(){
+void ICACHE_FLASH_ATTR LCD_clear(){
     LCD_command(LCD_CLEARDISPLAY);// clear display, set cursor position to zero
     os_delay_us(2000);  // this command takes a long time!
 }
 
-void  LCD_home(){
+void ICACHE_FLASH_ATTR LCD_home(){
     LCD_command(LCD_RETURNHOME);  // set cursor position to zero
     os_delay_us(2000);  // this command takes a long time!
 }
 
-void  LCD_setCursor(uint8 col, uint8 row){
+void ICACHE_FLASH_ATTR LCD_setCursor(uint8 col, uint8 row){
     int row_offsets[] = { 0x00, 0x40, 0x14, 0x54 };
     _numlines = LCD_ROW;
     if ( row > _numlines ) {
@@ -91,70 +91,70 @@ void  LCD_setCursor(uint8 col, uint8 row){
 }
 
 // Turn the display on/off (quickly)
-void  LCD_noDisplay() {
+void ICACHE_FLASH_ATTR LCD_noDisplay() {
     _displaycontrol &= ~LCD_DISPLAYON;
     LCD_command(LCD_DISPLAYCONTROL | _displaycontrol);
 }
-void  LCD_display() {
+void ICACHE_FLASH_ATTR LCD_display() {
     _displaycontrol |= LCD_DISPLAYON;
     LCD_command(LCD_DISPLAYCONTROL | _displaycontrol);
 }
 
 // Turns the underline cursor on/off
-void  LCD_noCursor() {
+void ICACHE_FLASH_ATTR LCD_noCursor() {
     _displaycontrol &= ~LCD_CURSORON;
     LCD_command(LCD_DISPLAYCONTROL | _displaycontrol);
 }
-void  LCD_cursor() {
+void ICACHE_FLASH_ATTR LCD_cursor() {
     _displaycontrol |= LCD_CURSORON;
     LCD_command(LCD_DISPLAYCONTROL | _displaycontrol);
 }
 
 // Turn on and off the blinking cursor
-void  LCD_noBlink() {
+void ICACHE_FLASH_ATTR LCD_noBlink() {
     _displaycontrol &= ~LCD_BLINKON;
     LCD_command(LCD_DISPLAYCONTROL | _displaycontrol);
 }
-void  LCD_blink() {
+void ICACHE_FLASH_ATTR LCD_blink() {
     _displaycontrol |= LCD_BLINKON;
     LCD_command(LCD_DISPLAYCONTROL | _displaycontrol);
 }
 
 // These commands scroll the display without changing the RAM
-void  LCD_scrollDisplayLeft(void) {
+void ICACHE_FLASH_ATTR LCD_scrollDisplayLeft(void) {
     LCD_command(LCD_CURSORSHIFT | LCD_DISPLAYMOVE | LCD_MOVELEFT);
 }
-void  LCD_scrollDisplayRight(void) {
+void ICACHE_FLASH_ATTR LCD_scrollDisplayRight(void) {
     LCD_command(LCD_CURSORSHIFT | LCD_DISPLAYMOVE | LCD_MOVERIGHT);
 }
 
 // This is for text that flows Left to Right
-void  LCD_leftToRight(void) {
+void ICACHE_FLASH_ATTR LCD_leftToRight(void) {
     _displaymode |= LCD_ENTRYLEFT;
     LCD_command(LCD_ENTRYMODESET | _displaymode);
 }
 
 // This is for text that flows Right to Left
-void  LCD_rightToLeft(void) {
+void ICACHE_FLASH_ATTR LCD_rightToLeft(void) {
     _displaymode &= ~LCD_ENTRYLEFT;
     LCD_command(LCD_ENTRYMODESET | _displaymode);
 }
 
 // This will 'right justify' text from the cursor
-void  LCD_autoscroll(void) {
+void ICACHE_FLASH_ATTR LCD_autoscroll(void) {
     _displaymode |= LCD_ENTRYSHIFTINCREMENT;
     LCD_command(LCD_ENTRYMODESET | _displaymode);
 }
 
 // This will 'left justify' text from the cursor
-void  LCD_noAutoscroll(void) {
+void ICACHE_FLASH_ATTR LCD_noAutoscroll(void) {
     _displaymode &= ~LCD_ENTRYSHIFTINCREMENT;
     LCD_command(LCD_ENTRYMODESET | _displaymode);
 }
 
 // Allows us to fill the first 8 CGRAM locations
 // with custom characters
-void  LCD_createChar(uint8 location, uint8 charmap[]) {
+void ICACHE_FLASH_ATTR LCD_createChar(uint8 location, uint8 charmap[]) {
     location &= 0x7; // we only have 8 locations 0-7
     LCD_command(LCD_SETCGRAMADDR | (location << 3));
     int i;
@@ -164,18 +164,17 @@ void  LCD_createChar(uint8 location, uint8 charmap[]) {
 }
 
 // Turn the (optional) backlight off/on
-void  LCD_noBacklight(void) {
+void ICACHE_FLASH_ATTR LCD_noBacklight(void) {
     _backlightval=LCD_NOBACKLIGHT;
     LCD_expanderWrite(0);
 }
 
-void  LCD_backlight(void) {
+void ICACHE_FLASH_ATTR LCD_backlight(void) {
     _backlightval=LCD_BACKLIGHT;
     LCD_expanderWrite(0);
 }
 
-void 
-LCD_print(char data[])
+void LCD_print(char data[])
 {
     uint8 size;
     size = strlen(data);
@@ -185,8 +184,7 @@ LCD_print(char data[])
     }
 }
 
-uint8 
-LCD_init(){
+uint8 LCD_init(){
 
     i2c_master_start();
     i2c_master_writeByte(LCD_ADDRESS << 1);

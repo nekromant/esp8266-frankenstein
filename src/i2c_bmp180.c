@@ -24,8 +24,7 @@ static sint16 b1, b2;
 static sint16 mb, mc, md; 
 #endif
 
-static uint16 
-BMP180_readRawValue(uint8 cmd) 
+static uint16 BMP180_readRawValue(uint8 cmd) 
 {
 	i2c_master_writeBytes2(BMP180_ADDRESS, BMP180_REG_CONTROL, cmd);
 	switch(cmd){
@@ -56,8 +55,7 @@ BMP180_readRawValue(uint8 cmd)
 	return false;
 }
 
-bool 
-BMP180_Read()
+bool BMP180_Read()
 {
 #ifdef CONFIG_USEFLOAT
 	float tu,pu,a,s,x,y,z;
@@ -133,8 +131,7 @@ BMP180_Read()
 	return true;
 }
 
-bool 
-BMP180_Init()
+bool BMP180_Init()
 {
 
 	uint16 reg;
@@ -216,11 +213,7 @@ static int do_i2c_bmp180(int argc, const char* const* argv)
 {
 	if(argc == 1 || strcmp(argv[1], "read") == 0){
 
-		if(!IS_ALREADY_INITED){
-			BMP180_Init();
-		}
-
-		if(BMP180_Read()){
+		if((IS_ALREADY_INITED || BMP180_Init()) && BMP180_Read()){
 			console_printf( argc == 1 ? "%d %d\n" : "Temperature: %d C\nPressure: %d mmHg\n", 
 #ifdef CONFIG_USEFLOAT
 				(int)(LAST_BMP_TEMPERATURE*100), 
