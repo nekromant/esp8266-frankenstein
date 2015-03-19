@@ -13,11 +13,14 @@ struct tcpservice_s
 	struct tcp_pcb* tcp;
 	bool is_closing;
 
+	// curbular buffer
+	char* sendbuf;	
+	cb_t send_buffer;
+
 	// listener args&callbacks
 	tcpservice_t* (*get_new_peer) (tcpservice_t* s);
 
 	// peer args&callbacks
-	cb_t send_buffer;
 	void (*cb_established) (tcpservice_t* s);
 	void (*cb_closing) (tcpservice_t* s);
 	void (*cb_recv) (tcpservice_t* s, const char* data, size_t len);
@@ -31,6 +34,7 @@ struct tcpservice_s
 	.name = NULL;				\
 	.tcp = NULL;				\
 	.is_closing = false;			\
+	.sendbuf = NULL,			\
 	.send_buffer = CB_INIT(NULL, 0),	\
 	.cb_accepted = NULL,			\
 	.cb_closing = NULL,			\

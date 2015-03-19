@@ -1,4 +1,7 @@
 
+// TODO: include telnet_state_t in send_buffer so to remove the need of telnet_service_s 
+
+
 #define TELNET_IAC   255
 #define TELNET_WILL  251
 #define TELNET_WONT  252
@@ -38,7 +41,6 @@ typedef struct telnet_service_s
 {
 	tcpservice_t peer;	// tcp service - COMES FIRST HERE
 	telnet_state_t state;	// telnet state
-	char* send_buffer;	// circular buffer
 } telnet_service_t;
 
 #define TS(s)		((telnet_service_t*)(s))
@@ -64,6 +66,7 @@ static tcpservice_t telnet_listener =
 	.name = "telnet listener",
 	.tcp = NULL,
 	.is_closing = false,
+	.sendbuf = NULL,
 	.send_buffer = CB_INIT(NULL, 0),
 	.get_new_peer = telnet_new_peer,
 	.cb_established = NULL,
@@ -107,15 +110,15 @@ static tcpservice_t* telnet_new_peer (tcpservice_t* s)
 	telnet_service_t* ts = (telnet_service_t*)os_malloc(sizeof(telnet_service_t));
 	if (!ts)
 		return NULL;
-	ts->send_buffer = (char*)os_malloc(1 << (TELNET_SEND_BUFFER_SIZE_LOG2_DEFAULT));
-	if (!ts->send_buffer)
+	ts->peer.sendbuf = (char*)os_malloc(1 << (TELNET_SEND_BUFFER_SIZE_LOG2_DEFAULT));
+	if (!ts->peer.sendbuf)
 	{
 		os_free(ts);
 		return NULL;
 	}
 	
 	ts->peer.name = "telnet";
-	cb_init(&ts->peer.send_buffer, ts->send_buffer, TELNET_SEND_BUFFER_SIZE_LOG2_DEFAULT);
+	cb_init(&ts->peer.send_buffer, ts->peer.sendbuf, TELNET_SEND_BUFFER_SIZE_LOG2_DEFAULT);
 	ts->peer.get_new_peer = NULL;
 	ts->peer.cb_established = telnet_established;
 	ts->peer.cb_closing = telnet_closing;
@@ -164,8 +167,8 @@ static void telnet_closing (tcpservice_t* s)
 static void telnet_cleanup (tcpservice_t* s)
 {
 	telnet_service_t* ts = TS(s);
-	if (ts->send_buffer)
-		os_free(ts->send_buffer);
+	if (ts->peer.sendbuf)
+		os_free(ts->peer.sendbuf);
 	os_free(ts);
 }
 
