@@ -12,8 +12,8 @@
 #include "microrl.h"
 #include "console.h"
 #include "env.h"
-
 #include "svc_passthrough.h"
+#include "generated/autoconf.h"	// CONFIG_ENABLE_PASSTHROUGH
 
 #include "lwip/mem.h" // mem_realloc
 
@@ -55,8 +55,8 @@ void console_write(char *buf, int len)
 
 static void  task_console(os_event_t *evt)
 {
+#ifdef CONFIG_ENABLE_PASSTHROUGH
 
-#if 1 //XXX enable this code only if passthrough is kcnf-enabled
 	// 3 times ESC count
 	if (svc_passthrough)
 	{
@@ -87,11 +87,13 @@ static void  task_console(os_event_t *evt)
 		}
 
 	}
-#endif
 
 	if (svc_passthrough)
 		passthrough_send(evt->par);
 	else
+
+#endif // CONFIG_ENABLE_PASSTHROUGH
+
 		console_insert(evt->par);
 }
 
