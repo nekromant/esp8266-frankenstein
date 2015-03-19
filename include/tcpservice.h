@@ -29,19 +29,20 @@ struct tcpservice_s
 	void (*cb_cleanup) (tcpservice_t* s);
 };
 
-#define TCP_SERVICE_VOID()			\
+#define TCP_SERVICE_LISTENER(nameptr, cb_new_peer) \
 {						\
-	.name = NULL;				\
-	.tcp = NULL;				\
-	.is_closing = false;			\
+	.name = (nameptr),			\
+	.tcp = NULL,				\
+	.is_closing = false,			\
 	.sendbuf = NULL,			\
 	.send_buffer = CB_INIT(NULL, 0),	\
-	.cb_accepted = NULL,			\
+	.get_new_peer = (cb_new_peer),		\
+	.cb_established = NULL,			\
 	.cb_closing = NULL,			\
 	.cb_recv = NULL,			\
 	.cb_poll = NULL,			\
 	.cb_ack = NULL,				\
-	.cb_cleanup = NULL;			\
+	.cb_cleanup = NULL,			\
 }
 
 void tcp_log_err (err_t err);

@@ -61,21 +61,7 @@ static void telnet_cleanup (tcpservice_t* s);
 // tcp server only, takes no space
 // (the "socketserver" awaiting for incoming request only)
 // sizeof=64
-static tcpservice_t telnet_listener =
-{
-	.name = "telnet listener",
-	.tcp = NULL,
-	.is_closing = false,
-	.sendbuf = NULL,
-	.send_buffer = CB_INIT(NULL, 0),
-	.get_new_peer = telnet_new_peer,
-	.cb_established = NULL,
-	.cb_closing = NULL,
-	.cb_recv = NULL,
-	.cb_poll = NULL,
-	.cb_ack = NULL,
-	.cb_cleanup = NULL,
-};
+static tcpservice_t telnet_listener = TCP_SERVICE_LISTENER("telnet listener", telnet_new_peer);
 
 // the current talking telnet peer, which is a hack
 static telnet_service_t* current_telnet = NULL;
@@ -297,7 +283,7 @@ static int  do_telnet(int argc, const char* const* argv)
 		}
 	}
 	else
-		console_printf("telnet: invalid command '%s'\n", argv[1]);
+		return -1;
 	
 	return 0;
 }

@@ -24,7 +24,7 @@ objects-$(CONFIG_CMD_DHT11)+=cmd_dht11.o
 objects-$(CONFIG_CMD_TFTP)+=cmd_tftp.o tftp.o
 objects-$(CONFIG_CMD_AT)+=cmd_at.o
 objects-$(CONFIG_CMD_ADC)+=cmd_adc.o
-objects-$(CONFIG_ENABLE_PASSTHROUGH)+=cmd_passthrough.o
+objects-$(CONFIG_ENABLE_PASSTHROUGH)+=svc_passthrough.o
 
 objects-$(CONFIG_CMD_I2C)+=cmd_i2c.o pin_map.o i2c_master.o 
 objects-$(CONFIG_CMD_I2C_BMP180)+=i2c_bmp180.o

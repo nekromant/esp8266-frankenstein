@@ -107,7 +107,7 @@ static err_t tcp_service_incoming_peer (void* svc, struct tcp_pcb * peer_pcb, er
 	tcp_setprio(peer->tcp, TCP_PRIO_MIN); //XXX???
 	tcp_recv(peer->tcp, tcp_service_receive);
 	tcp_err(peer->tcp, tcp_service_error);
-	tcp_poll(peer->tcp, tcp_service_poll, 4); //every two seconds of inactivity of the TCP connection
+	tcp_poll(peer->tcp, tcp_service_poll, 4); //every second of tcp inactivity
 	tcp_sent(peer->tcp, tcp_service_ack);
 	
 	// peer/tcp_pcb association

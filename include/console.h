@@ -1,7 +1,7 @@
 #ifndef CONSOLE_H
 #define CONSOLE_H
 
-#define ESC_SPACE	300000
+#define ESC_SPACE	300000	// 0.3 second
 #define ESC_COUNT	3
 
 struct console_cmd {
@@ -29,8 +29,6 @@ struct console_cmd {
 
 
 #define SERIAL_PRINTF				ets_uart_printf
-
-#define ENABLE_PASSTHROUGH_AT_BOOT		0
 
 #define LOG_ERR					0
 #define LOG_WARN				1
