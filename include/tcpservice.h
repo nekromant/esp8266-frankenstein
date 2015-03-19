@@ -46,7 +46,7 @@ struct tcpservice_s
 }
 
 void tcp_log_err (err_t err);
-err_t cb_tcp_send (cb_t* cb, struct tcp_pcb *pcb);
+err_t tcp_send (tcpservice_t* tcp); // trigger send-circular-buffer
 
 // install tcp service on port
 int tcp_service_install (const char* name, tcpservice_t* s, int port);

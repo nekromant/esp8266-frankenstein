@@ -79,7 +79,11 @@ static int telnet_printf (const char *fmt, ...)
 	va_list ap;
 	va_start(ap, fmt);
 	if (current_telnet && current_telnet->peer.tcp)
+	{
 		ret = cb_vprintf(&current_telnet->peer.send_buffer, fmt, ap);
+		if (tcp_send(&current_telnet->peer) != ERR_OK)
+			ret = -1;
+	}
 	else
 	{
 		vsnprintf(sprintbuf, SPRINTBUFSIZE, fmt, ap);

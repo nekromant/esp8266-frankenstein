@@ -11,13 +11,13 @@ void tcp_log_err (err_t err)
 	LOGSERIAL(LOG_ERR, "TCP: Fatal error %d(%s)", (int)err, lwip_strerr(err));
 }
 
-err_t cb_tcp_send (cb_t* cb, struct tcp_pcb *pcb)
+err_t tcp_send (tcpservice_t* tcp)
 {
 	err_t err;
 	char* data;
-	size_t sendsize = cb_read_ptr(cb, &data, tcp_sndbuf(pcb) /* = sendmax */);
+	size_t sendsize = cb_read_ptr(&tcp->send_buffer, &data, tcp_sndbuf(tcp->tcp) /* = sendmax */);
 	if (   sendsize
-	    && ((err = tcp_write(pcb, data, sendsize, /*tcpflags=0=PUSH,NOCOPY*/0)) != ERR_OK))
+	    && ((err = tcp_write(tcp->tcp, data, sendsize, /*tcpflags=0=PUSH,NOCOPY*/0)) != ERR_OK))
 	{
 		tcp_log_err(err);
 		return err;
@@ -34,7 +34,7 @@ static err_t tcp_service_receive (void* svc, struct tcp_pcb *pcb, struct pbuf *p
 		tcp_recved(peer->tcp, pbuf->tot_len);
 		peer->cb_recv(peer, pbuf->payload, pbuf->tot_len);
 		pbuf_free(pbuf);
-		return cb_tcp_send(&peer->send_buffer, peer->tcp);
+		return tcp_send(peer);
 	}
 	else
 	{
@@ -62,13 +62,16 @@ static err_t tcp_service_ack (void *svc, struct tcp_pcb *pcb, u16_t len)
 {
 	tcpservice_t* peer = (tcpservice_t*)svc;
 
-	cb_ack(&peer->send_buffer, len);
-	if (peer->cb_ack)
-		peer->cb_ack(peer);
+	if (len)
+	{
+		cb_ack(&peer->send_buffer, len);
+		if (peer->cb_ack)
+			peer->cb_ack(peer);
+	}
 	
 	return tcp_service_check_shutdown(peer)?
 		ERR_OK:
-		cb_tcp_send(&peer->send_buffer, peer->tcp);
+		tcp_send(peer);
 }
 
 static void tcp_service_error (void* svc, err_t err)
@@ -86,7 +89,7 @@ static err_t tcp_service_poll (void* svc, struct tcp_pcb* pcb)
 		service->cb_poll(service);
 
 	// trigger send buffer if needed
-	tcp_service_ack(service, service->tcp, 0);
+	tcp_send(service);
 		
 	return ERR_OK;
 }

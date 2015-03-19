@@ -94,6 +94,7 @@ void passthrough_send (char c)
 		if (cb_write_ptr(&svc_passthrough->send_buffer, &p, 1))
 		{
 			*p = c;
+			tcp_send(svc_passthrough);
 			return;
 		}
 		console_printf("passthrough: send overrun\n");
