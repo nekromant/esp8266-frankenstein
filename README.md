@@ -282,6 +282,22 @@ tftp       - Update firmware over tftp
              tftp
 AT         - says OK
 ```
+# Flashing the controller
+
+There is a convenience target wrapping `esptool.py`.
+Set the default tty and whether you have a pl2303 GPIO breakout for automatically resetting the board using `make menuconfig`
+
+```
+make deploy-esptool
+```
+
+If you dont have a pl2303 gpio breakoutboard and have to manually set the programming GPIO, use the following procedure.
+
+* Dont be running minicom or other terminal program
+* Connect RST and GPIO#)0 to GND
+* Release RST
+* Release GPIO#2 (at least 300ms after)
+* Deploy
 
 # Over-the-air firmware updates. 
 
