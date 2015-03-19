@@ -96,15 +96,19 @@ static int do_i2c(int argc, const char* const* argv)
 {
 	if(strcmp(argv[1], "init") == 0){
 
-		uint8 sda = 3;
-		uint8 scl = 4;
+		uint8 sda = 0;
+		uint8 scl = 2;
 		if(argc == 4){
 			sda = atoi(argv[2]);
 			scl = atoi(argv[3]);
 		}
 
-		console_printf( "Init i2c bus on %d:%d pins\n", sda, scl );
-		i2c_master_gpio_init(sda, scl);
+		console_printf( "Init i2c bus on GPIO%d:GPIO%d ", sda, scl );
+		if(i2c_master_gpio_init(sda, scl)){
+			console_printf( "ok\n" );
+		}else{
+			console_printf( "failed\n" );
+		}
 
 	} else
 
@@ -135,7 +139,7 @@ static int do_i2c(int argc, const char* const* argv)
 
 CONSOLE_CMD(i2c, 2, 4, 
 		do_i2c, NULL, NULL, 
-		"I2C bus config. Pin 3 4 for GPIO 0 and 2"
+		"I2C bus config. Default SDA and SCL is GPIO0 and 2"
 		HELPSTR_NEWLINE "i2c init [SDA] [SCL]"
 		HELPSTR_NEWLINE "i2c scan"
 );
