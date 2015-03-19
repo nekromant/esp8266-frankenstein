@@ -163,7 +163,7 @@ static int dht11_read_sensor(float* temperature, float* humidity)
 
 CONSOLE_CMD(dht11, 1, 1, 
       do_dht11, NULL, NULL, 
-      "Read temperature and humidity from DHT11 sensor module. Warning: will reset MCU if no device present!"
-      HELPSTR_NEWLINE "dht11 <gpio>"
+      "Read temperature and humidity from DHT11 sensor module. Presently hard-coded on GPIO #2. Warning: will reset MCU if no device present!"
+      HELPSTR_NEWLINE "dht11"
   );
 
