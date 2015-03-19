@@ -179,7 +179,7 @@ static void dhcp_option_trailer(struct dhcp *dhcp);
  *
  * @param netif the netif under DHCP control
  */
-static void ICACHE_FLASH_ATTR
+static void 
 dhcp_handle_nak(struct netif *netif)
 {
   struct dhcp *dhcp = netif->dhcp;
@@ -207,7 +207,7 @@ dhcp_handle_nak(struct netif *netif)
  *
  * @param netif the netif under DHCP control
  */
-static void ICACHE_FLASH_ATTR
+static void 
 dhcp_check(struct netif *netif)
 {
   struct dhcp *dhcp = netif->dhcp;
@@ -234,7 +234,7 @@ dhcp_check(struct netif *netif)
  *
  * @param netif the netif under DHCP control
  */
-static void ICACHE_FLASH_ATTR
+static void 
 dhcp_handle_offer(struct netif *netif)
 {
   struct dhcp *dhcp = netif->dhcp;
@@ -265,7 +265,7 @@ dhcp_handle_offer(struct netif *netif)
  * @param netif the netif under DHCP control
  * @return lwIP specific error (see error.h)
  */
-static err_t ICACHE_FLASH_ATTR
+static err_t 
 dhcp_select(struct netif *netif)
 {
   struct dhcp *dhcp = netif->dhcp;
@@ -329,7 +329,7 @@ dhcp_select(struct netif *netif)
 /**
  * The DHCP timer that checks for lease renewal/rebind timeouts.
  */
-void ICACHE_FLASH_ATTR
+void 
 dhcp_coarse_tmr()
 {
   struct netif *netif = netif_list;
@@ -361,7 +361,7 @@ dhcp_coarse_tmr()
  * A DHCP server is expected to respond within a short period of time.
  * This timer checks whether an outstanding DHCP request is timed out.
  */
-void ICACHE_FLASH_ATTR
+void 
 dhcp_fine_tmr()
 {
   struct netif *netif = netif_list;
@@ -394,7 +394,7 @@ dhcp_fine_tmr()
  *
  * @param netif the netif under DHCP control
  */
-static void ICACHE_FLASH_ATTR
+static void 
 dhcp_timeout(struct netif *netif)
 {
   struct dhcp *dhcp = netif->dhcp;
@@ -457,7 +457,7 @@ dhcp_timeout(struct netif *netif)
  *
  * @param netif the netif under DHCP control
  */
-static void ICACHE_FLASH_ATTR
+static void 
 dhcp_t1_timeout(struct netif *netif)
 {
   struct dhcp *dhcp = netif->dhcp;
@@ -479,7 +479,7 @@ dhcp_t1_timeout(struct netif *netif)
  *
  * @param netif the netif under DHCP control
  */
-static void ICACHE_FLASH_ATTR
+static void 
 dhcp_t2_timeout(struct netif *netif)
 {
   struct dhcp *dhcp = netif->dhcp;
@@ -500,7 +500,7 @@ dhcp_t2_timeout(struct netif *netif)
  *
  * @param netif the netif under DHCP control
  */
-static void ICACHE_FLASH_ATTR
+static void 
 dhcp_handle_ack(struct netif *netif)
 {
   struct dhcp *dhcp = netif->dhcp;
@@ -579,7 +579,7 @@ dhcp_handle_ack(struct netif *netif)
  * @param netif the netif for which to set the struct dhcp
  * @param dhcp (uninitialised) dhcp struct allocated by the application
  */
-void ICACHE_FLASH_ATTR
+void 
 dhcp_set_struct(struct netif *netif, struct dhcp *dhcp)
 {
   LWIP_ASSERT("netif != NULL", netif != NULL);
@@ -599,7 +599,7 @@ dhcp_set_struct(struct netif *netif, struct dhcp *dhcp)
  *
  * @param netif the netif from which to remove the struct dhcp
  */
-void ICACHE_FLASH_ATTR dhcp_cleanup(struct netif *netif)
+void  dhcp_cleanup(struct netif *netif)
 {
   LWIP_ASSERT("netif != NULL", netif != NULL);
 
@@ -621,7 +621,7 @@ void ICACHE_FLASH_ATTR dhcp_cleanup(struct netif *netif)
  * - ERR_OK - No error
  * - ERR_MEM - Out of memory
  */
-err_t ICACHE_FLASH_ATTR
+err_t 
 dhcp_start(struct netif *netif)
 {
   struct dhcp *dhcp;
@@ -704,7 +704,7 @@ dhcp_start(struct netif *netif)
  *
  * @param netif The lwIP network interface
  */
-void ICACHE_FLASH_ATTR
+void 
 dhcp_inform(struct netif *netif)
 {
   struct dhcp dhcp;
@@ -758,7 +758,7 @@ dhcp_inform(struct netif *netif)
  * This enters the REBOOTING state to verify that the currently bound
  * address is still valid.
  */
-void ICACHE_FLASH_ATTR
+void 
 dhcp_network_changed(struct netif *netif)
 {
   struct dhcp *dhcp = netif->dhcp;
@@ -796,7 +796,7 @@ dhcp_network_changed(struct netif *netif)
  * @param netif the network interface on which the reply was received
  * @param addr The IP address we received a reply from
  */
-void ICACHE_FLASH_ATTR dhcp_arp_reply(struct netif *netif, ip_addr_t *addr)
+void  dhcp_arp_reply(struct netif *netif, ip_addr_t *addr)
 {
   LWIP_ERROR("netif != NULL", (netif != NULL), return;);
   LWIP_DEBUGF(DHCP_DEBUG | LWIP_DBG_TRACE, ("dhcp_arp_reply()\n"));
@@ -824,7 +824,7 @@ void ICACHE_FLASH_ATTR dhcp_arp_reply(struct netif *netif, ip_addr_t *addr)
  *
  * @param netif the netif under DHCP control
  */
-static err_t ICACHE_FLASH_ATTR
+static err_t 
 dhcp_decline(struct netif *netif)
 {
   struct dhcp *dhcp = netif->dhcp;
@@ -864,7 +864,7 @@ dhcp_decline(struct netif *netif)
  *
  * @param netif the netif under DHCP control
  */
-static err_t ICACHE_FLASH_ATTR
+static err_t 
 dhcp_discover(struct netif *netif)
 {
   struct dhcp *dhcp = netif->dhcp;
@@ -919,7 +919,7 @@ dhcp_discover(struct netif *netif)
  *
  * @param netif network interface to bind to the offered address
  */
-static void ICACHE_FLASH_ATTR
+static void 
 dhcp_bind(struct netif *netif)
 {
   u32_t timeout;
@@ -1018,7 +1018,7 @@ dhcp_bind(struct netif *netif)
  *
  * @param netif network interface which must renew its lease
  */
-err_t ICACHE_FLASH_ATTR
+err_t 
 dhcp_renew(struct netif *netif)
 {
   struct dhcp *dhcp = netif->dhcp;
@@ -1081,7 +1081,7 @@ dhcp_renew(struct netif *netif)
  *
  * @param netif network interface which must rebind with a DHCP server
  */
-static err_t ICACHE_FLASH_ATTR
+static err_t 
 dhcp_rebind(struct netif *netif)
 {
   struct dhcp *dhcp = netif->dhcp;
@@ -1141,7 +1141,7 @@ dhcp_rebind(struct netif *netif)
  *
  * @param netif network interface which must reboot
  */
-static err_t ICACHE_FLASH_ATTR
+static err_t 
 dhcp_reboot(struct netif *netif)
 {
   struct dhcp *dhcp = netif->dhcp;
@@ -1183,7 +1183,7 @@ dhcp_reboot(struct netif *netif)
  *
  * @param netif network interface which must release its lease
  */
-err_t ICACHE_FLASH_ATTR
+err_t 
 dhcp_release(struct netif *netif)
 {
   struct dhcp *dhcp = netif->dhcp;
@@ -1238,7 +1238,7 @@ dhcp_release(struct netif *netif)
  *
  * @param netif The network interface to stop DHCP on
  */
-void ICACHE_FLASH_ATTR
+void 
 dhcp_stop(struct netif *netif)
 {
   struct dhcp *dhcp;
@@ -1271,7 +1271,7 @@ dhcp_stop(struct netif *netif)
  *
  * If the state changed, reset the number of tries.
  */
-static void ICACHE_FLASH_ATTR
+static void 
 dhcp_set_state(struct dhcp *dhcp, u8_t new_state)
 {
   if (new_state != dhcp->state) {
@@ -1286,7 +1286,7 @@ dhcp_set_state(struct dhcp *dhcp, u8_t new_state)
  * DHCP message.
  *
  */
-static void ICACHE_FLASH_ATTR
+static void 
 dhcp_option(struct dhcp *dhcp, u8_t option_type, u8_t option_len)
 {
   LWIP_ASSERT("dhcp_option: dhcp->options_out_len + 2 + option_len <= DHCP_OPTIONS_LEN", dhcp->options_out_len + 2U + option_len <= DHCP_OPTIONS_LEN);
@@ -1297,14 +1297,14 @@ dhcp_option(struct dhcp *dhcp, u8_t option_type, u8_t option_len)
  * Concatenate a single byte to the outgoing DHCP message.
  *
  */
-static void ICACHE_FLASH_ATTR
+static void 
 dhcp_option_byte(struct dhcp *dhcp, u8_t value)
 {
   LWIP_ASSERT("dhcp_option_byte: dhcp->options_out_len < DHCP_OPTIONS_LEN", dhcp->options_out_len < DHCP_OPTIONS_LEN);
   dhcp->msg_out->options[dhcp->options_out_len++] = value;
 }
 
-static void ICACHE_FLASH_ATTR
+static void 
 dhcp_option_short(struct dhcp *dhcp, u16_t value)
 {
   LWIP_ASSERT("dhcp_option_short: dhcp->options_out_len + 2 <= DHCP_OPTIONS_LEN", dhcp->options_out_len + 2U <= DHCP_OPTIONS_LEN);
@@ -1312,7 +1312,7 @@ dhcp_option_short(struct dhcp *dhcp, u16_t value)
   dhcp->msg_out->options[dhcp->options_out_len++] = (u8_t) (value & 0x00ffU);
 }
 
-static void ICACHE_FLASH_ATTR
+static void 
 dhcp_option_long(struct dhcp *dhcp, u32_t value)
 {
   LWIP_ASSERT("dhcp_option_long: dhcp->options_out_len + 4 <= DHCP_OPTIONS_LEN", dhcp->options_out_len + 4U <= DHCP_OPTIONS_LEN);
@@ -1332,7 +1332,7 @@ dhcp_option_long(struct dhcp *dhcp, u32_t value)
  * use that further on.
  *
  */
-static err_t ICACHE_FLASH_ATTR
+static err_t 
 dhcp_parse_reply(struct dhcp *dhcp, struct pbuf *p)
 {
   u8_t *options;
@@ -1531,7 +1531,7 @@ decode_next:
 /**
  * If an incoming DHCP message is in response to us, then trigger the state machine
  */
-static void ICACHE_FLASH_ATTR
+static void 
 dhcp_recv(void *arg, struct udp_pcb *pcb, struct pbuf *p, ip_addr_t *addr, u16_t port)
 {
   struct netif *netif = (struct netif *)arg;
@@ -1635,7 +1635,7 @@ free_pbuf_and_return:
  * @param dhcp dhcp control struct
  * @param message_type message type of the request
  */
-static err_t ICACHE_FLASH_ATTR
+static err_t 
 dhcp_create_msg(struct netif *netif, struct dhcp *dhcp, u8_t message_type)
 {
   u16_t i;
@@ -1726,7 +1726,7 @@ dhcp_create_msg(struct netif *netif, struct dhcp *dhcp, u8_t message_type)
  *
  * @param dhcp the dhcp struct to free the request from
  */
-static void ICACHE_FLASH_ATTR
+static void 
 dhcp_delete_msg(struct dhcp *dhcp)
 {
   LWIP_ERROR("dhcp_delete_msg: dhcp != NULL", (dhcp != NULL), return;);
@@ -1747,7 +1747,7 @@ dhcp_delete_msg(struct dhcp *dhcp)
  *
  * @param dhcp DHCP state structure
  */
-static void ICACHE_FLASH_ATTR
+static void 
 dhcp_option_trailer(struct dhcp *dhcp)
 {
   LWIP_ERROR("dhcp_option_trailer: dhcp != NULL", (dhcp != NULL), return;);

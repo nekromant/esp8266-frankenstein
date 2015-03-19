@@ -44,7 +44,7 @@ espconn_server_close(void *arg, struct tcp_pcb *pcb);
  * Parameters   : arg -- Additional argument to pass to the callback function
  * Returns      : none
 *******************************************************************************/
-static void ICACHE_FLASH_ATTR
+static void 
 espconn_tcp_reconnect(void *arg)
 {
 	espconn_msg *precon_cb = arg;
@@ -88,7 +88,7 @@ espconn_tcp_reconnect(void *arg)
  * Parameters   : arg -- Additional argument to pass to the callback function
  * Returns      : none
 *******************************************************************************/
-static void ICACHE_FLASH_ATTR
+static void 
 espconn_tcp_disconnect_successful(void *arg)
 {
 	espconn_msg *pdiscon_cb = arg;
@@ -139,7 +139,7 @@ espconn_tcp_disconnect_successful(void *arg)
  *                uint16 length -- Length of data to send
  * Returns      : none
 *******************************************************************************/
-void ICACHE_FLASH_ATTR
+void 
 espconn_tcp_sent(void *arg, uint8 *psent, uint16 length)
 {
 	espconn_msg *ptcp_sent = arg;
@@ -195,7 +195,7 @@ espconn_tcp_sent(void *arg, uint8 *psent, uint16 length)
  * Parameters   : arg -- Additional argument to pass to the callback function
  * Returns      : none
 *******************************************************************************/
-void ICACHE_FLASH_ATTR espconn_tcp_disconnect(espconn_msg *pdiscon)
+void  espconn_tcp_disconnect(espconn_msg *pdiscon)
 {
 	if (pdiscon != NULL){
 		if (pdiscon->preverse != NULL)
@@ -214,7 +214,7 @@ void ICACHE_FLASH_ATTR espconn_tcp_disconnect(espconn_msg *pdiscon)
  * Parameters   : arg -- Additional argument to pass to the callback function
  * Returns      : none
 *******************************************************************************/
-static void ICACHE_FLASH_ATTR
+static void 
 espconn_cclose_cb(void *arg)
 {
 	espconn_msg *pclose_cb = arg;
@@ -244,7 +244,7 @@ espconn_cclose_cb(void *arg)
  *                pcb -- the pcb to close
  * Returns      : none
 *******************************************************************************/
-static void ICACHE_FLASH_ATTR
+static void 
 espconn_client_close(void *arg, struct tcp_pcb *pcb)
 {
     err_t err;
@@ -275,7 +275,7 @@ espconn_client_close(void *arg, struct tcp_pcb *pcb)
  *                err -- An error code if there has been an error receiving
  * Returns      : ERR_ABRT: if you have called tcp_abort from within the function!
 *******************************************************************************/
-static err_t ICACHE_FLASH_ATTR
+static err_t 
 espconn_client_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err)
 {
 	espconn_msg *precv_cb = arg;
@@ -323,7 +323,7 @@ espconn_client_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err)
  * Returns      : ERR_OK: try to send some data by calling tcp_output
  *                ERR_ABRT: if you have called tcp_abort from within the function!
 *******************************************************************************/
-static err_t ICACHE_FLASH_ATTR
+static err_t 
 espconn_client_sent(void *arg, struct tcp_pcb *pcb, u16_t len)
 {
 	espconn_msg *psent_cb = arg;
@@ -352,7 +352,7 @@ espconn_client_sent(void *arg, struct tcp_pcb *pcb, u16_t len)
  * Returns      : ERR_OK: try to send some data by calling tcp_output
  *                ERR_ABRT: if you have called tcp_abort from within the function!
 *******************************************************************************/
-static err_t ICACHE_FLASH_ATTR
+static err_t 
 espconn_client_poll(void *arg, struct tcp_pcb *pcb)
 {
 	espconn_msg *ppoll_cb = arg;
@@ -380,7 +380,7 @@ espconn_client_poll(void *arg, struct tcp_pcb *pcb)
  *                err -- Error code to indicate why the pcb has been closed
  * Returns      : none
 *******************************************************************************/
-static void ICACHE_FLASH_ATTR
+static void 
 espconn_client_err(void *arg, err_t err)
 {
 	espconn_msg *perr_cb = arg;
@@ -446,7 +446,7 @@ espconn_client_err(void *arg, err_t err)
  *                err -- An unused error code, always ERR_OK currently
  * Returns      : connection result
 *******************************************************************************/
-static err_t ICACHE_FLASH_ATTR
+static err_t 
 espconn_client_connect(void *arg, struct tcp_pcb *tpcb, err_t err)
 {
     espconn_msg *pcon = arg;
@@ -476,7 +476,7 @@ espconn_client_connect(void *arg, struct tcp_pcb *tpcb, err_t err)
  * Parameters   : espconn -- the espconn used to build client
  * Returns      : none
 *******************************************************************************/
-sint8 ICACHE_FLASH_ATTR
+sint8 
 espconn_tcp_client(struct espconn *espconn)
 {
     struct tcp_pcb *pcb = NULL;
@@ -523,7 +523,7 @@ espconn_tcp_client(struct espconn *espconn)
  * Parameters   : arg -- Additional argument to pass to the callback function
  * Returns      : none
 *******************************************************************************/
-static void ICACHE_FLASH_ATTR
+static void 
 espconn_sclose_cb(void *arg)
 {
 	espconn_msg *psclose_cb = arg;
@@ -550,7 +550,7 @@ espconn_sclose_cb(void *arg)
  *                pcb -- the pcb to close
  * Returns      : none
 *******************************************************************************/
-static void ICACHE_FLASH_ATTR
+static void 
 espconn_server_close(void *arg, struct tcp_pcb *pcb)
 {
     err_t err;
@@ -582,7 +582,7 @@ espconn_server_close(void *arg, struct tcp_pcb *pcb)
  *                err -- An error code if there has been an error receiving
  * Returns      : ERR_ABRT: if you have called tcp_abort from within the function!
 *******************************************************************************/
-static err_t ICACHE_FLASH_ATTR
+static err_t 
 espconn_server_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err)
 {
 	espconn_msg *precv_cb = arg;
@@ -634,7 +634,7 @@ espconn_server_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err)
  * Returns      : ERR_OK: try to send some data by calling tcp_output
  *                ERR_ABRT: if you have called tcp_abort from within the function!
 *******************************************************************************/
-static err_t ICACHE_FLASH_ATTR
+static err_t 
 espconn_server_sent(void *arg, struct tcp_pcb *pcb, u16_t len)
 {
 	espconn_msg *psent_cb = arg;
@@ -664,7 +664,7 @@ espconn_server_sent(void *arg, struct tcp_pcb *pcb, u16_t len)
  * Returns      : ERR_OK: try to send some data by calling tcp_output
  *                ERR_ABRT: if you have called tcp_abort from within the function!
 *******************************************************************************/
-static err_t ICACHE_FLASH_ATTR
+static err_t 
 espconn_server_poll(void *arg, struct tcp_pcb *pcb)
 {
 	espconn_msg *pspoll_cb = arg;
@@ -710,7 +710,7 @@ espconn_server_poll(void *arg, struct tcp_pcb *pcb)
  *                err -- Error code to indicate why the pcb has been closed
  * Returns      : none
 *******************************************************************************/
-static void ICACHE_FLASH_ATTR
+static void 
 esponn_server_err(void *arg, err_t err)
 {
 	espconn_msg *pserr_cb = arg;
@@ -778,7 +778,7 @@ esponn_server_err(void *arg, err_t err)
  *                err -- An unused error code, always ERR_OK currently
  * Returns      : acception result
 *******************************************************************************/
-static err_t ICACHE_FLASH_ATTR
+static err_t 
 espconn_tcp_accept(void *arg, struct tcp_pcb *pcb, err_t err)
 {
     struct espconn *espconn = arg;
@@ -839,7 +839,7 @@ espconn_tcp_accept(void *arg, struct tcp_pcb *pcb, err_t err)
  * Parameters   : espconn -- the espconn used to build server
  * Returns      : none
 *******************************************************************************/
-sint8 ICACHE_FLASH_ATTR
+sint8 
 espconn_tcp_server(struct espconn *espconn)
 {
     struct tcp_pcb *pcb = NULL;

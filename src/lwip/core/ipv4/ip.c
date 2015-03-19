@@ -159,7 +159,7 @@ ip_route(ip_addr_t *dest)
  * @return the netif on which to send to reach source
  */
 
-struct netif *ICACHE_FLASH_ATTR
+struct netif *
 ip_router(ip_addr_t *dest, ip_addr_t *source){
 	struct netif *netif;
 	/* iterate through netifs */
@@ -203,7 +203,7 @@ ip_router(ip_addr_t *dest, ip_addr_t *source){
  * @param iphdr the IP header of the input packet
  * @param inp the netif on which this packet was received
  */
-static void ICACHE_FLASH_ATTR
+static void 
 ip_forward(struct pbuf *p, struct ip_hdr *iphdr, struct netif *inp)
 {
   struct netif *netif;

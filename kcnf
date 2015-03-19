@@ -1,3 +1,25 @@
+menu Hacks
+
+config ESP8266_NEED_ESPCONN_INIT
+bool "You need to set this setting to true when using SDK >= 1.0.0 or there will be linker errors"
+default n
+
+endmenu
+
+menu "Services to build"
+
+config SERVICE_DHCPS
+bool "DHCP Server"
+
+config SERVICE_TCP
+bool "TCP/IP services"
+
+config SERVICE_TELNET
+bool "Telnet Service"
+depends on SERVICE_TCP
+
+endmenu
+
 menu "Modules to build"
 
 config CMD_IW
@@ -17,12 +39,30 @@ bool "FLASH commands"
 
 config CMD_LISTEN
 bool "Listen on a port"
+depends on SERVICE_TCP
 
 config CMD_SEND
 bool "Send data over TCP"
+depends on SERVICE_TCP
 
 config CMD_TFTP
 bool "TFTP firmware update support"
+
+if CMD_TFTP
+
+config ENV_DEFAULT_TFTP_SERVER_IP
+string "Default IP to connect to when using tftp command"
+default "192.168.1.215"
+
+config ENV_DEFAULT_TFTP_SERVER_DIR
+string "TFTP server directory"
+default "/"
+
+config ENV_DEFAULT_TFTP_SERVER_FILE
+string "TFTP server file to retrieve"
+default "antares.com"
+
+endif
 
 config CMD_AT
 bool "AT to say OK"
@@ -30,8 +70,8 @@ bool "AT to say OK"
 config CMD_ADC
 bool "System ADC support"
 
-config CMD_I2C
-bool "I2C bus support"
+menuconfig CMD_I2C
+bool "I2C support (experimental)"
 
 if CMD_I2C
 
@@ -50,22 +90,14 @@ bool "I2C pcf8591 8-bit ADC DAC"
 config CMD_I2C_INA219
 bool "I2C ina219 current sensor"
 
-#still in progress
-#config CMD_I2C_AT24EEP
-#bool "I2C at24xx EEPROM serial flash"
+config CMD_I2C_TCS3414CS
+bool "I2C tcs3414cs color sensor (Needs testing)"
 
-#config CMD_I2C_TCS3414CS
-#bool "I2C tcs3414cs color sensor"
-#default n
+config CMD_I2C_MLX90614
+bool "I2C mlx90614 temperature sensor (Needs testing)"
 
-#config CMD_I2C_MLX90614
-#bool "I2C mlx90614 temperature sensor"
-#default n
-
-#config CMD_I2C_HMC5883L
-#bool "I2C hmc5883l 3-Axis Digital Compass"
-#default n
-#end still in progress
+config CMD_I2C_HMC5883L
+bool "I2C hmc5883l 3-Axis Digital Compass (Needs testing)"
 
 endif
 
@@ -74,7 +106,7 @@ endif
 #bool "enable tcp(10101)<->serial passthrough"
 
 menuconfig CMD_DS18B20
-bool "DS18B20/DS18S20 Termal Sensor support"
+bool "DS18B20/DS18S20 Thermal Sensor support"
 
 if CMD_DS18B20
 config CMD_DS18B20_DEBUG
@@ -84,8 +116,18 @@ help
 
 endif
 
-endmenu
+menuconfig CMD_DHT11
+bool "DHT11 Thermal & Humidity Sensor support (Needs testing)"
 
+if CMD_DHT11
+config CMD_DHT11_DEBUG
+bool "DHT11 Debugging"
+help
+	Show debugging messages
+
+endif
+
+endmenu
 
 menu "Environment Settings"
 
@@ -108,5 +150,56 @@ default 0x7e000
 config ENV_NOWRITE
 bool "Simulate writes of environment data in flash"
 default n
+
+menu "Default Values"
+
+choice
+prompt "Default wifi mode"
+default WIFI_MODE_AP
+
+config WIFI_MODE_AP
+bool "Access point"
+
+config WIFI_MODE_STATION
+bool "Station mode - (client)"
+
+config WIFI_MODE_SOFTAP
+bool "Soft access point mode - (both AP & client)"
+
+config WIFI_MODE_NONE
+bool "Wifi initially off"
+
+endchoice
+
+config ENV_DEFAULT_HOSTNAME
+string "Hostname at boot"
+default "frankenstein"
+
+config ENV_DEFAULT_STATION_IP
+string "Station mode IP address at boot"
+default "192.168.0.123"
+
+config ENV_DEFAULT_STATION_MASK
+string "Station mode IP netmask at boot"
+default "255.255.255.0"
+
+config ENV_DEFAULT_STATION_GW
+string "Station mode IP gateway address at boot"
+default "192.168.0.1"
+
+config ENV_DEFAULT_AP_IP
+string "AP mode IP address at boot"
+default "192.168.1.1"
+
+config ENV_DEFAULT_AP_MASK
+string "AP mode IP netmask at boot"
+default "255.255.255.0"
+
+config ENV_DEFAULT_AP_GW
+string "AP mode IP gateway at boot"
+default "192.168.1.1"
+
+endmenu
+
 
 endmenu

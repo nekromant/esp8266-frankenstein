@@ -152,6 +152,12 @@ frankenstein > iwconnect apname password
 Connected
 ```
 
+spaces are allowed with simple or double quotes:
+```
+frankenstein > iwconnect "ap name" 'my password'
+```
+
+
 iwconnect starts connection process and waits for some seconds until it 
 either connects or an error rises. It will continue to try and reconnect in
 background. 
@@ -224,10 +230,14 @@ disconnected!
 
 ```
 help       - Show this message
+telnet     - start/stop telnet server
+             telnet start - start service
+             telnet stop  - stop service
+             telnet quit  - drop current client
 argtest    - Print out argc/argv
 deepsleep  - Enter deep sleep for some microseconds
              deepsleep 10000
-reset      - Soft-reboot the device 
+reset      - Soft-reboot the device
 chipinfo   - Display chip information
 meminfo    - Display memory information
 hname      - Set dhcp hostname
@@ -235,12 +245,14 @@ envreset   - Reset environment to defaults
              resetenv
 saveenv    - Write environment to flash
              setenv var value
+getenv     - Get an environment variable
+             getenv var
 setenv     - Set an environment variable
              setenv var value
 printenv   - Print all environment variables
-apconfig   - Setup Access Point. 
+apconfig   - Setup Access Point.
              apconfig name OPEN/WEP/WPA_PSK/WPA2_PSK/WPA_WPA2_PSK [password]
-iwconnect  - Join a network/Display connection status. 
+iwconnect  - Join a network/Display connection status.
              iwconnect ssid password
 iwmode     - Get/set wireless mode. Available modes: NONE, STA, AP, APSTA
              iwmode STA
@@ -248,7 +260,7 @@ iwscan     - Scan for available stations
 ifconfig   - Show network interfaces and their status
              ifconfig [iface]
              ifconfig sta0
-gpio       - Control gpio lines. gpio mode line [value] 
+gpio       - Control gpio lines. gpio mode line [value]
              gpio in 0
              gpio out 0 1
 flash_scan - Scan the upper portion of FLASH for dirty blocks
@@ -262,12 +274,30 @@ spi_wipe   - Wipe the whole spi flash blank
              wipe any three arguments
 listen     - Listen for incoming data ona port
              listen 8080
-send       - Send data to a remote host. 
+send       - Send data to a remote host.
              send hostname port [data]
 ds18b20    - Read temperature from DS18B20 chip.
              ds18b20 <gpio>
- 
+tftp       - Update firmware over tftp
+             tftp
+AT         - says OK
 ```
+# Flashing the controller
+
+There is a convenience target wrapping `esptool.py`.
+Set the default tty and whether you have a pl2303 GPIO breakout for automatically resetting the board using `make menuconfig`
+
+```
+make deploy-esptool
+```
+
+If you dont have a pl2303 gpio breakoutboard and have to manually set the programming GPIO, use the following procedure.
+
+* Dont be running minicom or other terminal program
+* Connect RST and GPIO#)0 to GND
+* Release RST
+* Release GPIO#2 (at least 300ms after)
+* Deploy
 
 # Over-the-air firmware updates. 
 
@@ -306,10 +336,6 @@ bug, I'm working on a fix.
 
 Just after flashing run wipeparams. Stored settings from older SDK tend to confuse 
 Espressif's blobs and make them go nuts
-
-* No way to connect to AP that has whitespaces in its name or password/No whitespace escaping 
-
-Known limitation of microrl. Is on the TODO list
 
 * gpio controls only gpio0 and gpio2
 

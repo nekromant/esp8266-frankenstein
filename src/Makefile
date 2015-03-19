@@ -3,10 +3,12 @@ objects-y+=microrl.o
 objects-y+=console.o
 objects-y+=hostname.o
 objects-y+=env.o
-objects-y+=strbuf.o
-objects-y+=tcpbuf.o
-
-objects-y+=telnet.o
+#objects-y+=strbuf.o
+#objects-y+=tcpbuf.o
+objects-$(CONFIG_SERVICE_TCP)+=cb.o
+objects-$(CONFIG_SERVICE_TCP)+=cbtools.o
+objects-$(CONFIG_SERVICE_TCP)+=tcpservice.o
+objects-$(CONFIG_SERVICE_TELNET)+=svc_telnet.o
 
 objects-y+=cmd_common.o cmd_env.o uart.o
 objects-y+=pin_map.o
@@ -19,6 +21,7 @@ objects-$(CONFIG_CMD_FLASH)+=cmd_flash.o
 objects-$(CONFIG_CMD_LISTEN)+=cmd_listen.o
 objects-$(CONFIG_CMD_SEND)+=cmd_send.o
 objects-$(CONFIG_CMD_DS18B20)+=cmd_ds18b20.o
+objects-$(CONFIG_CMD_DHT11)+=cmd_dht11.o
 objects-$(CONFIG_CMD_TFTP)+=cmd_tftp.o tftp.o
 objects-$(CONFIG_CMD_AT)+=cmd_at.o
 objects-$(CONFIG_CMD_ADC)+=cmd_adc.o
@@ -33,7 +36,6 @@ objects-$(CONFIG_CMD_I2C_PCF8591)+=i2c_pcf8591.o
 objects-$(CONFIG_CMD_I2C_HMC5883L)+=i2c_hmc5883l.o
 objects-$(CONFIG_CMD_I2C_TCS3414CS)+=i2c_tcs3414cs.o
 objects-$(CONFIG_CMD_I2C_MLX90614)+=i2c_mlx90614.o
-objects-$(CONFIG_CMD_I2C_AT24EEP)+=i2c_at24eep.o
 
 ifneq ($(CONFIG_ESP8266_BLOB_LWIP),y)
 subdirs-y+=netapps/

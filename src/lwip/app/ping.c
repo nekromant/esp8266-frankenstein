@@ -124,7 +124,7 @@ u16_t inline get_ping_length(){
 
 /** Prepare a echo ICMP request */
 static void
-ping_prepare_echo( struct icmp_echo_hdr *iecho, u16_t len)ICACHE_FLASH_ATTR;
+ping_prepare_echo( struct icmp_echo_hdr *iecho, u16_t len);
 static void
 ping_prepare_echo( struct icmp_echo_hdr *iecho, u16_t len)
 {
@@ -147,7 +147,7 @@ ping_prepare_echo( struct icmp_echo_hdr *iecho, u16_t len)
 }
 
 static void
-ping_prepare_er(struct icmp_echo_hdr *iecho, u16_t len)ICACHE_FLASH_ATTR;
+ping_prepare_er(struct icmp_echo_hdr *iecho, u16_t len);
 static void
 ping_prepare_er(struct icmp_echo_hdr *iecho, u16_t len)
 {
@@ -165,7 +165,7 @@ ping_prepare_er(struct icmp_echo_hdr *iecho, u16_t len)
 
 /* Ping using the raw ip */
 static u8_t
-ping_recv(void *arg, struct raw_pcb *pcb, struct pbuf *p, ip_addr_t *addr)ICACHE_FLASH_ATTR;
+ping_recv(void *arg, struct raw_pcb *pcb, struct pbuf *p, ip_addr_t *addr);
 static u8_t
 ping_recv(void *arg, struct raw_pcb *pcb, struct pbuf *p, ip_addr_t *addr)
 {
@@ -218,7 +218,7 @@ ping_recv(void *arg, struct raw_pcb *pcb, struct pbuf *p, ip_addr_t *addr)
 }
 
 static void
-ping_send(struct raw_pcb *raw, ip_addr_t *addr)ICACHE_FLASH_ATTR;
+ping_send(struct raw_pcb *raw, ip_addr_t *addr);
 static void
 ping_send(struct raw_pcb *raw, ip_addr_t *addr)
 {
@@ -247,7 +247,7 @@ ping_send(struct raw_pcb *raw, ip_addr_t *addr)
 }
 
 static void
-ping_timeout(void *arg)ICACHE_FLASH_ATTR;
+ping_timeout(void *arg);
 static void
 ping_timeout(void *arg)
 {
@@ -262,7 +262,7 @@ ping_timeout(void *arg)
 }
 
 static void
-ping_raw_init(void)ICACHE_FLASH_ATTR;
+ping_raw_init(void);
 static void
 ping_raw_init(void)
 {

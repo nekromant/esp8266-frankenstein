@@ -211,7 +211,7 @@
 #endif
 
 #ifdef LWIP_DEBUG
-static void ICACHE_FLASH_ATTR
+static void 
 lwip_sanity_check(void)
 {
   /* Warnings */

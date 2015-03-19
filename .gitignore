@@ -8,3 +8,6 @@ tmp
 *.bak
 *.old
 include/config
+include/generated
+images/
+include/arch

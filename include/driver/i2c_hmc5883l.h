@@ -65,9 +65,9 @@ typedef enum
 
 typedef struct
 {
-    sint16 X;
-    sint16 Y;
-    sint16 Z;
+    float X;
+    float Y;
+    float Z;
 } Vector; 
 
 Vector LAST_HMC5883_VECTOR;

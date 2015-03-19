@@ -109,8 +109,8 @@ static struct ip_reassdata *reassdatagrams;
 static u16_t ip_reass_pbufcount;
 
 /* function prototypes */
-static void ip_reass_dequeue_datagram(struct ip_reassdata *ipr, struct ip_reassdata *prev)ICACHE_FLASH_ATTR;
-static int ip_reass_free_complete_datagram(struct ip_reassdata *ipr, struct ip_reassdata *prev)ICACHE_FLASH_ATTR;
+static void ip_reass_dequeue_datagram(struct ip_reassdata *ipr, struct ip_reassdata *prev);
+static int ip_reass_free_complete_datagram(struct ip_reassdata *ipr, struct ip_reassdata *prev);
 
 /**
  * Reassembly timer base function
@@ -265,7 +265,7 @@ ip_reass_remove_oldest_datagram(struct ip_hdr *fraghdr, int pbufs_needed)
  * @param clen number of pbufs needed to enqueue (used for freeing other datagrams if not enough space)
  * @return A pointer to the queue location into which the fragment was enqueued
  */
-static struct ip_reassdata* ICACHE_FLASH_ATTR
+static struct ip_reassdata* 
 ip_reass_enqueue_new_datagram(struct ip_hdr *fraghdr, int clen)
 {
   struct ip_reassdata* ipr;
@@ -300,7 +300,7 @@ ip_reass_enqueue_new_datagram(struct ip_hdr *fraghdr, int clen)
  * Dequeues a datagram from the datagram queue. Doesn't deallocate the pbufs.
  * @param ipr points to the queue entry to dequeue
  */
-static void ICACHE_FLASH_ATTR
+static void 
 ip_reass_dequeue_datagram(struct ip_reassdata *ipr, struct ip_reassdata *prev)
 {
   
@@ -327,7 +327,7 @@ ip_reass_dequeue_datagram(struct ip_reassdata *ipr, struct ip_reassdata *prev)
  * @param new_p points to the pbuf for the current fragment
  * @return 0 if invalid, >0 otherwise
  */
-static int ICACHE_FLASH_ATTR
+static int 
 ip_reass_chain_frag_into_datagram_and_validate(struct ip_reassdata *ipr, struct pbuf *new_p)
 {
   struct ip_reass_helper *iprh, *iprh_tmp, *iprh_prev=NULL;
@@ -620,14 +620,14 @@ static u8_t buf[LWIP_MEM_ALIGN_SIZE(IP_FRAG_MAX_MTU + MEM_ALIGNMENT - 1)];
 
 #if !LWIP_NETIF_TX_SINGLE_PBUF
 /** Allocate a new struct pbuf_custom_ref */
-static struct pbuf_custom_ref* ICACHE_FLASH_ATTR
+static struct pbuf_custom_ref* 
 ip_frag_alloc_pbuf_custom_ref(void)
 {
   return (struct pbuf_custom_ref*)memp_malloc(MEMP_FRAG_PBUF);
 }
 
 /** Free a struct pbuf_custom_ref */
-static void ICACHE_FLASH_ATTR
+static void 
 ip_frag_free_pbuf_custom_ref(struct pbuf_custom_ref* p)
 {
   LWIP_ASSERT("p != NULL", p != NULL);
@@ -636,7 +636,7 @@ ip_frag_free_pbuf_custom_ref(struct pbuf_custom_ref* p)
 
 /** Free-callback function to free a 'struct pbuf_custom_ref', called by
  * pbuf_free. */
-static void ICACHE_FLASH_ATTR
+static void 
 ipfrag_free_pbuf_custom(struct pbuf *p)
 {
   struct pbuf_custom_ref *pcr = (struct pbuf_custom_ref*)p;

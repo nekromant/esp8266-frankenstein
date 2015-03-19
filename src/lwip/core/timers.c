@@ -73,7 +73,7 @@ static int tcpip_tcp_timer_active;
  *
  * @param arg unused argument
  */
-static void ICACHE_FLASH_ATTR
+static void 
 tcpip_tcp_timer(void *arg)
 {
   LWIP_UNUSED_ARG(arg);
@@ -112,7 +112,7 @@ tcp_timer_needed(void)
  * @param arg unused argument
  */
 
-static void ICACHE_FLASH_ATTR
+static void 
 tcp_timer_coarse(void *arg)
 {
   LWIP_UNUSED_ARG(arg);
@@ -129,7 +129,7 @@ tcp_timer_coarse(void *arg)
  *
  * @param arg unused argument
  */
-static void ICACHE_FLASH_ATTR
+static void 
 ip_reass_timer(void *arg)
 {
   LWIP_UNUSED_ARG(arg);
@@ -145,7 +145,7 @@ ip_reass_timer(void *arg)
  *
  * @param arg unused argument
  */
-static void ICACHE_FLASH_ATTR
+static void 
 arp_timer(void *arg)
 {
   LWIP_UNUSED_ARG(arg);

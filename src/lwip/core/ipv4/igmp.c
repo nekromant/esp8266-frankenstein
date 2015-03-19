@@ -135,14 +135,14 @@ PACK_STRUCT_END
 #endif
 
 
-static struct igmp_group *igmp_lookup_group(struct netif *ifp, ip_addr_t *addr)ICACHE_FLASH_ATTR;
-static err_t  igmp_remove_group(struct igmp_group *group)ICACHE_FLASH_ATTR;
-static void   igmp_timeout( struct igmp_group *group)ICACHE_FLASH_ATTR;
-static void   igmp_start_timer(struct igmp_group *group, u8_t max_time)ICACHE_FLASH_ATTR;
-//static void   igmp_stop_timer(struct igmp_group *group)ICACHE_FLASH_ATTR;
-static void   igmp_delaying_member(struct igmp_group *group, u8_t maxresp)ICACHE_FLASH_ATTR;
-static err_t  igmp_ip_output_if(struct pbuf *p, ip_addr_t *src, ip_addr_t *dest, struct netif *netif)ICACHE_FLASH_ATTR;
-static void   igmp_send(struct igmp_group *group, u8_t type)ICACHE_FLASH_ATTR;
+static struct igmp_group *igmp_lookup_group(struct netif *ifp, ip_addr_t *addr);
+static err_t  igmp_remove_group(struct igmp_group *group);
+static void   igmp_timeout( struct igmp_group *group);
+static void   igmp_start_timer(struct igmp_group *group, u8_t max_time);
+//static void   igmp_stop_timer(struct igmp_group *group);
+static void   igmp_delaying_member(struct igmp_group *group, u8_t maxresp);
+static err_t  igmp_ip_output_if(struct pbuf *p, ip_addr_t *src, ip_addr_t *dest, struct netif *netif);
+static void   igmp_send(struct igmp_group *group, u8_t type);
 
 
 static struct igmp_group* igmp_group_list;

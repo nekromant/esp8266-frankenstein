@@ -30,13 +30,13 @@ CONSOLE_CMD(send, -1, -1,
 
 
 
-LOCAL void ICACHE_FLASH_ATTR
+LOCAL void 
 webserver_recv(void *arg, char *pusrdata, unsigned short length)
 {
 	console_printf("received %d bytes of data\n", length);
 }
 
-LOCAL ICACHE_FLASH_ATTR
+LOCAL 
 void webserver_recon(void *arg, sint8 err)
 {
     struct espconn *pesp_conn = arg;
@@ -46,7 +46,7 @@ void webserver_recon(void *arg, sint8 err)
     		pesp_conn->proto.tcp->remote_ip[3],pesp_conn->proto.tcp->remote_port, err);
 }
 
-LOCAL ICACHE_FLASH_ATTR
+LOCAL 
 void webserver_discon(void *arg)
 {
     struct espconn *pesp_conn = arg;
@@ -56,7 +56,7 @@ void webserver_discon(void *arg)
 		   pesp_conn->proto.tcp->remote_ip[3],pesp_conn->proto.tcp->remote_port);
 }
 
-LOCAL void ICACHE_FLASH_ATTR
+LOCAL void 
 webserver_listen(void *arg)
 {
     struct espconn *pesp_conn = arg;

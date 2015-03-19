@@ -17,7 +17,6 @@ sudo pacman -S git flex bison gperf
 Now grab and unpack latest kconfig-frontends from 
 http://ymorin.is-a-geek.org/projects/kconfig-frontends
 
-
 This is normally installed by:
 
 cd kconfig-frontends
@@ -25,6 +24,14 @@ cd kconfig-frontends
 make 
 sudo make install
 
+To build from git instead:
+
+git clone http://ymorin.is-a-geek.org/git/kconfig-frontends/
+cd kconfig-frontends
+./bootstrap
+./configure --prefix=/usr
+make 
+sudo make install
 
 Now, we'll need our toolchain. we'll need the awesome esp-open-sdk created by pfalcon: 
 https://github.com/pfalcon/esp-open-sdk

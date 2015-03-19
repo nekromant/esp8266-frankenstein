@@ -48,7 +48,14 @@ extern int log_level;
 #define LOG(level,b...)		do { if ((level) <= LOG_LEVEL_MAX && (level) <= log_level) { console_printf("L%d: ", level); console_printf(b); console_printf(" (%s:%d)\n", __FILE__, __LINE__); } } while (0)
 #define LOGSERIAL(level,b...)	do { if ((level) <= LOG_LEVEL_MAX && (level) <= log_level) { SERIAL_PRINTF("L%d: ", level); SERIAL_PRINTF(b); SERIAL_PRINTF(" (%s:%d)\n", __FILE__, __LINE__); } } while (0)
 
-int  (*console_printf)             (const char *fmt, ...) __attribute__ ((format (printf, 1, 2)));
+typedef int (*printf_f)(const char *fmt, ...) __attribute__ ((format (printf, 1, 2)));
+
+// add this to antares/esp8266 missing includes
+#include <stdarg.h>
+#include <c_types.h>
+int vsnprintf(char *str, size_t size, const char *format, va_list ap);
+       
+extern printf_f console_printf;
 
 #define HELPSTR_NEWLINE "\n             "
 

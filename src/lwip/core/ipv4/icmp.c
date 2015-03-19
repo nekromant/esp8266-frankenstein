@@ -284,7 +284,7 @@ icmp_time_exceeded(struct pbuf *p, enum icmp_te_type t)
  * @param type Type of the ICMP header
  * @param code Code of the ICMP header
  */
-static void ICACHE_FLASH_ATTR
+static void 
 icmp_send_response(struct pbuf *p, u8_t type, u8_t code)
 {
   struct pbuf *q;

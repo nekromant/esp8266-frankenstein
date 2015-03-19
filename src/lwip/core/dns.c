@@ -228,7 +228,7 @@ static u8_t*                  dns_payload;
  * Initialize the resolver: set up the UDP pcb and configure the default server
  * (DNS_SERVER_ADDRESS).
  */
-void ICACHE_FLASH_ATTR
+void 
 dns_init()
 {
   ip_addr_t dnsserver;
@@ -269,7 +269,7 @@ dns_init()
  * @param numdns the index of the DNS server to set must be < DNS_MAX_SERVERS
  * @param dnsserver IP address of the DNS server to set
  */
-void ICACHE_FLASH_ATTR
+void 
 dns_setserver(u8_t numdns, ip_addr_t *dnsserver)
 {
   if ((numdns < DNS_MAX_SERVERS) && (dns_pcb != NULL) &&
@@ -285,7 +285,7 @@ dns_setserver(u8_t numdns, ip_addr_t *dnsserver)
  * @return IP address of the indexed DNS server or "ip_addr_any" if the DNS
  *         server has not been configured.
  */
-ip_addr_t ICACHE_FLASH_ATTR
+ip_addr_t 
 dns_getserver(u8_t numdns)
 {
   if (numdns < DNS_MAX_SERVERS) {
@@ -309,7 +309,7 @@ dns_tmr(void)
 }
 
 #if DNS_LOCAL_HOSTLIST
-static void ICACHE_FLASH_ATTR
+static void 
 dns_init_local()
 {
 #if DNS_LOCAL_HOSTLIST_IS_DYNAMIC && defined(DNS_LOCAL_HOSTLIST_INIT)
@@ -344,7 +344,7 @@ dns_init_local()
  * @return The first IP address for the hostname in the local host-list or
  *         IPADDR_NONE if not found.
  */
-static u32_t ICACHE_FLASH_ATTR
+static u32_t 
 dns_lookup_local(const char *hostname)
 {
 #if DNS_LOCAL_HOSTLIST_IS_DYNAMIC
@@ -375,7 +375,7 @@ dns_lookup_local(const char *hostname)
  * @param addr address for which entries shall be removed from the local host-list
  * @return the number of removed entries
  */
-int ICACHE_FLASH_ATTR
+int 
 dns_local_removehost(const char *hostname, const ip_addr_t *addr)
 {
   int removed = 0;
@@ -410,7 +410,7 @@ dns_local_removehost(const char *hostname, const ip_addr_t *addr)
  * @param addr IP address of the new entry
  * @return ERR_OK if succeeded or ERR_MEM on memory error
  */
-err_t ICACHE_FLASH_ATTR
+err_t 
 dns_local_addhost(const char *hostname, const ip_addr_t *addr)
 {
   struct local_hostlist_entry *entry;
@@ -446,7 +446,7 @@ dns_local_addhost(const char *hostname, const ip_addr_t *addr)
  *         better check for failure: != IPADDR_NONE) or IPADDR_NONE if the hostname
  *         was not found in the cached dns_table.
  */
-static u32_t ICACHE_FLASH_ATTR
+static u32_t 
 dns_lookup(const char *name)
 {
   u8_t i;
@@ -489,7 +489,7 @@ dns_lookup(const char *name)
  * @param response encoded hostname in the DNS response
  * @return 0: names equal; 1: names differ
  */
-static u8_t ICACHE_FLASH_ATTR
+static u8_t 
 dns_compare_name(unsigned char *query, unsigned char *response)
 {
   unsigned char n;
@@ -524,7 +524,7 @@ dns_compare_name(unsigned char *query, unsigned char *response)
  * @param query encoded DNS name in the DNS server response
  * @return end of the name
  */
-static unsigned char * ICACHE_FLASH_ATTR
+static unsigned char * 
 dns_parse_name(unsigned char *query)
 {
   unsigned char n;
@@ -556,7 +556,7 @@ dns_parse_name(unsigned char *query)
  *        DNS query packet
  * @return ERR_OK if packet is sent; an err_t indicating the problem otherwise
  */
-static err_t ICACHE_FLASH_ATTR
+static err_t 
 dns_send(u8_t numdns, const char* name, u8_t id)
 {
   err_t err;
@@ -632,7 +632,7 @@ dns_send(u8_t numdns, const char* name, u8_t id)
  *
  * @param i index of the dns_table entry to check
  */
-static void ICACHE_FLASH_ATTR
+static void 
 dns_check_entry(u8_t i)
 {
   err_t err;
@@ -714,7 +714,7 @@ dns_check_entry(u8_t i)
 /**
  * Call dns_check_entry for each entry in dns_table - check all entries.
  */
-static void ICACHE_FLASH_ATTR
+static void 
 dns_check_entries(void)
 {
   u8_t i;
@@ -729,7 +729,7 @@ dns_check_entries(void)
  *
  * @params see udp.h
  */
-static void ICACHE_FLASH_ATTR
+static void 
 dns_recv(void *arg, struct udp_pcb *pcb, struct pbuf *p, ip_addr_t *addr, u16_t port)
 {
   u16_t i;
@@ -856,7 +856,7 @@ memerr:
  * @param callback_arg argument to pass to the callback function
  * @return @return a err_t return code.
  */
-static err_t ICACHE_FLASH_ATTR
+static err_t 
 dns_enqueue(const char *name, dns_found_callback found, void *callback_arg)
 {
   u8_t i;
@@ -932,7 +932,7 @@ dns_enqueue(const char *name, dns_found_callback found, void *callback_arg)
  * @param callback_arg argument to pass to the callback function
  * @return a err_t return code.
  */
-err_t ICACHE_FLASH_ATTR
+err_t 
 dns_gethostbyname(const char *hostname, ip_addr_t *addr, dns_found_callback found,
                   void *callback_arg)
 {

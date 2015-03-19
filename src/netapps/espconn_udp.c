@@ -24,7 +24,7 @@
 
 extern espconn_msg *plink_active;
 
-static void ICACHE_FLASH_ATTR espconn_data_sentcb(struct espconn *pespconn)
+static void  espconn_data_sentcb(struct espconn *pespconn)
 {
     if (pespconn == NULL) {
         return;
@@ -35,7 +35,7 @@ static void ICACHE_FLASH_ATTR espconn_data_sentcb(struct espconn *pespconn)
     }
 }
 
-static void ICACHE_FLASH_ATTR espconn_data_sent(void *arg)
+static void  espconn_data_sent(void *arg)
 {
     espconn_msg *psent = arg;
 
@@ -59,7 +59,7 @@ static void ICACHE_FLASH_ATTR espconn_data_sent(void *arg)
  *                uint16 length -- Length of data to send
  * Returns      : none
 *******************************************************************************/
-void ICACHE_FLASH_ATTR
+void 
 espconn_udp_sent(void *arg, uint8 *psent, uint16 length)
 {
     espconn_msg *pudp_sent = arg;
@@ -132,7 +132,7 @@ espconn_udp_sent(void *arg, uint8 *psent, uint16 length)
  * Returns      : none
 *******************************************************************************/
 #if 0
-static void ICACHE_FLASH_ATTR
+static void 
 espconn_udp_client_recv(void *arg, struct udp_pcb *upcb, struct pbuf *p,
                         struct ip_addr *addr, u16_t port)
 {
@@ -185,7 +185,7 @@ espconn_udp_client_recv(void *arg, struct udp_pcb *upcb, struct pbuf *p,
  *                port -- the remote port from which the packet was received
  * Returns      : none
 *******************************************************************************/
-static void ICACHE_FLASH_ATTR
+static void 
 espconn_udp_recv(void *arg, struct udp_pcb *upcb, struct pbuf *p,
                  struct ip_addr *addr, u16_t port)
 {
@@ -240,7 +240,7 @@ espconn_udp_recv(void *arg, struct udp_pcb *upcb, struct pbuf *p,
  * Parameters   : espconn -- the espconn used to disconnect with host
  * Returns      : none
 *******************************************************************************/
-void ICACHE_FLASH_ATTR espconn_udp_disconnect(espconn_msg *pdiscon)
+void  espconn_udp_disconnect(espconn_msg *pdiscon)
 {
     if (pdiscon == NULL) {
         return;
@@ -268,7 +268,7 @@ void ICACHE_FLASH_ATTR espconn_udp_disconnect(espconn_msg *pdiscon)
  * Parameters   : pespconn -- the espconn used to build client
  * Returns      : none
 *******************************************************************************/
-sint8 ICACHE_FLASH_ATTR
+sint8 
 espconn_udp_client(struct espconn *pespconn)
 {
     struct udp_pcb *upcb;
@@ -309,7 +309,7 @@ espconn_udp_client(struct espconn *pespconn)
  * Parameters   : pespconn -- the espconn used to build server
  * Returns      : none
 *******************************************************************************/
-sint8 ICACHE_FLASH_ATTR
+sint8 
 espconn_udp_server(struct espconn *pespconn)
 {
     struct udp_pcb *upcb = NULL;
@@ -343,7 +343,7 @@ espconn_udp_server(struct espconn *pespconn)
  * 				  multicast_ip -- multicast ip given by user
  * Returns      : none
 *******************************************************************************/
-sint8 ICACHE_FLASH_ATTR
+sint8 
 espconn_igmp_leave(ip_addr_t *host_ip, ip_addr_t *multicast_ip)
 {
     if (igmp_leavegroup(host_ip, multicast_ip) != ERR_OK) {
@@ -361,7 +361,7 @@ espconn_igmp_leave(ip_addr_t *host_ip, ip_addr_t *multicast_ip)
  * 				  multicast_ip -- multicast ip given by user
  * Returns      : none
 *******************************************************************************/
-sint8 ICACHE_FLASH_ATTR
+sint8 
 espconn_igmp_join(ip_addr_t *host_ip, ip_addr_t *multicast_ip)
 {
     if (igmp_joingroup(host_ip, multicast_ip) != ERR_OK) {

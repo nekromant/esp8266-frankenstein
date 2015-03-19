@@ -55,9 +55,7 @@ static  int do_deepsleep(int argc, const char* const* argv)
 {
 	const char *tmp = argv[1];
 	unsigned long n = skip_atoul(&tmp); 
-	console_printf("Do not forgot connect GPIO16 to RST\n");
 	console_printf("Deep sleep mode for %lu microseconds\n", n);
-	os_delay_us(10*1000); //wait for serial traffic 
 	system_deep_sleep(n);
 	return 0;
 }
