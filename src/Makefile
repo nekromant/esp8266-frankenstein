@@ -36,8 +36,7 @@ objects-$(CONFIG_CMD_I2C_HMC5883L)+=i2c_hmc5883l.o
 objects-$(CONFIG_CMD_I2C_TCS3414CS)+=i2c_tcs3414cs.o
 objects-$(CONFIG_CMD_I2C_MLX90614)+=i2c_mlx90614.o
 
-
-
+ifneq ($(CONFIG_ESP8266_BLOB_LWIP),y)
 subdirs-y+=netapps/
-
 subdirs-y+=lwip
+endif
