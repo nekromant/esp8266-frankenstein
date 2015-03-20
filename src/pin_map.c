@@ -20,6 +20,16 @@ GPIO_INT_TYPE pin_int_type[GPIO_PIN_NUM] = {
 								GPIO_PIN_INTR_DISABLE, GPIO_PIN_INTR_DISABLE, GPIO_PIN_INTR_DISABLE, GPIO_PIN_INTR_DISABLE};
 #endif
 #else
+
+/* Lookup pin from common gpio number... */
+uint8_t gpio_pin[MAX_GPIO_USER_NUMBER+1] = {
+                  3,    10,    4,    9,  /* gpio 0..3 */
+                  2,     1, 0xff, 0xff,  /* gpio 4..5 (no 6,7) */
+                  0xff, 11,   12, 0xff,  /* gpio 9..10 (no 8,11) */
+                  6,     7,    5,    8,  /* gpio 12..15 */
+                  0 };                   /* gpio 16 */
+
+
 uint32_t pin_mux[GPIO_PIN_NUM] = {PAD_XPD_DCDC_CONF,  PERIPHS_IO_MUX_GPIO5_U,  PERIPHS_IO_MUX_GPIO4_U, 	 PERIPHS_IO_MUX_GPIO0_U,
 								  PERIPHS_IO_MUX_GPIO2_U, PERIPHS_IO_MUX_MTMS_U, PERIPHS_IO_MUX_MTDI_U, PERIPHS_IO_MUX_MTCK_U,
 								  PERIPHS_IO_MUX_MTDO_U, PERIPHS_IO_MUX_U0RXD_U, PERIPHS_IO_MUX_U0TXD_U, PERIPHS_IO_MUX_SD_DATA2_U,
