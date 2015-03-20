@@ -12,6 +12,8 @@
 #include "microrl.h"
 #include "console.h"
 #include "env.h"
+#include "svc_passthrough.h"
+#include "generated/autoconf.h"	// CONFIG_ENABLE_PASSTHROUGH
 
 #include "lwip/mem.h" // mem_realloc
 
@@ -24,7 +26,6 @@ int log_level = LOG_LEVEL_DEFAULT;
 static microrl_t rl;
 #define prl (&rl)
 static int console_locked = 0;
-static int passthrough = ENABLE_PASSTHROUGH_AT_BOOT;
 
 #if 0
 struct console {
@@ -40,23 +41,28 @@ void console_lock(int l)
 		microrl_print_prompt(prl);
 }
 
-void enable_passthrough(int v)
-{
-	passthrough = v;
-	console_lock(v);
-}
-
 void console_insert(char c)
 {
-#if 0
-WIP direct link serial<->wifi
-	static uint32 esc_time = 0;
-	static int esc_count = 0;
-	
-	if (passthrough)
+	if (!console_locked || (c) == KEY_ETX)
+			microrl_insert_char (prl, c);
+}
+
+void console_write(char *buf, int len)
+{
+	while (len--)
+		console_insert(*buf++);
+}
+
+static void  task_console(os_event_t *evt)
+{
+#ifdef CONFIG_ENABLE_PASSTHROUGH
+
+	// 3 times ESC count
+	if (svc_passthrough)
 	{
-		//console_printf("%c", c);
-		ets_uart_printf("@%c,%d", c,c);
+		static uint32 esc_time = 0;
+		static int esc_count = 0;
+		char c = evt->par;
 		
 		if (c != KEY_ESC)
 			esc_count = 0;
@@ -70,29 +76,25 @@ WIP direct link serial<->wifi
 				else if (esc_count == ESC_COUNT)
 				{
 					// disable passthrough
-					enable_passthrough(0);
-					console_printf("console on serial line\n");
+					tcp_service_close(svc_passthrough);
+					SERIAL_PRINTF("console restored\n");
 					esc_count = 0;
+					
+					return;
 				}
 			}
 			esc_time = now;
 		}
+
 	}
+
+	if (svc_passthrough)
+		passthrough_send(evt->par);
 	else
-#endif
-		if (!console_locked || (c) == KEY_ETX)
-			microrl_insert_char (prl, c);
-}
 
-void console_write(char *buf, int len)
-{
-	while (len--)
-		console_insert(*buf++);
-}
+#endif // CONFIG_ENABLE_PASSTHROUGH
 
-static void  task_console(os_event_t *evt)
-{
-	console_insert(evt->par);
+		console_insert(evt->par);
 }
 
 static void  rl_print(const char *str)
@@ -149,7 +151,8 @@ int execute (int argc, const char * const * argv)
 				goto err_more_args; 
 			if ((cmd->maximum_args != -1) && (argc > cmd->maximum_args))
 				goto err_too_many_args;
-			cmd->handler(argc, argv);
+			if (cmd->handler(argc, argv) < 0)
+				console_printf("%s: error\n", argv[0]);
 			return 0;
 		}
 	}

@@ -1,4 +1,7 @@
 
+// TODO: include telnet_state_t in send_buffer so to remove the need of telnet_service_s 
+
+
 #define TELNET_IAC   255
 #define TELNET_WILL  251
 #define TELNET_WONT  252
@@ -38,7 +41,6 @@ typedef struct telnet_service_s
 {
 	tcpservice_t peer;	// tcp service - COMES FIRST HERE
 	telnet_state_t state;	// telnet state
-	char* send_buffer;	// circular buffer
 } telnet_service_t;
 
 #define TS(s)		((telnet_service_t*)(s))
@@ -59,20 +61,7 @@ static void telnet_cleanup (tcpservice_t* s);
 // tcp server only, takes no space
 // (the "socketserver" awaiting for incoming request only)
 // sizeof=64
-static tcpservice_t telnet_listener =
-{
-	.name = "telnet listener",
-	.tcp = NULL,
-	.is_closing = false,
-	.send_buffer = CB_INIT(NULL, 0),
-	.get_new_peer = telnet_new_peer,
-	.cb_established = NULL,
-	.cb_closing = NULL,
-	.cb_recv = NULL,
-	.cb_poll = NULL,
-	.cb_ack = NULL,
-	.cb_cleanup = NULL,
-};
+static tcpservice_t telnet_listener = TCP_SERVICE_LISTENER("telnet listener", telnet_new_peer);
 
 // the current talking telnet peer, which is a hack
 static telnet_service_t* current_telnet = NULL;
@@ -90,7 +79,11 @@ static int telnet_printf (const char *fmt, ...)
 	va_list ap;
 	va_start(ap, fmt);
 	if (current_telnet && current_telnet->peer.tcp)
+	{
 		ret = cb_vprintf(&current_telnet->peer.send_buffer, fmt, ap);
+		if (tcp_send(&current_telnet->peer) != ERR_OK)
+			ret = -1;
+	}
 	else
 	{
 		vsnprintf(sprintbuf, SPRINTBUFSIZE, fmt, ap);
@@ -107,15 +100,15 @@ static tcpservice_t* telnet_new_peer (tcpservice_t* s)
 	telnet_service_t* ts = (telnet_service_t*)os_malloc(sizeof(telnet_service_t));
 	if (!ts)
 		return NULL;
-	ts->send_buffer = (char*)os_malloc(1 << (TELNET_SEND_BUFFER_SIZE_LOG2_DEFAULT));
-	if (!ts->send_buffer)
+	ts->peer.sendbuf = (char*)os_malloc(1 << (TELNET_SEND_BUFFER_SIZE_LOG2_DEFAULT));
+	if (!ts->peer.sendbuf)
 	{
 		os_free(ts);
 		return NULL;
 	}
 	
 	ts->peer.name = "telnet";
-	cb_init(&ts->peer.send_buffer, ts->send_buffer, TELNET_SEND_BUFFER_SIZE_LOG2_DEFAULT);
+	cb_init(&ts->peer.send_buffer, ts->peer.sendbuf, TELNET_SEND_BUFFER_SIZE_LOG2_DEFAULT);
 	ts->peer.get_new_peer = NULL;
 	ts->peer.cb_established = telnet_established;
 	ts->peer.cb_closing = telnet_closing;
@@ -164,8 +157,8 @@ static void telnet_closing (tcpservice_t* s)
 static void telnet_cleanup (tcpservice_t* s)
 {
 	telnet_service_t* ts = TS(s);
-	if (ts->send_buffer)
-		os_free(ts->send_buffer);
+	if (ts->peer.sendbuf)
+		os_free(ts->peer.sendbuf);
 	os_free(ts);
 }
 
@@ -294,7 +287,7 @@ static int  do_telnet(int argc, const char* const* argv)
 		}
 	}
 	else
-		console_printf("telnet: invalid command '%s'\n", argv[1]);
+		return -1;
 	
 	return 0;
 }

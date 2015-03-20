@@ -89,7 +89,7 @@ uart1_tx_one_char(uint8 TxChar)
 }
 #endif
 
-static  __attribute__ ((section(".iram0.text"))) STATUS uart0_tx_one_char(uint8 TxChar)
+__attribute__ ((section(".iram0.text"))) STATUS uart0_tx_one_char(uint8 TxChar)
 {
     while (true)
 	{

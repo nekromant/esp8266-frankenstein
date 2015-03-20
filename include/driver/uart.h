@@ -93,6 +93,7 @@ typedef struct {
 void uart_init(int port, UartBautRate br);
 void uart_init_io();
 
+STATUS uart0_tx_one_char(uint8 TxChar); // expose, active wait, always return OK
 
 #endif
 
