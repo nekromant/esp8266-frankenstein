@@ -1,13 +1,13 @@
 
-// gcc -g -Os -Wall -Wextra -I../include cb.c cbtest.c -o cbtest && ./cbtest
-// gcc -g -O3 -Wall -Wextra -I../include cb.c cbtest.c -o cbtest && ./cbtest
+// gcc -g -Os -Wall -Wextra -I../../include ../cbuf.c cbuftest.c -o cbuftest && ./cbuftest
+// gcc -g -O3 -Wall -Wextra -I../../include ../cbuf.c cbuftest.c -o cbuftest && ./cbuftest
 
 #include <stdio.h>
 #include <assert.h>
 #include <string.h>
 #include <sys/time.h>
 
-#include "cb.h"
+#include "cbuf.h"
 
 #define RFRSH	5	// refresh display
 
@@ -16,9 +16,9 @@
 #define R(x)	((rand() % ((x) - 1)) + 1)
 
 char buf [1<<SZlog2];
-cb_t cb = CB_INIT(buf, SZlog2);
+cbuf_t cb = CBUF_INIT(buf, SZlog2);
 
-void info (cb_t* cb)
+void info (cbuf_t* cb)
 {
 	printf("(r=%i u=%i w=%i sz=%i empty=%i allread=%i)", (int)cb->read, (int)cb->unread, (int)cb->write, (int)cb->size, (int)cb->empty, cb->allread);
 }
@@ -38,11 +38,11 @@ int main (int argc, char* argv[])
 	
 	if (argc != 2 || (argv[1][0] != 'C' && argv[1][0] != 'N' && argv[1][0] != 'D' && argv[1][0] != 'M'))
 	{
-		fprintf(stderr, "syntax: %s C|N\n", argv[0]);
-		fprintf(stderr, "	C: perf / R/W copy functions\n");
-		fprintf(stderr, "	N: perf / R/W no copy functions\n");
-		fprintf(stderr, "	D: perf / R no copy / W copy functions\n");
-		fprintf(stderr, "	M: perf / R copy / W no copy functions\n");
+		fprintf(stderr, "syntax: %s C|N|D|M\n", argv[0]);
+		fprintf(stderr, "	C= perf: R copy / W copy functions\n");
+		fprintf(stderr, "	N= perf: R no copy / W no copy functions\n");
+		fprintf(stderr, "	D= perf: R no copy / W copy functions\n");
+		fprintf(stderr, "	M= perf: R copy / W no copy functions\n");
 		exit(1);
 	}
 	
@@ -57,14 +57,17 @@ int main (int argc, char* argv[])
 	
 	while (1)
 	{
+		// write to buffer
+
 		if (argv[1][0] == 'C' || argv[1][0] == 'D')
 		{
+			// write copy
 			nw = R(NW);
-			for (i = 0; !cb_is_full(&cb) && i < nw; i++)
+			for (i = 0; !cbuf_is_full(&cb) && i < nw; i++)
 			{
 				sz = (rand() % (SZ - 1)) + 1;
 				//memcpy(u, t, sz); // simulate data generation to be written
-				ret = cb_write(&cb, t, sz); // write data (copy)
+				ret = cbuf_write(&cb, t, sz); // write data (copy)
 				for (j = 0; j < ret; j++)
 					tot += t[j]; // sum
 				size += ret;
@@ -72,12 +75,13 @@ int main (int argc, char* argv[])
 		}
 		else 
 		{
+			// write no copy
 			nw = R(NW);
-			for (i = 0; !cb_is_full(&cb) && i < nw; i++)
+			for (i = 0; !cbuf_is_full(&cb) && i < nw; i++)
 			{
 				char* ptr;
 				sz = (rand() % (SZ - 1)) + 1;
-				ret = cb_write_ptr(&cb, &ptr, sz); // get write ptr
+				ret = cbuf_write_ptr(&cb, &ptr, sz); // get write ptr
 				for (j = 0; j < ret; j++)
 					tot += (ptr[j] = t[j]); // write data
 				size += ret;
@@ -86,11 +90,12 @@ int main (int argc, char* argv[])
 
 		if (argv[1][0] == 'C' || argv[1][0] == 'M')
 		{
+			// read copy
 			nr = R(NR);
-			for (i = 0; !cb_all_is_read(&cb) && i < nr; i++)
+			for (i = 0; !cbuf_all_is_read(&cb) && i < nr; i++)
 			{
 				sz = (rand() % (SZ - 1)) + 1;
-				ret = cb_read(&cb, u, sz); // read data (copy)
+				ret = cbuf_read(&cb, u, sz); // read data (copy)
 				for (j = 0; j < ret; j++)
 					tot -= u[j]; // sum
 				size += ret;
@@ -98,23 +103,23 @@ int main (int argc, char* argv[])
 		}
 		else
 		{
+			// read no copy
 			nr = R(NR);
 			ack = 0;
-			for (i = 0; !cb_all_is_read(&cb) && i < nr; i++)
+			for (i = 0; !cbuf_all_is_read(&cb) && i < nr; i++)
 			{
 				char* ptr;
 				sz = (rand() % (SZ - 1)) + 1;
-				ret = cb_read_ptr(&cb, &ptr, sz); // get read ptr
+				ret = cbuf_read_ptr(&cb, &ptr, sz); // get read ptr
 				for (j = 0; j < ret; j++)
 					tot -= ptr[j]; // read data & sum
 				ack += ret;
 				size += ret;
 			}
-			cb_ack(&cb, ack); // data not useful anymore
+			cbuf_ack(&cb, ack); // data not useful anymore
 		}
-		
 	
-		if (cb_is_empty(&cb))
+		if (cbuf_is_empty(&cb))
 		{
 #if 0
 			printf("1: ");

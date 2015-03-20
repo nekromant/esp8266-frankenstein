@@ -4,7 +4,7 @@ Frankenstein is a quick and dirty firmware, made from different bits
 and pieces (thus the name) for ESP8266. 
 The features: 
 
-* A nice and shiny commandline interface that reminds of u-boot. 
+* A nice and shiny commandline interface similar to that of u-boot. 
   No more sloppy AT commands. 
 * Full command line editing and history. 
 * A very easy way of adding new commands to the shell 
@@ -29,12 +29,13 @@ coolterm.
 If you are communicating with frankenstein with some other hardware, here's some 
 technical stuff for you: 
 
-* All lines you send to ESP8266 should end with CR, e.h. "\r". 
+* All lines you send to ESP8266 should end with CR, i.e. "\r".
+  (No more pressing CTRL^J on Linux terminals, either!)
 
 * CTRL+C tries to interrupt the running command and unlocks the terminal
 
 
-#Getting to know frankenstein. The basics
+#Getting to know frankenstein. The basics:
 
 Now that we're clear with that, let's start the device and open up terminal.
 You'll see something like this: 
@@ -80,7 +81,7 @@ The workflow is simple. You type commands, frankenstein does things. Simple?
 
 You can store come configuration parameters in 'environment'. 
 Environment is just a key=value storage. Certain variables affect behavior of different commands.  
-You can list environment with printenv
+You can list environment with `printenv`.
 
 ```
 === Current environment ===
@@ -104,7 +105,7 @@ tftp-file   antares.rom
 === 309/4092 bytes used ===
 ```
 
-You can set environment values with setenv.
+You can set environment values with `setenv`.
 
 `frankenstein > setenv key value`
 
@@ -116,20 +117,20 @@ value
 ```
 
 All changes are made in ram. To save them to flash run 
-saveenv and they will survive reboot. 
+`saveenv` and they will survive reboot. 
 
 Environment variables hold paramers for the firmware that are
 applied on boot or affect certain commands.
-All variables are described in README.env. You can also store arbitary data 
+All variables are described in [README.env](README.env). You can also store arbitary data 
 in environment variables. 
 
 
 #Wireless modes
 
-Wireless modes can be switched using iwmode command
-modes are: NONE, STA, AP, APSTA
-Default mode is specified in default-mode environment variable
-Use iwmode to switch manually:
+Wireless modes can be switched using `iwmode` command.
+Modes are: `NONE`, `STA`, `AP`, `APSTA`.
+Default mode is specified in `default-mode` environment variable.
+Use `iwmode` to switch manually:
 
 ```
 frankenstein > iwmode STA
@@ -152,19 +153,19 @@ frankenstein > iwconnect apname password
 Connected
 ```
 
-spaces are allowed with simple or double quotes:
+Spaces are allowed with simple or double quotes:
 ```
 frankenstein > iwconnect "ap name" 'my password'
 ```
 
 
-iwconnect starts connection process and waits for some seconds until it 
-either connects or an error rises. It will continue to try and reconnect in
+`iwconnect` starts connection process and waits for some seconds until it 
+either connects or an error occurs. It will continue to try and reconnect in
 background. 
 
 #Checking connection info
 
-ifconfig prints the info about curently active interfaces. they are names ap0 and sta0. 
+`ifconfig` prints the info about curently active interfaces. they are named `ap0` and `sta0`. 
 They do not correspond (yet!) to lwip iface names. 
  
 ```
@@ -182,7 +183,7 @@ sta0: WiFi Client Interface
 
 #Configuring an AP
 
-apconfig with no arguments shows current ap configuration.
+`apconfig` with no arguments shows current ap configuration.
 
 ```
 frankenstein > apconfig
@@ -196,13 +197,14 @@ SSID: myap AUTH WPA2_PSK BSSID: 1a:fe:34:98:dc:9e
 ```
 
 To enable DHCP server set 'dhcps-enable' to '1' and reboot. 
-To start AP on boot set 'default-mode' to 'AP' or 'APSTA'
+To start AP on boot set 'default-mode' to 'AP' or 'APSTA'.
 
 
-#listening for data
+#Listening for data
 
-A very simple TCP test command. It will liste on a port and print out the line 
+A very simple TCP test command. It will listen on a port and print out the line 
 of text received. '\n' terminates connection. 
+
 BUG: As of 0.9.2 SDK it's impossible to terminate a running TCP listener. Say thanks
 to espressif! May be 0.9.3 will fix it.
 
@@ -278,6 +280,9 @@ send       - Send data to a remote host.
              send hostname port [data]
 ds18b20    - Read temperature from DS18B20 chip.
              ds18b20 <gpio>
+dht22      - Read temperature and humidity from DHT-11 or DHT-22 module.
+             dht22 init <gpio> <11|22>
+             dht22 read
 tftp       - Update firmware over tftp
              tftp
 AT         - says OK
@@ -285,7 +290,7 @@ AT         - says OK
 # Flashing the controller
 
 There is a convenience target wrapping `esptool.py`.
-Set the default tty and whether you have a pl2303 GPIO breakout for automatically resetting the board using `make menuconfig`
+Set the default tty, and whether you have a pl2303 GPIO breakout for automatically resetting the board using `make menuconfig`.
 
 ```
 make deploy-esptool
@@ -294,9 +299,9 @@ make deploy-esptool
 If you dont have a pl2303 gpio breakoutboard and have to manually set the programming GPIO, use the following procedure.
 
 * Dont be running minicom or other terminal program
-* Connect RST and GPIO#)0 to GND
+* Connect RST and GPIO#0 to GND
 * Release RST
-* Release GPIO#2 (at least 300ms after)
+* Release GPIO#0 (at least 300ms after)
 * Deploy
 
 # Over-the-air firmware updates. 
@@ -312,19 +317,24 @@ To update use the following:
 * Set up a tftp server on the host pc. e.g. tftpd-hpa.   
 * Set 'tftp-server' environment variable to the tftp server ip address. 
 * Set 'tftp-dir' and 'tftp-file' to point to your firmware file. 
-e.g. To get /tftpboot/antares.rom you'll need
+e.g. To get `/tftpboot/antares.rom` you'll need
 
+```
 setenv tftp-dir /tftpboot/
 setenv tftp-file antares.rom
+tftp
+```
 
-* (optional) saveenv
-
-* tftp
+Optionally, use `saveenv` before `tftp`.
 
 If everything goes well - you'll be running your new firmware in a few seconds.  
-tftp doesn't check what stuff you have in your image, so if 
+Note, `tftp` doesn't check what stuff you have in your image...
 
 # Known bugs
+
+* Espressif SDK updates can cause issues
+
+To build against SDK V1.0.0 and later you need to set a specific configuration item `CONFIG_ESP8266_NEED_ESPCONN_INIT`. This workaround is presently required because it is not simple to determine the SDK version.
 
 * iwscan just hangs and iwconnect never connects to an access point
 
@@ -334,9 +344,10 @@ bug, I'm working on a fix.
 
 * Firmware is unstable and randomly reboots.
 
-Just after flashing run wipeparams. Stored settings from older SDK tend to confuse 
-Espressif's blobs and make them go nuts
+Just after flashing run `wipeparams`. Stored settings from older SDK tend to confuse 
+Espressif's blobs and make them go nuts.
 
 * gpio controls only gpio0 and gpio2
 
 Known limitation, since only these are broken out on my modules. It's somewhere on my TODO list.
+Note that selection of the full range of valid GPIOs now exists for the `dht22` command and the i2c commands.

@@ -46,6 +46,6 @@ GPIO_INT_TYPE pin_int_type[GPIO_PIN_NUM] = {
 
 bool is_valid_gpio_pin(uint8 gpiopin)
 {
-	if(gpiopin > GPIO_PIN_NUM) return false;
+	if(gpiopin >= GPIO_PIN_NUM) return false;
 	return (pin_func[gpiopin] != GPIO_PIN_FUNC_INVALID);
 }
