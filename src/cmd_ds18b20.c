@@ -27,8 +27,6 @@
 #include <stdlib.h>
 #include <generic/macros.h>
 
-//#define CONFIG_CMD_DS18B20_DEBUG
-
 #ifdef CONFIG_CMD_DS18B20_DEBUG
 #define dbg(fmt, ...) LOG(LOG_DEBUG, fmt, ##__VA_ARGS__)
 #else
@@ -154,9 +152,11 @@ static int do_ds18b20(int argc, const char* const* argv)
 
 		}while(getall);
 
-		//750ms 1x, 375ms 0.5x, 188ms 0.25x, 94ms 0.12x
-		os_delay_us( 750*1000 ); 
-		wdt_feed();
+		if(stage == 0){
+			//750ms 1x, 375ms 0.5x, 188ms 0.25x, 94ms 0.12x
+			os_delay_us( 750*1000 ); 
+			wdt_feed();
+		}
 	}
 
 	return r;
