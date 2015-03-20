@@ -28,7 +28,6 @@ Define you prompt string here. You can use colors escape code, for highlight you
 for example this prompt will green color (if you terminal supports color)*/
 //#define _PROMPT_DEFAULT "\033[32mIRin >\033[0m "	// green color
 //#define _PROMPT_DEFAULT "\nfrankenstein > "
-
 //#define _PROMPT_DEFAULT "\n\033[32mfrankenstein >\033[0m "	// green color
 
 /*
@@ -40,12 +39,16 @@ ESC sequence, it's not possible detect only text length*/
 now if user press TAB calls 'copmlitetion' callback. If you no need it, you can just set 
 NULL to callback ptr and do not use it, but for memory saving tune, 
 if you are not going to use it - disable this define.*/
+#ifdef CONFIG_MICRORL_USE_COMPLETE
 #define _USE_COMPLETE
+#endif
 
 /*Define it, if you wanna use history. It s work's like bash history, and
 set stored value to cmdline, if UP and DOWN key pressed. Using history add
 memory consuming, depends from _RING_HISTORY_LEN parametr */
+#ifdef CONFIG_MICRORL_USE_HISTORY
 #define _USE_HISTORY
+#endif
 
 /*
 History ring buffer length, define static buffer size.

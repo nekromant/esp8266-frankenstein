@@ -133,6 +133,14 @@ endif
 
 endmenu
 
+
+config MICRORL_USE_COMPLETE
+bool "Microrl use autocomplete by tab"
+
+config MICRORL_USE_HISTORY
+bool "Microrl use history for commands"
+
+
 menu "Environment Settings"
 
 config ENV_OFFSET
@@ -154,6 +162,7 @@ default 0x7e000
 config ENV_NOWRITE
 bool "Simulate writes of environment data in flash"
 default n
+
 
 menu "Default Values"
 
