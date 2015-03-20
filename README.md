@@ -1,4 +1,4 @@
-#ABOUT
+#This Repo under development, and it's not safe to use
 
 Frankenstein is a quick and dirty firmware, made from different bits
 and pieces (thus the name) for ESP8266. 
