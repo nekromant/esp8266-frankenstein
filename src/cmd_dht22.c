@@ -6,6 +6,12 @@
 #include "osapi.h"
 #include "gpio.h"
 
+#ifdef CONFIG_DHT22_DEBUG
+#define dbg(fmt, ...) LOG(LOG_DEBUG, fmt, ##__VA_ARGS__)
+#else
+#define dbg(fmt, ...)
+#endif
+
 static DHT_Type current_dht_type;
 static uint8 DHT_Pin;
 
@@ -31,9 +37,7 @@ bool DHT_Read(void)
 		{
 			os_delay_us(1);
 			if (++counter > DHT_READTIMEOUT){
-#ifdef CONFIG_DHT22_DEBUG
-				console_printf("DHT reading timeout on bit %d.\n", bits);
-#endif
+				dbg("DHT reading timeout on bit %d.\n", bits);
 				return false;
 			}
 		}
@@ -65,13 +69,9 @@ bool DHT_Read(void)
 			return true;
 		}
 
-#ifdef CONFIG_DHT22_DEBUG
-		console_printf("Checksum mismatch. Expected %d got %d. Data: %02x %02x %02x %02x\n", data[4], checksum, data[0], data[1], data[2], data[3]);
-#endif
+		dbg("Checksum mismatch. Expected %d got %d. Data: %02x %02x %02x %02x\n", data[4], checksum, data[0], data[1], data[2], data[3]);
 	} else {
-#ifdef CONFIG_DHT22_DEBUG
-		console_printf("Want to read 40 bits, got: %d\n", bits);
-#endif
+		dbg("Want to read 40 bits, got: %d\n", bits);
 	}
 
 	return false;

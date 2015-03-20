@@ -20,9 +20,14 @@
 #include "microrl.h"
 #include "console.h"
 
+#include "driver/ds18b20.h"
+#include "pin_map.h"
+
+
 #include <stdlib.h>
 #include <generic/macros.h>
 
+//#define CONFIG_CMD_DS18B20_DEBUG
 
 #ifdef CONFIG_CMD_DS18B20_DEBUG
 #define dbg(fmt, ...) LOG(LOG_DEBUG, fmt, ##__VA_ARGS__)
@@ -56,77 +61,104 @@ static int do_ds18b20(int argc, const char* const* argv)
 	uint8_t addr[8], data[12];
 	
 	gpio = skip_atoi( &tmp );
+	bool getall = ((argc >= 3) && (strcmp(argv[2], "all") == 0));
 
 	// We will need to use microsecond timer
 	// wait 500 us
 	// system_timer_reinit();
 
+	if(!is_valid_gpio_pin(gpio)){
+		console_printf( "Invalid GPIO pin number.\n" );
+		return false;
+	}
+
 	ds_init( gpio );
 
 	dbg( "After init.\n" );
+	for(uint8 stage = 0; stage < 2; stage ++){
 
-	r = ds_search( addr );
-	if( r )
-	{
-		dbg( "Found Device @ %02x %02x %02x %02x %02x %02x %02x %02x\n", 
-				addr[0], addr[1], addr[2], addr[3], addr[4], addr[5], 
-				addr[6], addr[7] );
-		if( crc8( addr, 7 ) != addr[7] )
-			console_printf( "CRC mismatch, crc=%xd, addr[7]=%xd\n",
-					crc8( addr, 7 ), addr[7] );
+		reset_search();
+		do{
+			r = ds_search( addr );
+			if( r )
+			{
+				dbg( "Found Device @ %02x %02x %02x %02x %02x %02x %02x %02x\n", 
+						addr[0], addr[1], addr[2], addr[3], addr[4], addr[5], addr[6], addr[7] );
+				if( crc8( addr, 7 ) != addr[7] )
+					console_printf( "CRC mismatch, crc=%xd, addr[7]=%xd\n", crc8( addr, 7 ), addr[7] );
 
-		switch( addr[0] )
-		{
-		case 0x10:
-			dbg( "Device is DS18S20 family.\n" );
-			break;
+				switch( addr[0] )
+				{
+					case 0x10:
+						dbg( "Device is DS18S20 family.\n" );
+						break;
 
-		case 0x28:
-			dbg( "Device is DS18B20 family.\n" );
-			break;
+					case 0x28:
+						dbg( "Device is DS18B20 family.\n" );
+						break;
 
-		default:
-			console_printf( "Device is unknown family.\n" );
-			return 1;
-		}
+					default:
+						console_printf( "Device is unknown family.\n" );
+						return 1;
+				}
+			}
+			else {
+				if(!getall){
+					console_printf( "No DS18B20 detected, sorry\n" );
+					return 1;
+				} else break;
+			}
+
+			if(stage == 0){
+				// perform the conversion
+				reset();
+				select( addr );
+				write( DS1820_CONVERT_T, 1 ); // perform temperature conversion
+			} else
+
+			if(stage == 1){
+				dbg( "Scratchpad: " );
+				reset();
+				select( addr );
+				write( DS1820_READ_SCRATCHPAD, 0 );
+				
+				for( i = 0; i < 9; i++ )
+				{
+					data[i] = read();
+					dbg( "%2x ", data[i] );
+				}
+				dbg( "\n" );
+
+				int HighByte, LowByte, TReading, SignBit, /*Tc_100,*/ Whole, Fract;
+				LowByte = data[0];
+				HighByte = data[1];
+				TReading = (HighByte << 8) + LowByte;
+				SignBit = TReading & 0x8000;  // test most sig bit
+				if (SignBit) // negative
+					TReading = (TReading ^ 0xffff) + 1; // 2's comp
+				
+				Whole = TReading >> 4;  // separate off the whole and fractional portions
+				Fract = (TReading & 0xf) * 100 / 16;
+
+				if(getall){
+					console_printf( "%02x%02x%02x%02x%02x%02x%02x%02x %c%d.%d\n", 
+						addr[0], addr[1], addr[2], addr[3], addr[4], addr[5], addr[6], addr[7],
+						SignBit ? '-' : '+', Whole, Fract < 10 ? 0 : Fract);
+				}else{
+					console_printf( "Temperature: %c%d.%d Celsius\n", SignBit ? '-' : '+', 
+						Whole, Fract < 10 ? 0 : Fract);
+
+					return r;
+				}
+			}
+
+		}while(getall);
+
+		//750ms 1x, 375ms 0.5x, 188ms 0.25x, 94ms 0.12x
+		os_delay_us( 750*1000 ); 
+		wdt_feed();
 	}
-	else { 
-		console_printf( "No DS18B20 detected, sorry\n" );
-		return 1;
-	}
-	// perform the conversion
-	reset();
-	select( addr );
 
-	write( 0x44, 1 ); // perform temperature conversion
-
-	os_delay_us( 1000000 );
-
-	dbg( "Scratchpad: " );
-	reset();
-	select( addr );
-	write( 0xbe, 0 ); // read scratchpad
-	
-	for( i = 0; i < 9; i++ )
-	{
-		data[i] = read();
-		dbg( "%2x ", data[i] );
-	}
-	dbg( "\n" );
-
-	int HighByte, LowByte, TReading, SignBit, /*Tc_100,*/ Whole, Fract;
-	LowByte = data[0];
-	HighByte = data[1];
-	TReading = (HighByte << 8) + LowByte;
-	SignBit = TReading & 0x8000;  // test most sig bit
-	if (SignBit) // negative
-		TReading = (TReading ^ 0xffff) + 1; // 2's comp
-	
-	Whole = TReading >> 4;  // separate off the whole and fractional portions
-	Fract = (TReading & 0xf) * 100 / 16;
-
-	console_printf( "Temperature: %c%d.%d Celsius\n", SignBit ? '-' : '+', 
-			Whole, Fract < 10 ? 0 : Fract);
 	return r;
 }
 
@@ -140,13 +172,13 @@ static int gpioPin;
 void ds_init( int gpio )
 {
 	//set gpio2 as gpio pin
-	PIN_FUNC_SELECT(PERIPHS_IO_MUX_GPIO2_U, FUNC_GPIO2);
+	PIN_FUNC_SELECT(pin_mux[gpio], pin_func[gpio]);
 	  
 	//disable pulldown
-	PIN_PULLDWN_DIS(PERIPHS_IO_MUX_GPIO2_U);
+	PIN_PULLDWN_DIS(pin_mux[gpio]);
 	  
 	//enable pull up R
-	PIN_PULLUP_EN(PERIPHS_IO_MUX_GPIO2_U);  
+	PIN_PULLUP_EN(pin_mux[gpio]);  
 	  
 	// Configure the GPIO with internal pull-up
 	// PIN_PULLUP_EN( gpio );
@@ -154,8 +186,6 @@ void ds_init( int gpio )
 	GPIO_DIS_OUTPUT( gpio );
 
 	gpioPin = gpio;
-
-	reset_search();
 }
 
 static void reset_search()
@@ -243,7 +273,7 @@ static int ds_search( uint8_t *newAddr )
 		}
 
 		// issue the search command
-		write(0xF0, 0);
+		write(DS1820_SEARCHROM, 0);
 
 		// loop to do the search
 		do
@@ -419,7 +449,7 @@ static void select(const uint8_t *rom)
 {
 	uint8_t i;
 
-	write(0x55, 0);           // Choose ROM
+	write(DS1820_MATCHROM, 0);           // Choose ROM
 
 	for (i = 0; i < 8; i++) write(rom[i], 0);
 }
@@ -457,9 +487,9 @@ static uint8_t crc8(const uint8_t *addr, uint8_t len)
 	return crc;
 }
 
-CONSOLE_CMD(ds18b20, 2, 2, 
+CONSOLE_CMD(ds18b20, 2, 3, 
 	    do_ds18b20, NULL, NULL, 
 	    "Read temperature from DS18B20 chip."
-	    HELPSTR_NEWLINE "ds18b20 <gpio>"
+	    HELPSTR_NEWLINE "ds18b20 <gpio> [all]"
 	);
 

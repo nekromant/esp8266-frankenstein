@@ -103,7 +103,7 @@ bool "I2C mlx90614 temperature sensor (Needs testing)"
 endif
 
 menuconfig CMD_DHT22
-bool "DHT22/DHT11 Thermal & Humidity Sensor support"
+bool "DHT22/DHT11 temperature and humidity sensor"
 
 # Not working right now.
 #config ENABLE_PASSTHROUGH

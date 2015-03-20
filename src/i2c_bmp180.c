@@ -85,9 +85,7 @@ bool BMP180_Read()
 	T  = (B5+8) >> 4;
 	LAST_BMP_TEMPERATURE = T; 
 
-#ifdef CONFIG_CMD_BMP180_DEBUG
-	console_printf( "UT: %d\nX1: %d\nX2: %d\nB5: %d\n", UT, X1, X2, B5);
-#endif
+	dbg( "UT: %d\nX1: %d\nX2: %d\nB5: %d\n", UT, X1, X2, B5);
 
 	UP = BMP180_readRawValue(BMP180_COMMAND_PRESSURE0);
 	B6 = B5 - 4000;
@@ -96,9 +94,7 @@ bool BMP180_Read()
 	X3 = X1 + X2;
 	B3 = (((sint32)ac1 * 4 + X3) + 2) >> 2;
 
-#ifdef CONFIG_CMD_BMP180_DEBUG
-	console_printf( "UP: %d\nB5: %d\nB6: %d\nX1: %d\nX2: %d\nX3: %d\n", UP, B5, B6, X1, X2, X3);
-#endif
+	dbg( "UP: %d\nB5: %d\nB6: %d\nX1: %d\nX2: %d\nX3: %d\n", UP, B5, B6, X1, X2, X3);
 
 	X1 = ((sint32)ac3 * B6) >> 13;
 	X2 = ((sint32)b1 * ((B6 * B6) >> 12)) >> 16;
@@ -112,9 +108,7 @@ bool BMP180_Read()
 		P = (B7 / B4) * 2;
 	}
 
-#ifdef CONFIG_CMD_BMP180_DEBUG
-	console_printf( "X1: %d\nX2: %d\nX3: %d\nB4: %d\nB7: %d\nP: %d\n", X1, X2, X3, B4, B7, P);
-#endif
+	dbg( "X1: %d\nX2: %d\nX3: %d\nB4: %d\nB7: %d\nP: %d\n", X1, X2, X3, B4, B7, P);
 
 	X1 = (P >> 8) * (P >> 8);
 	X1 = (X1 * 3038) >> 16;
@@ -123,9 +117,7 @@ bool BMP180_Read()
 	P  = P + ((X1 + X2 + (sint32)3791) >> 4);
 	LAST_BMP_REAL_PRESSURE = P * 0.75;
 
-#ifdef CONFIG_CMD_BMP180_DEBUG
-	console_printf( "X1: %d\nX2: %d\nP: %d\n", X1, X2, P);
-#endif
+	dbg( "X1: %d\nX2: %d\nP: %d\n", X1, X2, P);
 
 #endif
 	return true;
@@ -140,9 +132,7 @@ bool BMP180_Init()
 	
 
 	if(reg != BMP180_MAGIC_CHIPID){
-#ifdef CONFIG_CMD_BMP180_DEBUG
-		console_printf( "Invalid chip id: 0x%X, mustbe 0x%X\n", reg, BMP180_MAGIC_CHIPID);
-#endif
+		dbg( "Invalid chip id: 0x%X, mustbe 0x%X\n", reg, BMP180_MAGIC_CHIPID);
 		return false;
 	}
 
@@ -197,9 +187,7 @@ bool BMP180_Init()
 	&& i2c_master_readSint16(BMP180_ADDRESS, 0xBC, &mc)
 	&& i2c_master_readSint16(BMP180_ADDRESS, 0xBE, &md)){
 
-#ifdef CONFIG_CMD_BMP180_DEBUG
-	console_printf( "ac1: %d\nac2: %d\nac3: %d\nac4: %d\nac5: %d\nac6: %d\nb1: %d\nb2: %d\nmb: %d\nmc: %d\nmd: %d\n", ac1,ac2,ac3,ac4,ac5,ac6,b1,b2,mb,mc,md);
-#endif
+	dbg( "ac1: %d\nac2: %d\nac3: %d\nac4: %d\nac5: %d\nac6: %d\nb1: %d\nb2: %d\nmb: %d\nmc: %d\nmd: %d\n", ac1,ac2,ac3,ac4,ac5,ac6,b1,b2,mb,mc,md);
 		
 		IS_ALREADY_INITED = true;
 		return true;

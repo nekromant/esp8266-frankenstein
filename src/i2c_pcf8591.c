@@ -6,7 +6,7 @@
 #include "driver/i2c_master.h"
 #include "driver/i2c_pcf8591.h"
 
-#ifdef CONFIG_CMD_BH1750_DEBUG
+#ifdef CONFIG_CMD_PCF8591_DEBUG
 #define dbg(fmt, ...) LOG(LOG_DEBUG, fmt, ##__VA_ARGS__)
 #else
 #define dbg(fmt, ...)
