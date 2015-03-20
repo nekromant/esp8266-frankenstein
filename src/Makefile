@@ -11,6 +11,7 @@ objects-y+=tcpservice.o
 objects-y+=svc_telnet.o
 
 objects-y+=cmd_common.o cmd_env.o uart.o
+objects-y+=pin_map.o
 
 objects-$(CONFIG_CMD_IW)+=cmd_iw.o
 objects-$(CONFIG_CMD_UART)+=cmd_uart.o
@@ -26,7 +27,7 @@ objects-$(CONFIG_CMD_AT)+=cmd_at.o
 objects-$(CONFIG_CMD_ADC)+=cmd_adc.o
 objects-$(CONFIG_ENABLE_PASSTHROUGH)+=cmd_passthrough.o
 
-objects-$(CONFIG_CMD_I2C)+=cmd_i2c.o pin_map.o i2c_master.o 
+objects-$(CONFIG_CMD_I2C)+=cmd_i2c.o i2c_master.o 
 objects-$(CONFIG_CMD_I2C_BMP180)+=i2c_bmp180.o
 objects-$(CONFIG_CMD_I2C_INA219)+=i2c_ina219.o
 objects-$(CONFIG_CMD_I2C_SHT21)+=i2c_sht21.o
@@ -36,8 +37,7 @@ objects-$(CONFIG_CMD_I2C_HMC5883L)+=i2c_hmc5883l.o
 objects-$(CONFIG_CMD_I2C_TCS3414CS)+=i2c_tcs3414cs.o
 objects-$(CONFIG_CMD_I2C_MLX90614)+=i2c_mlx90614.o
 
-
-
+ifneq ($(CONFIG_ESP8266_BLOB_LWIP),y)
 subdirs-y+=netapps/
-
 subdirs-y+=lwip
+endif
