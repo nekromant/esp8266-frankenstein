@@ -2,6 +2,7 @@
 #define __I2C_MASTER_H__
 
 #include "os_type.h"
+#include "user_interface.h"
 
 #define I2C_SLEEP_TIME 5
 

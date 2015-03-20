@@ -4,6 +4,7 @@
 #include "c_types.h"
 #include "ets_sys.h"
 #include "osapi.h"
+#include "user_interface.h"
 
 typedef enum{
 	DHT11 = 0,
