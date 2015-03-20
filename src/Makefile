@@ -22,3 +22,5 @@ objects-$(CONFIG_CMD_TFTP)+=cmd_tftp.o tftp.o
 subdirs-y+=netapps/
 
 subdirs-y+=lwip
+
+subdirs-y+=mqtt

@@ -21,6 +21,19 @@ bool "Send data over TCP"
 config CMD_TFTP
 bool "TFTP firmware update support"
 
+config CMD_AT
+bool "AT to say OK"
+
+config CMD_ADC
+bool "System ADC support"
+
+config ENABLE_MQTT
+bool "MQTT Support"
+
+# Not working right now.
+#config ENABLE_PASSTHROUGH
+#bool "enable tcp(10101)<->serial passthrough"
+
 menuconfig CMD_DS18B20
 bool "DS18B20/DS18S20 Termal Sensor support"
 
