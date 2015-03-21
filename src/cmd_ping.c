@@ -18,14 +18,12 @@ static void ping_recv_callback(void* arg, void *pdata)
 {
 	struct ping_resp *pingresp = pdata;
 
-	//TODO: check for pingresp->ping_err
-
 	if(pingresp->seqno == 3 /*LAST PING PACKET*/){
-		console_printf("total %d, lost %d, %d bytes, %d ms\n" , 
-			pingresp->total_count, pingresp->timeout_count, pingresp->total_bytes, pingresp->total_time);
+		console_printf("total %d, lost %d, %d bytes, %d ms (%d)\n" , 
+			pingresp->total_count, pingresp->timeout_count, pingresp->total_bytes, pingresp->total_time, pingresp->ping_err);
 		console_lock(0);
 	} else {
-		console_printf("recv %d bytes in %d ms, seq %d\n" , pingresp->bytes, pingresp->resp_time, pingresp->seqno);
+		console_printf("recv %d bytes in %d ms, seq %d (%d)\n" , pingresp->bytes, pingresp->resp_time, pingresp->seqno, pingresp->ping_err);
 	}
 }
 
@@ -33,9 +31,7 @@ static int do_ping(int argc, const char* const* argv)
 {
 	struct ping_option *pingopts = os_zalloc(sizeof(struct ping_option));
 	ip_addr_t ipaddr;
-
-	//TODO: parse addr from argv
-	IP4_ADDR(&ipaddr, 8, 8, 8, 8);
+	ipaddr.addr = ipaddr_addr(argv[1]);
 
 	pingopts->ip = ipaddr.addr;
 	pingopts->count = 3;
