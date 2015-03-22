@@ -1,3 +1,11 @@
+menu Hacks
+
+config ESP8266_NEED_ESPCONN_INIT
+bool "You need to set this setting to true when using SDK >= 1.0.0 or there will be linker errors"
+default n
+
+endmenu
+
 menu "Services to build"
 
 config SERVICE_DHCPS
