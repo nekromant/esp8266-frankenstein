@@ -10,3 +10,4 @@ tmp
 include/config
 include/generated
 images/
+include/arch
