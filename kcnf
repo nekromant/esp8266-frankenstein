@@ -1,5 +1,8 @@
 menu "Services to build"
 
+config SERVICE_DHCPS
+bool "DHCP Server"
+
 config SERVICE_TCP
 bool "TCP/IP services"
 

@@ -49,7 +49,9 @@ struct envpair defaultenv[] = {
 
 	{ "hostname",          CONFIG_ENV_DEFAULT_HOSTNAME },
 	{ "bootdelay",         "5" },
+#if defined(CONFIG_SERVICE_DHCPS) && CONFIG_SERVICE_DHCPS
 	{ "dhcps-enable",      "1" },
+#endif
 #if defined(CONFIG_SERVICE_TELNET) && CONFIG_SERVICE_TELNET
   /* Note: modules requiring their own config might be able to have a 'registration' struct that adds to here */
 	{ "telnet-port",       "23" },
@@ -117,12 +119,14 @@ void network_init()
 	if (wifi_get_opmode() != STATION_MODE)
 		wifi_set_ip_info(SOFTAP_IF, &info);
 
+#if defined(CONFIG_SERVICE_DHCPS) && CONFIG_SERVICE_DHCPS
 	const char *dhcps = env_get("dhcps-enable"); 
 	if (dhcps && (*dhcps == '1')) {
 		dhcps_start(&info);
 		console_printf("dhcpserver: started\n");
 	} else
 		console_printf("dhcpserver: disabled\n");
+#endif
 }
 
 #include <stdio.h>
