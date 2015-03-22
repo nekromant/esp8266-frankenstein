@@ -34,3 +34,7 @@ endif
 # They will can be later hooked as default make target
 # in menuconfig 
 
+ditch_that_icache_flash_attr:
+	for f in `find src/ -type f `; do \
+	sed -i 's/ICACHE_FLASH_ATTR//g' $$f;\
+	done
