@@ -31,9 +31,11 @@ bool "FLASH commands"
 
 config CMD_LISTEN
 bool "Listen on a port"
+depends on SERVICE_TCP
 
 config CMD_SEND
 bool "Send data over TCP"
+depends on SERVICE_TCP
 
 config CMD_TFTP
 bool "TFTP firmware update support"
