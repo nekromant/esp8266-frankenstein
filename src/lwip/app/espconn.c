@@ -31,6 +31,12 @@ espconn_msg *pserver_list = NULL;
 remot_info premot[5];
 uint32 link_timer = 0;
 
+#if defined(CONFIG_ESP8266_NEED_ESPCONN_INIT) && CONFIG_ESP8266_NEED_ESPCONN_INIT
+uint32 ICACHE_FLASH_ATTR espconn_init(uint32 x) {
+return 1;
+}
+#endif
+
 /******************************************************************************
  * FunctionName : espconn_copy_partial
  * Description  : reconnect with host
