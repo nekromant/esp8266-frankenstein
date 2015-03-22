@@ -1,3 +1,14 @@
+menu "Services to build"
+
+config SERVICE_TCP
+bool "TCP/IP services"
+
+config SERVICE_TELNET
+bool "Telnet Service"
+depends on SERVICE_TCP
+
+endmenu
+
 menu "Modules to build"
 
 config CMD_IW

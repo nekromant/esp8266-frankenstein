@@ -17,7 +17,9 @@
 #include <lwip/app/dhcpserver.h>
 
 #include "env.h"
+#if defined(CONFIG_SERVICE_TELNET) && CONFIG_SERVICE_TELNET
 #include "svc_telnet.h"
+#endif
 
 struct envpair {
 	char *key, *value;
@@ -37,9 +39,12 @@ struct envpair defaultenv[] = {
 	{ "hostname",          "frankenstein" },
 	{ "bootdelay",         "5" },
 	{ "dhcps-enable",      "1" },
+#if defined(CONFIG_SERVICE_TELNET) && CONFIG_SERVICE_TELNET
+  /* Note: modules requiring their own config might be able to have a 'registration' struct that adds to here */
 	{ "telnet-port",       "23" },
 	{ "telnet-autostart",  "1" },
 	{ "telnet-drop",       "60" },
+#endif
 	{ "tftp-server",       "192.168.1.215"}, 
 	{ "tftp-dir",          "/"}, 
 	{ "tftp-file",         "antares.rom"}    
@@ -128,10 +133,11 @@ void user_init()
 
 	network_init();
 
+#if defined(CONFIG_SERVICE_TELNET) && CONFIG_SERVICE_TELNET
 	const char *enabled = env_get("telnet-autostart"); 
 	if (enabled && (*enabled=='1'))
 		telnet_start(-1); // use env or 23
-
+#endif
 	console_init(32);
 
 	PIN_FUNC_SELECT(PERIPHS_IO_MUX_GPIO2_U, FUNC_GPIO2);
