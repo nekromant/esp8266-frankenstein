@@ -58,9 +58,11 @@ struct envpair defaultenv[] = {
 	{ "telnet-autostart",  "1" },
 	{ "telnet-drop",       "60" },
 #endif
-	{ "tftp-server",       "192.168.1.215"}, 
-	{ "tftp-dir",          "/"}, 
-	{ "tftp-file",         "antares.rom"}    
+#if defined(CONFIG_CMD_TFTP) && CONFIG_CMD_TFTP
+	{ "tftp-server",       CONFIG_ENV_DEFAULT_TFTP_SERVER_IP}, 
+	{ "tftp-dir",          CONFIG_ENV_DEFAULT_TFTP_SERVER_DIR}, 
+	{ "tftp-file",         CONFIG_ENV_DEFAULT_TFTP_SERVER_FILE},
+#endif
 };
 
 void request_default_environment(void)

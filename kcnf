@@ -38,6 +38,22 @@ bool "Send data over TCP"
 config CMD_TFTP
 bool "TFTP firmware update support"
 
+if CMD_TFTP
+
+config ENV_DEFAULT_TFTP_SERVER_IP
+string "Default IP to connect to when using tftp command"
+default "192.168.1.215"
+
+config ENV_DEFAULT_TFTP_SERVER_DIR
+string "TFTP server directory"
+default "/"
+
+config ENV_DEFAULT_TFTP_SERVER_FILE
+string "TFTP server file to retrieve"
+default "antares.com"
+
+endif
+
 config CMD_AT
 bool "AT to say OK"
 
