@@ -17,7 +17,9 @@
 #include <lwip/app/dhcpserver.h>
 
 #include "env.h"
+#if defined(CONFIG_SERVICE_TELNET) && CONFIG_SERVICE_TELNET
 #include "svc_telnet.h"
+#endif
 
 struct envpair {
 	char *key, *value;
@@ -25,24 +27,42 @@ struct envpair {
 
 struct envpair defaultenv[] = {
 	{ "sta-mode",          "dhcp" },
-	{ "default-mode",      "STA" },
-	{ "sta-ip",            "192.168.0.123" },
-	{ "sta-mask",          "255.255.255.0" },
-	{ "sta-gw",            "192.168.0.1" },
+	{ "default-mode",
+/* ideally, this should somehow be tied into helpers.c, id_from_wireless_mode... */
+#if defined(CONFIG_WIFI_MODE_AP) && CONFIG_WIFI_MODE_AP
+                         "AP" },
+#elif defined(CONFIG_WIFI_MODE_STATION) && CONFIG_WIFI_MODE_STATION
+                         "STA" },
+#elif defined(CONFIG_WIFI_MODE_SOFTAP) && CONFIG_WIFI_MODE_SOFTAP
+                         "APSTA" },
+#else
+                         "" },
+#endif
 
-	{ "ap-ip",             "192.168.1.1" },
-	{ "ap-mask",           "255.255.255.0" },
-	{ "ap-gw",             "192.168.1.1" },
+	{ "sta-ip",            CONFIG_ENV_DEFAULT_STATION_IP },
+	{ "sta-mask",          CONFIG_ENV_DEFAULT_STATION_MASK },
+	{ "sta-gw",            CONFIG_ENV_DEFAULT_STATION_GW },
 
-	{ "hostname",          "frankenstein" },
+	{ "ap-ip",             CONFIG_ENV_DEFAULT_AP_IP },
+	{ "ap-mask",           CONFIG_ENV_DEFAULT_AP_MASK },
+	{ "ap-gw",             CONFIG_ENV_DEFAULT_AP_GW },
+
+	{ "hostname",          CONFIG_ENV_DEFAULT_HOSTNAME },
 	{ "bootdelay",         "5" },
+#if defined(CONFIG_SERVICE_DHCPS) && CONFIG_SERVICE_DHCPS
 	{ "dhcps-enable",      "1" },
+#endif
+#if defined(CONFIG_SERVICE_TELNET) && CONFIG_SERVICE_TELNET
+  /* Note: modules requiring their own config might be able to have a 'registration' struct that adds to here */
 	{ "telnet-port",       "23" },
 	{ "telnet-autostart",  "1" },
 	{ "telnet-drop",       "60" },
-	{ "tftp-server",       "192.168.1.215"}, 
-	{ "tftp-dir",          "/"}, 
-	{ "tftp-file",         "antares.rom"}    
+#endif
+#if defined(CONFIG_CMD_TFTP) && CONFIG_CMD_TFTP
+	{ "tftp-server",       CONFIG_ENV_DEFAULT_TFTP_SERVER_IP}, 
+	{ "tftp-dir",          CONFIG_ENV_DEFAULT_TFTP_SERVER_DIR}, 
+	{ "tftp-file",         CONFIG_ENV_DEFAULT_TFTP_SERVER_FILE},
+#endif
 };
 
 void request_default_environment(void)
@@ -61,6 +81,16 @@ void print_hello_banner(void)
 	console_printf("\nMemory Layout:\n");	
 	system_print_meminfo();
 	system_set_os_print(0);
+	console_printf("\nAvailable services:\n");
+  int have_features = 0;
+#if defined(CONFIG_SERVICE_DHCPS) && CONFIG_SERVICE_DHCPS
+	console_printf("DHCP server\n"); have_features ++;
+#endif
+#if defined(CONFIG_SERVICE_TELNET) && CONFIG_SERVICE_TELNET
+	console_printf("Telnet server\n"); have_features ++;
+#endif
+  if (have_features == 0) { console_printf("None.\n"); }
+
 
 }
 
@@ -101,12 +131,14 @@ void network_init()
 	if (wifi_get_opmode() != STATION_MODE)
 		wifi_set_ip_info(SOFTAP_IF, &info);
 
+#if defined(CONFIG_SERVICE_DHCPS) && CONFIG_SERVICE_DHCPS
 	const char *dhcps = env_get("dhcps-enable"); 
 	if (dhcps && (*dhcps == '1')) {
 		dhcps_start(&info);
 		console_printf("dhcpserver: started\n");
 	} else
 		console_printf("dhcpserver: disabled\n");
+#endif
 }
 
 #include <stdio.h>
@@ -128,10 +160,11 @@ void user_init()
 
 	network_init();
 
+#if defined(CONFIG_SERVICE_TELNET) && CONFIG_SERVICE_TELNET
 	const char *enabled = env_get("telnet-autostart"); 
 	if (enabled && (*enabled=='1'))
 		telnet_start(-1); // use env or 23
-
+#endif
 	console_init(32);
 
 	PIN_FUNC_SELECT(PERIPHS_IO_MUX_GPIO2_U, FUNC_GPIO2);

@@ -1,3 +1,11 @@
+#if !defined(CONFIG_SERVICE_DHCPS) || !CONFIG_SERVICE_DHCPS
+#include "lwip/inet.h"
+#include "osapi.h"
+void ICACHE_FLASH_ATTR dhcps_start(struct ip_info *unused) { }
+void ICACHE_FLASH_ATTR dhcps_stop(void) {}
+void ICACHE_FLASH_ATTR dhcps_coarse_tmr(void) {}
+#else
+
 #include "lwip/inet.h"
 #include "lwip/err.h"
 #include "lwip/pbuf.h"
@@ -875,3 +883,4 @@ void ICACHE_FLASH_ATTR dhcps_coarse_tmr(void)
 		}
 	}
 }
+#endif
