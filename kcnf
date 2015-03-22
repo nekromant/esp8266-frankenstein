@@ -122,4 +122,55 @@ config ENV_NOWRITE
 bool "Simulate writes of environment data in flash"
 default n
 
+menu "Default Values"
+
+choice
+prompt "Default wifi mode"
+default WIFI_MODE_AP
+
+config WIFI_MODE_AP
+bool "Access point"
+
+config WIFI_MODE_STATION
+bool "Station mode - (client)"
+
+config WIFI_MODE_SOFTAP
+bool "Soft access point mode - (both AP & client)"
+
+config WIFI_MODE_NONE
+bool "Wifi initially off"
+
+endchoice
+
+config ENV_DEFAULT_HOSTNAME
+string "Hostname at boot"
+default "frankenstein"
+
+config ENV_DEFAULT_STATION_IP
+string "Station mode IP address at boot"
+default "192.168.0.123"
+
+config ENV_DEFAULT_STATION_MASK
+string "Station mode IP netmask at boot"
+default "255.255.255.0"
+
+config ENV_DEFAULT_STATION_GW
+string "Station mode IP gateway address at boot"
+default "192.168.0.1"
+
+config ENV_DEFAULT_AP_IP
+string "AP mode IP address at boot"
+default "192.168.1.1"
+
+config ENV_DEFAULT_AP_MASK
+string "AP mode IP netmask at boot"
+default "255.255.255.0"
+
+config ENV_DEFAULT_AP_GW
+string "AP mode IP gateway at boot"
+default "192.168.1.1"
+
+endmenu
+
+
 endmenu

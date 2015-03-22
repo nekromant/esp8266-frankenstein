@@ -27,16 +27,27 @@ struct envpair {
 
 struct envpair defaultenv[] = {
 	{ "sta-mode",          "dhcp" },
-	{ "default-mode",      "STA" },
-	{ "sta-ip",            "192.168.0.123" },
-	{ "sta-mask",          "255.255.255.0" },
-	{ "sta-gw",            "192.168.0.1" },
+	{ "default-mode",
+/* ideally, this should somehow be tied into helpers.c, id_from_wireless_mode... */
+#if defined(CONFIG_WIFI_MODE_AP) && CONFIG_WIFI_MODE_AP
+                         "AP" },
+#elif defined(CONFIG_WIFI_MODE_STATION) && CONFIG_WIFI_MODE_STATION
+                         "STA" },
+#elif defined(CONFIG_WIFI_MODE_SOFTAP) && CONFIG_WIFI_MODE_SOFTAP
+                         "APSTA" },
+#else
+                         "" },
+#endif
 
-	{ "ap-ip",             "192.168.1.1" },
-	{ "ap-mask",           "255.255.255.0" },
-	{ "ap-gw",             "192.168.1.1" },
+	{ "sta-ip",            CONFIG_ENV_DEFAULT_STATION_IP },
+	{ "sta-mask",          CONFIG_ENV_DEFAULT_STATION_MASK },
+	{ "sta-gw",            CONFIG_ENV_DEFAULT_STATION_GW },
 
-	{ "hostname",          "frankenstein" },
+	{ "ap-ip",             CONFIG_ENV_DEFAULT_AP_IP },
+	{ "ap-mask",           CONFIG_ENV_DEFAULT_AP_MASK },
+	{ "ap-gw",             CONFIG_ENV_DEFAULT_AP_GW },
+
+	{ "hostname",          CONFIG_ENV_DEFAULT_HOSTNAME },
 	{ "bootdelay",         "5" },
 	{ "dhcps-enable",      "1" },
 #if defined(CONFIG_SERVICE_TELNET) && CONFIG_SERVICE_TELNET
