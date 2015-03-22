@@ -81,6 +81,16 @@ void print_hello_banner(void)
 	console_printf("\nMemory Layout:\n");	
 	system_print_meminfo();
 	system_set_os_print(0);
+	console_printf("\nAvailable services:\n");
+  int have_features = 0;
+#if defined(CONFIG_SERVICE_DHCPS) && CONFIG_SERVICE_DHCPS
+	console_printf("DHCP server\n"); have_features ++;
+#endif
+#if defined(CONFIG_SERVICE_TELNET) && CONFIG_SERVICE_TELNET
+	console_printf("Telnet server\n"); have_features ++;
+#endif
+  if (have_features == 0) { console_printf("None.\n"); }
+
 
 }
 
