@@ -79,7 +79,7 @@ struct netio_state {
 
 static err_t netio_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err);
 
-static void ICACHE_FLASH_ATTR
+static void 
 netio_close(void *arg, struct tcp_pcb *pcb)
 {
   err_t err;
@@ -108,7 +108,7 @@ netio_close(void *arg, struct tcp_pcb *pcb)
   }
 }
 
-static err_t ICACHE_FLASH_ATTR
+static err_t 
 netio_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err)
 {
   struct netio_state *ns = arg;
@@ -244,7 +244,7 @@ netio_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err)
 
 }
 
-static err_t ICACHE_FLASH_ATTR
+static err_t 
 netio_sent(void *arg, struct tcp_pcb *pcb, u16_t len)
 {
   struct netio_state *ns = arg;
@@ -296,7 +296,7 @@ netio_sent(void *arg, struct tcp_pcb *pcb, u16_t len)
   return ERR_OK;
 }
 
-static err_t ICACHE_FLASH_ATTR
+static err_t 
 netio_poll(void *arg, struct tcp_pcb *pcb)
 {
   struct netio_state * ns = arg;
@@ -314,7 +314,7 @@ netio_poll(void *arg, struct tcp_pcb *pcb)
 static u8_t netio_buf[NETIO_BUF_SIZE];
 #endif
 
-static err_t ICACHE_FLASH_ATTR
+static err_t 
 netio_accept(void *arg, struct tcp_pcb *pcb, err_t err)
 {
   struct netio_state * ns;
@@ -352,7 +352,7 @@ netio_accept(void *arg, struct tcp_pcb *pcb, err_t err)
   return ERR_OK;
 }
 
-void ICACHE_FLASH_ATTR netio_init(void)
+void  netio_init(void)
 {
   struct tcp_pcb *pcb;
 

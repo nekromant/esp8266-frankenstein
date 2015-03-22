@@ -181,7 +181,7 @@ static u8_t memp_memory[MEM_ALIGNMENT - 1
 /**
  * Check that memp-lists don't form a circle, modify by ives at 2014.4.23.
  */
-static int ICACHE_FLASH_ATTR
+static int 
 memp_sanity(void)
 {
   s16_t i;
@@ -216,7 +216,7 @@ static const char * memp_overflow_names[] = {
  * @param p the memp element to check
  * @param memp_type the pool p comes from
  */
-static void ICACHE_FLASH_ATTR
+static void 
 memp_overflow_check_element_overflow(struct memp *p, u16_t memp_type)
 {
   u16_t k;
@@ -249,7 +249,7 @@ memp_overflow_check_element_overflow(struct memp *p, u16_t memp_type)
  * @param p the memp element to check
  * @param memp_type the pool p comes from
  */
-static void ICACHE_FLASH_ATTR
+static void 
 memp_overflow_check_element_underflow(struct memp *p, u16_t memp_type)
 {
   u16_t k;
@@ -280,7 +280,7 @@ memp_overflow_check_element_underflow(struct memp *p, u16_t memp_type)
  *
  * @see memp_overflow_check_element for a description of the check
  */
-static void ICACHE_FLASH_ATTR
+static void 
 memp_overflow_check_all(void)
 {
   u16_t i, j;
@@ -307,7 +307,7 @@ memp_overflow_check_all(void)
 /**
  * Initialize the restricted areas of all memp elements in every pool.
  */
-static void ICACHE_FLASH_ATTR
+static void 
 memp_overflow_init(void)
 {
   u16_t i, j;

@@ -12,7 +12,7 @@
 #define dbg(fmt, ...)
 #endif
 
-bool ICACHE_FLASH_ATTR 
+bool  
 TCS3414_Read()
 {
 	
@@ -51,7 +51,7 @@ TCS3414_Read()
 	return false;
 }
 
-bool ICACHE_FLASH_ATTR 
+bool  
 TCS3414_SetTimeing(uint8_t timeing, uint8_t gain)
 {
 	return i2c_master_writeBytes2(TCS3414_ADDRESS, TCS3414_REG_TIMING, timeing)
@@ -59,7 +59,7 @@ TCS3414_SetTimeing(uint8_t timeing, uint8_t gain)
 }
 
 
-bool ICACHE_FLASH_ATTR 
+bool  
 TCS3414_SetInterrupt(uint8_t interruptSource, uint8_t interruptControl)
 {
 
@@ -67,7 +67,7 @@ TCS3414_SetInterrupt(uint8_t interruptSource, uint8_t interruptControl)
 		&& i2c_master_writeBytes2(TCS3414_ADDRESS, TCS3414_REG_INT, interruptControl);
 }
 
-bool ICACHE_FLASH_ATTR 
+bool  
 TCS3414_Init()
 {
 	if(!TCS3414_SetTimeing(TCS3414_INTEGRATION_TIME_12ms, TCS3414_GAIN_1|TCS3414_PRESCALER_4)){

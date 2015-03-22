@@ -74,7 +74,7 @@ void dht11_setup(int gpio)
 
 static os_timer_t data_timer;
 static volatile int dht11_data_timeout_flag;
-static void ICACHE_FLASH_ATTR
+static void 
 dht11_data_timeout(void* unused)
 {
   dht11_data_timeout_flag ++;

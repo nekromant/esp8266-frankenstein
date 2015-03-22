@@ -231,7 +231,7 @@ static volatile u8_t mem_free_count;
  * This assumes access to the heap is protected by the calling function
  * already.
  */
-static void ICACHE_FLASH_ATTR
+static void 
 plug_holes(struct mem *mem)
 {
   struct mem *nmem;

@@ -13,14 +13,14 @@
 #endif
 
 #ifdef CONFIG_USEFLOAT
-float ICACHE_FLASH_ATTR 
+float  
 MLX90614_ReadTempFrom(uint8 reg)
 {
 	float result = i2c_master_readRegister16(MLX90614_ADDRESS, reg);
 	return ((result / 50) - 273.15);
 }
 #else
-sint16 ICACHE_FLASH_ATTR 
+sint16  
 MLX90614_ReadTempFrom(uint8 reg)
 {
 
@@ -34,7 +34,7 @@ MLX90614_ReadTempFrom(uint8 reg)
 }
 #endif
 
-bool ICACHE_FLASH_ATTR 
+bool  
 MLX90614_Read()
 {
 	LAST_MLX90614_AMBIENT_TEMPERATURE = MLX90614_ReadTempFrom(MLX90614_TA);
@@ -43,7 +43,7 @@ MLX90614_Read()
 }
 
 
-bool ICACHE_FLASH_ATTR 
+bool  
 MLX90614_Init()
 {
 #ifdef CONFIG_CMD_MLX90614_DEBUG

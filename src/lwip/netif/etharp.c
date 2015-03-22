@@ -165,7 +165,7 @@ free_etharp_q(struct etharp_q_entry *q)
 #endif /* ARP_QUEUEING */
 
 /** Clean up ARP table entries */
-static void ICACHE_FLASH_ATTR
+static void 
 free_entry(int i)
 {
   /* remove from SNMP ARP index tree */
@@ -254,7 +254,7 @@ etharp_tmr(void)
  * @return The ARP entry index that matched or is created, ERR_MEM if no
  * entry is found or could be recycled.
  */
-static s8_t ICACHE_FLASH_ATTR
+static s8_t 
 find_entry(ip_addr_t *ipaddr, u8_t flags)
 {
   s8_t old_pending = ARP_TABLE_SIZE, old_stable = ARP_TABLE_SIZE;
@@ -406,7 +406,7 @@ find_entry(ip_addr_t *ipaddr, u8_t flags)
  * @params dst the destination MAC address to be copied into the ethernet header
  * @return ERR_OK if the packet was sent, any other err_t on failure
  */
-static err_t ICACHE_FLASH_ATTR
+static err_t 
 etharp_send_ip(struct netif *netif, struct pbuf *p, struct eth_addr *src, struct eth_addr *dst)
 {
   struct eth_hdr *ethhdr = (struct eth_hdr *)p->payload;
@@ -439,7 +439,7 @@ etharp_send_ip(struct netif *netif, struct pbuf *p, struct eth_addr *src, struct
  *
  * @see pbuf_free()
  */
-static err_t ICACHE_FLASH_ATTR
+static err_t 
 update_arp_entry(struct netif *netif, ip_addr_t *ipaddr, struct eth_addr *ethaddr, u8_t flags)
 {
   s8_t i;
@@ -573,7 +573,7 @@ etharp_remove_static_entry(ip_addr_t *ipaddr)
  *
  * @param netif points to a network interface
  */
-void ICACHE_FLASH_ATTR etharp_cleanup_netif(struct netif *netif)
+void  etharp_cleanup_netif(struct netif *netif)
 {
   u8_t i;
 
@@ -632,7 +632,7 @@ etharp_find_addr(struct netif *netif, ip_addr_t *ipaddr,
  *
  * @see pbuf_free()
  */
-static void ICACHE_FLASH_ATTR
+static void 
 etharp_ip_input(struct netif *netif, struct pbuf *p)
 {
   struct eth_hdr *ethhdr;
@@ -681,7 +681,7 @@ etharp_ip_input(struct netif *netif, struct pbuf *p)
  *
  * @see pbuf_free()
  */
-static void ICACHE_FLASH_ATTR
+static void 
 etharp_arp_input(struct netif *netif, struct eth_addr *ethaddr, struct pbuf *p)
 {
   struct etharp_hdr *hdr;
@@ -1151,7 +1151,7 @@ etharp_query(struct netif *netif, ip_addr_t *ipaddr, struct pbuf *q)
 #if !LWIP_AUTOIP
 static
 #endif /* LWIP_AUTOIP */
-err_t ICACHE_FLASH_ATTR
+err_t 
 etharp_raw(struct netif *netif, const struct eth_addr *ethsrc_addr,
            const struct eth_addr *ethdst_addr,
            const struct eth_addr *hwsrc_addr, const ip_addr_t *ipsrc_addr,

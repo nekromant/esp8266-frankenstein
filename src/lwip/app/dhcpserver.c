@@ -1,9 +1,9 @@
 #if !defined(CONFIG_SERVICE_DHCPS) || !CONFIG_SERVICE_DHCPS
 #include "lwip/inet.h"
 #include "osapi.h"
-void ICACHE_FLASH_ATTR dhcps_start(struct ip_info *unused) { }
-void ICACHE_FLASH_ATTR dhcps_stop(void) {}
-void ICACHE_FLASH_ATTR dhcps_coarse_tmr(void) {}
+void  dhcps_start(struct ip_info *unused) { }
+void  dhcps_stop(void) {}
+void  dhcps_coarse_tmr(void) {}
 #else
 
 #include "lwip/inet.h"
@@ -44,7 +44,7 @@ static list_node *plist = NULL;
  * Parameters   : arg -- Additional argument to pass to the callback function
  * Returns      : none
 *******************************************************************************/
-void ICACHE_FLASH_ATTR node_insert_to_list(list_node **phead, list_node* pinsert)
+void  node_insert_to_list(list_node **phead, list_node* pinsert)
 {
 	list_node *plist = NULL;
 
@@ -66,7 +66,7 @@ void ICACHE_FLASH_ATTR node_insert_to_list(list_node **phead, list_node* pinsert
  * Parameters   : arg -- Additional argument to pass to the callback function
  * Returns      : none
 *******************************************************************************/
-void ICACHE_FLASH_ATTR node_remove_from_list(list_node **phead, list_node* pdelete)
+void  node_remove_from_list(list_node **phead, list_node* pdelete)
 {
 	list_node *plist = NULL;
 
@@ -96,7 +96,7 @@ void ICACHE_FLASH_ATTR node_remove_from_list(list_node **phead, list_node* pdele
  * @return uint8_t* ����DHCP msgƫ�Ƶ�ַ
  */
 ///////////////////////////////////////////////////////////////////////////////////
-static uint8_t* ICACHE_FLASH_ATTR add_msg_type(uint8_t *optptr, uint8_t type)
+static uint8_t*  add_msg_type(uint8_t *optptr, uint8_t type)
 {
 
         *optptr++ = DHCP_OPTION_MSG_TYPE;
@@ -113,7 +113,7 @@ static uint8_t* ICACHE_FLASH_ATTR add_msg_type(uint8_t *optptr, uint8_t type)
  * @return uint8_t* ����DHCP msgƫ�Ƶ�ַ
  */
 ///////////////////////////////////////////////////////////////////////////////////
-static uint8_t* ICACHE_FLASH_ATTR add_offer_options(uint8_t *optptr)
+static uint8_t*  add_offer_options(uint8_t *optptr)
 {
         struct ip_addr ipadd;
 
@@ -209,7 +209,7 @@ static uint8_t* ICACHE_FLASH_ATTR add_offer_options(uint8_t *optptr)
  * @return uint8_t* ����DHCP msgƫ�Ƶ�ַ
  */
 ///////////////////////////////////////////////////////////////////////////////////
-static uint8_t* ICACHE_FLASH_ATTR add_end(uint8_t *optptr)
+static uint8_t*  add_end(uint8_t *optptr)
 {
 
         *optptr++ = DHCP_OPTION_END;
@@ -222,7 +222,7 @@ static uint8_t* ICACHE_FLASH_ATTR add_end(uint8_t *optptr)
  * @param -- m ָ�򴴽���DHCP msg�ṹ�����?
  */
 ///////////////////////////////////////////////////////////////////////////////////
-static void ICACHE_FLASH_ATTR create_msg(struct dhcps_msg *m)
+static void  create_msg(struct dhcps_msg *m)
 {
         struct ip_addr client;
 
@@ -254,7 +254,7 @@ static void ICACHE_FLASH_ATTR create_msg(struct dhcps_msg *m)
  * @param -- m ָ����Ҫ���͵�DHCP msg����
  */
 ///////////////////////////////////////////////////////////////////////////////////
-static void ICACHE_FLASH_ATTR send_offer(struct dhcps_msg *m)
+static void  send_offer(struct dhcps_msg *m)
 {
         uint8_t *end;
 	    struct pbuf *p, *q;
@@ -322,7 +322,7 @@ static void ICACHE_FLASH_ATTR send_offer(struct dhcps_msg *m)
  * @param m ָ����Ҫ���͵�DHCP msg����
  */
 ///////////////////////////////////////////////////////////////////////////////////
-static void ICACHE_FLASH_ATTR send_nak(struct dhcps_msg *m)
+static void  send_nak(struct dhcps_msg *m)
 {
 
     	u8_t *end;
@@ -390,7 +390,7 @@ static void ICACHE_FLASH_ATTR send_nak(struct dhcps_msg *m)
  * @param m ָ����Ҫ���͵�DHCP msg����
  */
 ///////////////////////////////////////////////////////////////////////////////////
-static void ICACHE_FLASH_ATTR send_ack(struct dhcps_msg *m)
+static void  send_ack(struct dhcps_msg *m)
 {
 
 		u8_t *end;
@@ -463,7 +463,7 @@ static void ICACHE_FLASH_ATTR send_ack(struct dhcps_msg *m)
  * @return uint8_t ���ش�����DHCP Server״ֵ̬
  */
 ///////////////////////////////////////////////////////////////////////////////////
-static uint8_t ICACHE_FLASH_ATTR parse_options(uint8_t *optptr, sint16_t len)
+static uint8_t  parse_options(uint8_t *optptr, sint16_t len)
 {
         struct ip_addr client;
     	bool is_dhcp_parse_end = false;
@@ -551,7 +551,7 @@ static uint8_t ICACHE_FLASH_ATTR parse_options(uint8_t *optptr, sint16_t len)
 }
 ///////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////
-static sint16_t ICACHE_FLASH_ATTR parse_msg(struct dhcps_msg *m, u16_t len)
+static sint16_t  parse_msg(struct dhcps_msg *m, u16_t len)
 {
 		if(os_memcmp((char *)m->options,
               (char *)magic_cookie,
@@ -685,7 +685,7 @@ static sint16_t ICACHE_FLASH_ATTR parse_msg(struct dhcps_msg *m, u16_t len)
  * @param port ���ʹ�UDP���Դ�����UDPͨ���˿ں�
  */
 ///////////////////////////////////////////////////////////////////////////////////
-static void ICACHE_FLASH_ATTR handle_dhcp(void *arg, 
+static void  handle_dhcp(void *arg, 
 									struct udp_pcb *pcb, 
 									struct pbuf *p, 
 									struct ip_addr *addr, 
@@ -777,7 +777,7 @@ static void ICACHE_FLASH_ATTR handle_dhcp(void *arg,
         pbuf_free(p);
 }
 ///////////////////////////////////////////////////////////////////////////////////
-static void ICACHE_FLASH_ATTR wifi_softap_init_dhcps_lease(uint32 ip)
+static void  wifi_softap_init_dhcps_lease(uint32 ip)
 {
 	uint32 softap_ip = 0,local_ip = 0;
 
@@ -799,7 +799,7 @@ static void ICACHE_FLASH_ATTR wifi_softap_init_dhcps_lease(uint32 ip)
 //	os_printf("start_ip = 0x%x, end_ip = 0x%x\n",dhcps_lease.start_ip, dhcps_lease.end_ip);
 }
 ///////////////////////////////////////////////////////////////////////////////////
-void ICACHE_FLASH_ATTR dhcps_start(struct ip_info *info)
+void  dhcps_start(struct ip_info *info)
 {
 	os_memset(&msg_dhcps, 0, sizeof(dhcps_msg));
 	pcb_dhcps = udp_new();
@@ -821,13 +821,13 @@ void ICACHE_FLASH_ATTR dhcps_start(struct ip_info *info)
 		
 }
 
-void ICACHE_FLASH_ATTR dhcps_stop(void)
+void  dhcps_stop(void)
 {
 	udp_disconnect(pcb_dhcps);
 	udp_remove(pcb_dhcps);
 }
 
-bool ICACHE_FLASH_ATTR wifi_softap_set_dhcps_lease(struct dhcps_lease *please)
+bool  wifi_softap_set_dhcps_lease(struct dhcps_lease *please)
 {
 	struct ip_info info;
 	uint32 softap_ip = 0;
@@ -861,7 +861,7 @@ bool ICACHE_FLASH_ATTR wifi_softap_set_dhcps_lease(struct dhcps_lease *please)
 	return true;
 }
 
-void ICACHE_FLASH_ATTR dhcps_coarse_tmr(void)
+void  dhcps_coarse_tmr(void)
 {
 	list_node *pback_node = NULL;
 	list_node *pnode = NULL;

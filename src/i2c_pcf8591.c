@@ -12,7 +12,7 @@
 #define dbg(fmt, ...)
 #endif
 
-bool ICACHE_FLASH_ATTR 
+bool  
 PCF8591_Read()
 {
 	for(uint8 i = 0; i < 4; i++){
@@ -21,14 +21,14 @@ PCF8591_Read()
 	return true;
 }
 
-bool ICACHE_FLASH_ATTR 
+bool  
 PCF8591_Write(uint8 value)
 {
 	return i2c_master_writeBytes2(PCF8591_ADDRESS, PCF8591_REG_DAC, value);
 }
 
 
-bool ICACHE_FLASH_ATTR 
+bool  
 PCF8591_Init()
 {
 	//TODO: configure for differential input

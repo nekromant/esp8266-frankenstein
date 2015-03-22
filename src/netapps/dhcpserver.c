@@ -34,7 +34,7 @@ struct dhcps_state s;
  * @return uint8_t* ����DHCP msgƫ�Ƶ�ַ
  */
 ///////////////////////////////////////////////////////////////////////////////////
-static uint8_t* ICACHE_FLASH_ATTR add_msg_type(uint8_t *optptr, uint8_t type)
+static uint8_t*  add_msg_type(uint8_t *optptr, uint8_t type)
 {
 
         *optptr++ = DHCP_OPTION_MSG_TYPE;
@@ -51,7 +51,7 @@ static uint8_t* ICACHE_FLASH_ATTR add_msg_type(uint8_t *optptr, uint8_t type)
  * @return uint8_t* ����DHCP msgƫ�Ƶ�ַ
  */
 ///////////////////////////////////////////////////////////////////////////////////
-static uint8_t* ICACHE_FLASH_ATTR add_offer_options(uint8_t *optptr)
+static uint8_t*  add_offer_options(uint8_t *optptr)
 {
         struct ip_addr ipadd;
 
@@ -147,7 +147,7 @@ static uint8_t* ICACHE_FLASH_ATTR add_offer_options(uint8_t *optptr)
  * @return uint8_t* ����DHCP msgƫ�Ƶ�ַ
  */
 ///////////////////////////////////////////////////////////////////////////////////
-static uint8_t* ICACHE_FLASH_ATTR add_end(uint8_t *optptr)
+static uint8_t*  add_end(uint8_t *optptr)
 {
 
         *optptr++ = DHCP_OPTION_END;
@@ -160,7 +160,7 @@ static uint8_t* ICACHE_FLASH_ATTR add_end(uint8_t *optptr)
  * @param -- m ָ�򴴽���DHCP msg�ṹ�����??
  */
 ///////////////////////////////////////////////////////////////////////////////////
-static void ICACHE_FLASH_ATTR create_msg(struct dhcps_msg *m)
+static void  create_msg(struct dhcps_msg *m)
 {
         struct ip_addr client;
 
@@ -192,7 +192,7 @@ static void ICACHE_FLASH_ATTR create_msg(struct dhcps_msg *m)
  * @param -- m ָ����Ҫ���͵�DHCP msg����
  */
 ///////////////////////////////////////////////////////////////////////////////////
-static void ICACHE_FLASH_ATTR send_offer(struct dhcps_msg *m)
+static void  send_offer(struct dhcps_msg *m)
 {
         uint8_t *end;
 	    struct pbuf *p, *q;
@@ -258,7 +258,7 @@ static void ICACHE_FLASH_ATTR send_offer(struct dhcps_msg *m)
  * @param m ָ����Ҫ���͵�DHCP msg����
  */
 ///////////////////////////////////////////////////////////////////////////////////
-static void ICACHE_FLASH_ATTR send_nak(struct dhcps_msg *m)
+static void  send_nak(struct dhcps_msg *m)
 {
 
     	u8_t *end;
@@ -324,7 +324,7 @@ static void ICACHE_FLASH_ATTR send_nak(struct dhcps_msg *m)
  * @param m ָ����Ҫ���͵�DHCP msg����
  */
 ///////////////////////////////////////////////////////////////////////////////////
-static void ICACHE_FLASH_ATTR send_ack(struct dhcps_msg *m)
+static void  send_ack(struct dhcps_msg *m)
 {
 
 		u8_t *end;
@@ -395,7 +395,7 @@ static void ICACHE_FLASH_ATTR send_ack(struct dhcps_msg *m)
  * @return uint8_t ���ش�����DHCP Server״ֵ̬
  */
 ///////////////////////////////////////////////////////////////////////////////////
-static uint8_t ICACHE_FLASH_ATTR parse_options(uint8_t *optptr, sint16_t len)
+static uint8_t  parse_options(uint8_t *optptr, sint16_t len)
 {
         struct ip_addr client;
     	bool is_dhcp_parse_end = false;
@@ -483,7 +483,7 @@ static uint8_t ICACHE_FLASH_ATTR parse_options(uint8_t *optptr, sint16_t len)
 }
 ///////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////
-static sint16_t ICACHE_FLASH_ATTR parse_msg(struct dhcps_msg *m, u16_t len)
+static sint16_t  parse_msg(struct dhcps_msg *m, u16_t len)
 {
 		if(os_memcmp((char *)m->options,
               (char *)magic_cookie,
@@ -590,7 +590,7 @@ static sint16_t ICACHE_FLASH_ATTR parse_msg(struct dhcps_msg *m, u16_t len)
  * @param port ���ʹ�UDP���Դ�����UDPͨ���˿ں�
  */
 ///////////////////////////////////////////////////////////////////////////////////
-static void ICACHE_FLASH_ATTR handle_dhcp(void *arg, 
+static void  handle_dhcp(void *arg, 
 									struct udp_pcb *pcb, 
 									struct pbuf *p, 
 									struct ip_addr *addr, 
@@ -683,7 +683,7 @@ static void ICACHE_FLASH_ATTR handle_dhcp(void *arg,
 }
 ///////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////
-void ICACHE_FLASH_ATTR dhcps_start(struct ip_info *info)
+void  dhcps_start(struct ip_info *info)
 {
 		os_memset(&msg_dhcps, 0, sizeof(dhcps_msg));
 		pcb_dhcps = udp_new();

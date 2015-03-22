@@ -8,7 +8,7 @@
 #define dbg(fmt, ...)
 #endif
 
-bool ICACHE_FLASH_ATTR
+bool 
 SHT21_Init()
 {
 	
@@ -22,7 +22,7 @@ SHT21_Init()
 	return false;
 }
 
-bool ICACHE_FLASH_ATTR
+bool 
 SHT21_Read()
 {
 #ifdef CONFIG_USEFLOAT

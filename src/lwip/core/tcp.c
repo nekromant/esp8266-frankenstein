@@ -1129,7 +1129,7 @@ tcp_recv_null(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err)
  *
  * @param prio minimum priority
  */
-static void ICACHE_FLASH_ATTR
+static void 
 tcp_kill_prio(u8_t prio)
 {
   struct tcp_pcb *pcb, *inactive;
@@ -1162,7 +1162,7 @@ tcp_kill_prio(u8_t prio)
  * Kills the oldest connection that is in TIME_WAIT state.
  * Called from tcp_alloc() if no more connections are available.
  */
-static void ICACHE_FLASH_ATTR
+static void 
 tcp_kill_timewait(void)
 {
   struct tcp_pcb *pcb, *inactive;

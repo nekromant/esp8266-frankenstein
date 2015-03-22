@@ -77,7 +77,7 @@
  * @note accumulator size limits summable length to 64k
  * @note host endianess is irrelevant (p3 RFC1071)
  */
-static u16_t ICACHE_FLASH_ATTR
+static u16_t 
 lwip_standard_chksum(void *dataptr, u16_t len)
 {
   u32_t acc;
@@ -131,7 +131,7 @@ lwip_standard_chksum(void *dataptr, u16_t len)
  * @return host order (!) lwip checksum (non-inverted Internet sum) 
  */
 
-static u16_t ICACHE_FLASH_ATTR
+static u16_t 
 lwip_standard_chksum(void *dataptr, int len)
 {
   u8_t *pb = (u8_t *)dataptr;
@@ -187,7 +187,7 @@ lwip_standard_chksum(void *dataptr, int len)
  * by Curt McDowell, Broadcom Corp. December 8th, 2005
  */
 
-static u16_t ICACHE_FLASH_ATTR
+static u16_t 
 lwip_standard_chksum(void *dataptr, int len)
 {
   u8_t *pb = (u8_t *)dataptr;

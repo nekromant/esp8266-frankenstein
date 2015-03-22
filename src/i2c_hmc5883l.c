@@ -15,7 +15,7 @@
 
 static float mgPerDigit; 
 
-uint16_t ICACHE_FLASH_ATTR 
+uint16_t  
 HMC5883_ReadDegrees()
 {
 	float heading = atan2(LAST_HMC5883_VECTOR.X, LAST_HMC5883_VECTOR.Y);
@@ -33,7 +33,7 @@ HMC5883_ReadDegrees()
 	return (heading * 180/M_PI);
 }
 
-bool ICACHE_FLASH_ATTR 
+bool  
 HMC5883_Read()
 {
     LAST_HMC5883_VECTOR.X = ((float)i2c_master_readRegister16(HMC5883L_ADDRESS, HMC5883L_REG_OUT_X_M)) * mgPerDigit;
@@ -42,7 +42,7 @@ HMC5883_Read()
 	return true;
 }
 
-bool ICACHE_FLASH_ATTR 
+bool  
 HMC5883_SetConfig(hmc5883l_range_t range, hmc5883l_mode_t mode, hmc5883l_dataRate_t dataRate, hmc5883l_samples_t samples)
 {
     switch(range)
@@ -109,7 +109,7 @@ HMC5883_SetConfig(hmc5883l_range_t range, hmc5883l_mode_t mode, hmc5883l_dataRat
 	return true;
 }
 
-bool ICACHE_FLASH_ATTR 
+bool  
 HMC5883_Init()
 {
 	if((i2c_master_readRegister8(HMC5883L_ADDRESS, HMC5883L_REG_IDENT_A) != 0x48)

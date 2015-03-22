@@ -85,7 +85,7 @@ static struct netif loop_netif;
  * @return ERR_OK if the loopif is initialized
  *         ERR_MEM if private data couldn't be allocated
  */
- static err_t ICACHE_FLASH_ATTR
+ static err_t 
 netif_loopif_init(struct netif *netif)
 {
   /* initialize the snmp variables and counters inside the struct netif
