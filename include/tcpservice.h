@@ -13,11 +13,14 @@ struct tcpservice_s
 	struct tcp_pcb* tcp;
 	bool is_closing;
 
+	// circular buffer
+	char* sendbuf;
+	cb_t send_buffer;
+
 	// listener args&callbacks
 	tcpservice_t* (*get_new_peer) (tcpservice_t* s);
 
 	// peer args&callbacks
-	cb_t send_buffer;
 	void (*cb_established) (tcpservice_t* s);
 	void (*cb_closing) (tcpservice_t* s);
 	void (*cb_recv) (tcpservice_t* s, const char* data, size_t len);
@@ -26,22 +29,23 @@ struct tcpservice_s
 	void (*cb_cleanup) (tcpservice_t* s);
 };
 
-#define TCP_SERVICE_VOID()			\
+#define TCP_SERVICE_LISTENER(nameptr, cb_new_peer) \
 {						\
-	.name = NULL;				\
-	.tcp = NULL;				\
-	.is_closing = false;			\
+	.name = (nameptr),			\
+	.tcp = NULL,				\
+	.is_closing = false,			\
+	.sendbuf = NULL,			\
 	.send_buffer = CB_INIT(NULL, 0),	\
-	.cb_accepted = NULL,			\
+	.get_new_peer = (cb_new_peer),		\
+	.cb_established = NULL,			\
 	.cb_closing = NULL,			\
 	.cb_recv = NULL,			\
 	.cb_poll = NULL,			\
 	.cb_ack = NULL,				\
-	.cb_cleanup = NULL;			\
+	.cb_cleanup = NULL,			\
 }
 
 void tcp_log_err (err_t err);
-err_t cb_tcp_send (cb_t* cb, struct tcp_pcb *pcb);
 
 // install tcp service on port
 int tcp_service_install (const char* name, tcpservice_t* s, int port);
