@@ -350,4 +350,4 @@ Espressif's blobs and make them go nuts.
 * gpio controls only gpio0 and gpio2
 
 Known limitation, since only these are broken out on my modules. It's somewhere on my TODO list.
-Note that GPIO selection support now exists for the `dht22` command and the i2c commands.
+Note that selection of the full range of valid GPIOs now exists for the `dht22` command and the i2c commands.
