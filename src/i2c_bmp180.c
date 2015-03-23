@@ -24,8 +24,7 @@ static sint16 b1, b2;
 static sint16 mb, mc, md; 
 #endif
 
-static uint16 
-BMP180_readRawValue(uint8 cmd) 
+static uint16 BMP180_readRawValue(uint8 cmd) 
 {
 	i2c_master_writeBytes2(BMP180_ADDRESS, BMP180_REG_CONTROL, cmd);
 	switch(cmd){
@@ -56,8 +55,7 @@ BMP180_readRawValue(uint8 cmd)
 	return false;
 }
 
-bool 
-BMP180_Read()
+bool BMP180_Read()
 {
 #ifdef CONFIG_USEFLOAT
 	float tu,pu,a,s,x,y,z;
@@ -87,9 +85,7 @@ BMP180_Read()
 	T  = (B5+8) >> 4;
 	LAST_BMP_TEMPERATURE = T; 
 
-#ifdef CONFIG_CMD_BMP180_DEBUG
-	console_printf( "UT: %d\nX1: %d\nX2: %d\nB5: %d\n", UT, X1, X2, B5);
-#endif
+	dbg( "UT: %d\nX1: %d\nX2: %d\nB5: %d\n", UT, X1, X2, B5);
 
 	UP = BMP180_readRawValue(BMP180_COMMAND_PRESSURE0);
 	B6 = B5 - 4000;
@@ -98,9 +94,7 @@ BMP180_Read()
 	X3 = X1 + X2;
 	B3 = (((sint32)ac1 * 4 + X3) + 2) >> 2;
 
-#ifdef CONFIG_CMD_BMP180_DEBUG
-	console_printf( "UP: %d\nB5: %d\nB6: %d\nX1: %d\nX2: %d\nX3: %d\n", UP, B5, B6, X1, X2, X3);
-#endif
+	dbg( "UP: %d\nB5: %d\nB6: %d\nX1: %d\nX2: %d\nX3: %d\n", UP, B5, B6, X1, X2, X3);
 
 	X1 = ((sint32)ac3 * B6) >> 13;
 	X2 = ((sint32)b1 * ((B6 * B6) >> 12)) >> 16;
@@ -114,9 +108,7 @@ BMP180_Read()
 		P = (B7 / B4) * 2;
 	}
 
-#ifdef CONFIG_CMD_BMP180_DEBUG
-	console_printf( "X1: %d\nX2: %d\nX3: %d\nB4: %d\nB7: %d\nP: %d\n", X1, X2, X3, B4, B7, P);
-#endif
+	dbg( "X1: %d\nX2: %d\nX3: %d\nB4: %d\nB7: %d\nP: %d\n", X1, X2, X3, B4, B7, P);
 
 	X1 = (P >> 8) * (P >> 8);
 	X1 = (X1 * 3038) >> 16;
@@ -125,16 +117,13 @@ BMP180_Read()
 	P  = P + ((X1 + X2 + (sint32)3791) >> 4);
 	LAST_BMP_REAL_PRESSURE = P * 0.75;
 
-#ifdef CONFIG_CMD_BMP180_DEBUG
-	console_printf( "X1: %d\nX2: %d\nP: %d\n", X1, X2, P);
-#endif
+	dbg( "X1: %d\nX2: %d\nP: %d\n", X1, X2, P);
 
 #endif
 	return true;
 }
 
-bool 
-BMP180_Init()
+bool BMP180_Init()
 {
 
 	uint16 reg;
@@ -143,9 +132,7 @@ BMP180_Init()
 	
 
 	if(reg != BMP180_MAGIC_CHIPID){
-#ifdef CONFIG_CMD_BMP180_DEBUG
-		console_printf( "Invalid chip id: 0x%X, mustbe 0x%X\n", reg, BMP180_MAGIC_CHIPID);
-#endif
+		dbg( "Invalid chip id: 0x%X, mustbe 0x%X\n", reg, BMP180_MAGIC_CHIPID);
 		return false;
 	}
 
@@ -200,9 +187,7 @@ BMP180_Init()
 	&& i2c_master_readSint16(BMP180_ADDRESS, 0xBC, &mc)
 	&& i2c_master_readSint16(BMP180_ADDRESS, 0xBE, &md)){
 
-#ifdef CONFIG_CMD_BMP180_DEBUG
-	console_printf( "ac1: %d\nac2: %d\nac3: %d\nac4: %d\nac5: %d\nac6: %d\nb1: %d\nb2: %d\nmb: %d\nmc: %d\nmd: %d\n", ac1,ac2,ac3,ac4,ac5,ac6,b1,b2,mb,mc,md);
-#endif
+	dbg( "ac1: %d\nac2: %d\nac3: %d\nac4: %d\nac5: %d\nac6: %d\nb1: %d\nb2: %d\nmb: %d\nmc: %d\nmd: %d\n", ac1,ac2,ac3,ac4,ac5,ac6,b1,b2,mb,mc,md);
 		
 		IS_ALREADY_INITED = true;
 		return true;
@@ -216,11 +201,7 @@ static int do_i2c_bmp180(int argc, const char* const* argv)
 {
 	if(argc == 1 || strcmp(argv[1], "read") == 0){
 
-		if(!IS_ALREADY_INITED){
-			BMP180_Init();
-		}
-
-		if(BMP180_Read()){
+		if((IS_ALREADY_INITED || BMP180_Init()) && BMP180_Read()){
 			console_printf( argc == 1 ? "%d %d\n" : "Temperature: %d C\nPressure: %d mmHg\n", 
 #ifdef CONFIG_USEFLOAT
 				(int)(LAST_BMP_TEMPERATURE*100), 

@@ -96,10 +96,14 @@ bool "I2C tcs3414cs color sensor (Needs testing)"
 config CMD_I2C_MLX90614
 bool "I2C mlx90614 temperature sensor (Needs testing)"
 
-config CMD_I2C_HMC5883L
-bool "I2C hmc5883l 3-Axis Digital Compass (Needs testing)"
+#fatal bugs
+#config CMD_I2C_HMC5883L
+#bool "I2C hmc5883l 3-Axis Digital Compass (Needs testing)"
 
 endif
+
+menuconfig CMD_DHT22
+bool "DHT22/DHT11 temperature and humidity sensor"
 
 # Not working right now.
 #config ENABLE_PASSTHROUGH
@@ -133,7 +137,7 @@ menu "Environment Settings"
 
 config ENV_OFFSET
 hex "Environment address in flash (4K aligned)"
-default 0x7f000
+default 0x7c000
 
 config ENV_LEN
 hex "Environment length"

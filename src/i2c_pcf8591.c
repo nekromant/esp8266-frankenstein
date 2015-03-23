@@ -6,14 +6,13 @@
 #include "driver/i2c_master.h"
 #include "driver/i2c_pcf8591.h"
 
-#ifdef CONFIG_CMD_BH1750_DEBUG
+#ifdef CONFIG_CMD_PCF8591_DEBUG
 #define dbg(fmt, ...) LOG(LOG_DEBUG, fmt, ##__VA_ARGS__)
 #else
 #define dbg(fmt, ...)
 #endif
 
-bool  
-PCF8591_Read()
+bool PCF8591_Read()
 {
 	for(uint8 i = 0; i < 4; i++){
 		i2c_master_readUint8(PCF8591_ADDRESS, i, &LAST_PCF8591_A[i]);
@@ -21,15 +20,13 @@ PCF8591_Read()
 	return true;
 }
 
-bool  
-PCF8591_Write(uint8 value)
+bool PCF8591_Write(uint8 value)
 {
 	return i2c_master_writeBytes2(PCF8591_ADDRESS, PCF8591_REG_DAC, value);
 }
 
 
-bool  
-PCF8591_Init()
+bool PCF8591_Init()
 {
 	//TODO: configure for differential input
 	if(PCF8591_Read()){
@@ -43,11 +40,7 @@ static int do_i2c_pcf8591(int argc, const char* const* argv)
 {
 	if(argc == 1 || strcmp(argv[1], "read") == 0){
 
-		if(!IS_ALREADY_INITED){
-			PCF8591_Init();
-		}
-
-		if(PCF8591_Read()){
+		if((IS_ALREADY_INITED || PCF8591_Init()) && PCF8591_Read()){
 			if(argc != 1){
 				console_printf( "A0-A3: " );
 			}
