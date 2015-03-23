@@ -3,7 +3,7 @@
 
 #include <lwip/tcp.h>
 
-#include "cbtools.h"
+#include "cbuftools.h"
 
 typedef struct tcpservice_s tcpservice_t;
 
@@ -15,12 +15,12 @@ struct tcpservice_s
 
 	// circular buffer
 	char* sendbuf;
-	cb_t send_buffer;
+	cbuf_t send_buffer;
 
-	// listener args&callbacks
-	tcpservice_t* (*get_new_peer) (tcpservice_t* s);
+	// listener callbacks
+	tcpservice_t* (*cb_get_new_peer) (tcpservice_t* s);
 
-	// peer args&callbacks
+	// peer callbacks
 	void (*cb_established) (tcpservice_t* s);
 	void (*cb_closing) (tcpservice_t* s);
 	void (*cb_recv) (tcpservice_t* s, const char* data, size_t len);
@@ -35,8 +35,8 @@ struct tcpservice_s
 	.tcp = NULL,				\
 	.is_closing = false,			\
 	.sendbuf = NULL,			\
-	.send_buffer = CB_INIT(NULL, 0),	\
-	.get_new_peer = (cb_new_peer),		\
+	.send_buffer = CBUF_INIT(NULL, 0),	\
+	.cb_get_new_peer = (cb_new_peer),	\
 	.cb_established = NULL,			\
 	.cb_closing = NULL,			\
 	.cb_recv = NULL,			\

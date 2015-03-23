@@ -77,7 +77,7 @@ static int telnet_printf (const char *fmt, ...)
 	va_list ap;
 	va_start(ap, fmt);
 	if (current_telnet && current_telnet->peer.tcp)
-		ret = cb_vprintf(&current_telnet->peer.send_buffer, fmt, ap);
+		ret = cbuf_vprintf(&current_telnet->peer.send_buffer, fmt, ap);
 	else
 	{
 		vsnprintf(sprintbuf, SPRINTBUFSIZE, fmt, ap);
@@ -102,8 +102,8 @@ static tcpservice_t* telnet_new_peer (tcpservice_t* s)
 	}
 	
 	ts->peer.name = "telnet";
-	cb_init(&ts->peer.send_buffer, ts->peer.sendbuf, TELNET_SEND_BUFFER_SIZE_LOG2_DEFAULT);
-	ts->peer.get_new_peer = NULL;
+	cbuf_init(&ts->peer.send_buffer, ts->peer.sendbuf, TELNET_SEND_BUFFER_SIZE_LOG2_DEFAULT);
+	ts->peer.cb_get_new_peer = NULL;
 	ts->peer.cb_established = telnet_established;
 	ts->peer.cb_closing = telnet_closing;
 	ts->peer.cb_recv = telnet_recv;
@@ -162,7 +162,7 @@ int sendopt (tcpservice_t* s, u8_t option, u8_t value)
 	tmp[1] = option;
 	tmp[2] = value;
 	tmp[3] = 0;
-	return cb_write(&s->send_buffer, tmp, 4) == 4? 0: -1;
+	return cbuf_write(&s->send_buffer, tmp, 4) == 4? 0: -1;
 }
 
 static void telnet_recv (tcpservice_t* s, const char* q, size_t len)
