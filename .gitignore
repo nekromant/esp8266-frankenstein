@@ -11,3 +11,4 @@ include/config
 include/generated
 images/
 include/arch
+.config

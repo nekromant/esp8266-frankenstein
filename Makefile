@@ -38,3 +38,7 @@ ditch_that_icache_flash_attr:
 	for f in `find src/ -type f `; do \
 	sed -i 's/ICACHE_FLASH_ATTR//g' $$f;\
 	done
+
+defconfig:
+	@cp configs/config_default .config
+	@echo "Reverting to default config"

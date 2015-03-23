@@ -14,6 +14,7 @@ CONFIG_ARCH_ESP8266=y
 # CONFIG_ARCH_MIPS is not set
 # CONFIG_ARCH_MSP430 is not set
 # CONFIG_ARCH_NATIVE is not set
+# CONFIG_ARCH_NMC is not set
 # CONFIG_ARCH_PIC32 is not set
 CONFIG_ESP8266_FORCE_IROM=y
 CONFIG_ESP8266_LIBC_IROM=y
@@ -102,6 +103,11 @@ CONFIG_LIB_PANIC_NONE=y
 # CONFIG_LIB_URPC is not set
 
 #
+# 3rd-party libraries
+#
+# CONFIG_CONTRIB_LWIP is not set
+
+#
 # Data compression
 #
 CONFIG_LIB_HEATSHRINK=y
@@ -114,9 +120,9 @@ CONFIG_LIB_HEATSHRINK_STATIC_LOOKAHEAD_BITS=4
 # CONFIG_LIB_HEATSHRINK_USE_INDEX is not set
 
 #
-# 3rd-party libraries
+# Cryptography
 #
-# CONFIG_CONTRIB_LWIP is not set
+# CONFIG_LIB_CRYPTO_CRC16 is not set
 
 #
 # Project Settings
