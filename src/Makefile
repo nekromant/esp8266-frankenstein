@@ -5,8 +5,8 @@ objects-y+=hostname.o
 objects-y+=env.o
 #objects-y+=strbuf.o
 #objects-y+=tcpbuf.o
-objects-$(CONFIG_SERVICE_TCP)+=cb.o
-objects-$(CONFIG_SERVICE_TCP)+=cbtools.o
+objects-$(CONFIG_SERVICE_TCP)+=cbuf.o
+objects-$(CONFIG_SERVICE_TCP)+=cbuftools.o
 objects-$(CONFIG_SERVICE_TCP)+=tcpservice.o
 objects-$(CONFIG_SERVICE_TELNET)+=svc_telnet.o
 
