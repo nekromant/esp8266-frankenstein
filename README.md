@@ -35,7 +35,7 @@ technical stuff for you:
 * CTRL+C tries to interrupt the running command and unlocks the terminal
 
 
-#Getting to know frankenstein. The basics
+#Getting to know frankenstein. The basics:
 
 Now that we're clear with that, let's start the device and open up terminal.
 You'll see something like this: 
@@ -81,7 +81,7 @@ The workflow is simple. You type commands, frankenstein does things. Simple?
 
 You can store come configuration parameters in 'environment'. 
 Environment is just a key=value storage. Certain variables affect behavior of different commands.  
-You can list environment with `printenv`
+You can list environment with `printenv`.
 
 ```
 === Current environment ===
@@ -128,8 +128,8 @@ in environment variables.
 #Wireless modes
 
 Wireless modes can be switched using `iwmode` command.
-Modes are: `NONE`, `STA`, `AP`, `APSTA`
-Default mode is specified in default-mode environment variable
+Modes are: `NONE`, `STA`, `AP`, `APSTA`.
+Default mode is specified in `default-mode` environment variable.
 Use `iwmode` to switch manually:
 
 ```
@@ -160,12 +160,12 @@ frankenstein > iwconnect "ap name" 'my password'
 
 
 `iwconnect` starts connection process and waits for some seconds until it 
-either connects or an error rises. It will continue to try and reconnect in
+either connects or an error occurs. It will continue to try and reconnect in
 background. 
 
 #Checking connection info
 
-`ifconfig` prints the info about curently active interfaces. they are names `ap0` and `sta0`. 
+`ifconfig` prints the info about curently active interfaces. they are named `ap0` and `sta0`. 
 They do not correspond (yet!) to lwip iface names. 
  
 ```
@@ -183,7 +183,7 @@ sta0: WiFi Client Interface
 
 #Configuring an AP
 
-apconfig with no arguments shows current ap configuration.
+`apconfig` with no arguments shows current ap configuration.
 
 ```
 frankenstein > apconfig
@@ -197,13 +197,14 @@ SSID: myap AUTH WPA2_PSK BSSID: 1a:fe:34:98:dc:9e
 ```
 
 To enable DHCP server set 'dhcps-enable' to '1' and reboot. 
-To start AP on boot set 'default-mode' to 'AP' or 'APSTA'
+To start AP on boot set 'default-mode' to 'AP' or 'APSTA'.
 
 
 #Listening for data
 
-A very simple TCP test command. It will liste on a port and print out the line 
+A very simple TCP test command. It will listen on a port and print out the line 
 of text received. '\n' terminates connection. 
+
 BUG: As of 0.9.2 SDK it's impossible to terminate a running TCP listener. Say thanks
 to espressif! May be 0.9.3 will fix it.
 
@@ -289,7 +290,7 @@ AT         - says OK
 # Flashing the controller
 
 There is a convenience target wrapping `esptool.py`.
-Set the default tty and whether you have a pl2303 GPIO breakout for automatically resetting the board using `make menuconfig`
+Set the default tty, and whether you have a pl2303 GPIO breakout for automatically resetting the board using `make menuconfig`.
 
 ```
 make deploy-esptool
@@ -316,7 +317,7 @@ To update use the following:
 * Set up a tftp server on the host pc. e.g. tftpd-hpa.   
 * Set 'tftp-server' environment variable to the tftp server ip address. 
 * Set 'tftp-dir' and 'tftp-file' to point to your firmware file. 
-e.g. To get /tftpboot/antares.rom you'll need
+e.g. To get `/tftpboot/antares.rom` you'll need
 
 ```
 setenv tftp-dir /tftpboot/
@@ -324,10 +325,10 @@ setenv tftp-file antares.rom
 tftp
 ```
 
-Optionally, use `saveenv` before `tftp`
+Optionally, use `saveenv` before `tftp`.
 
 If everything goes well - you'll be running your new firmware in a few seconds.  
-tftp doesn't check what stuff you have in your image, so if 
+Note, `tftp` doesn't check what stuff you have in your image...
 
 # Known bugs
 
@@ -344,7 +345,7 @@ bug, I'm working on a fix.
 * Firmware is unstable and randomly reboots.
 
 Just after flashing run `wipeparams`. Stored settings from older SDK tend to confuse 
-Espressif's blobs and make them go nuts
+Espressif's blobs and make them go nuts.
 
 * gpio controls only gpio0 and gpio2
 
