@@ -12,7 +12,6 @@
 #include "microrl.h"
 #include "console.h"
 #include "env.h"
-
 #include "lwip/mem.h" // mem_realloc
 
 printf_f console_printf = SERIAL_PRINTF;

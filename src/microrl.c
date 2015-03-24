@@ -5,6 +5,7 @@ BUGS and TODO:
 -- rewrite history for use more than 256 byte buffer
 */
 
+#include <stdio.h>
 #include <string.h>
 #include <ctype.h>
 #include <stdlib.h>
@@ -31,7 +32,7 @@ void microrl_set_prompt(const char* prompt)
 		console_printf("error: prompt too long\n"); //inrease CONFIG_PROMPT_BUF
 		return;
 	}	
-	ets_sprintf(current_prompt, "\n%s > ", prompt);
+	sprintf(current_prompt, "\n%s > ", prompt);
 	current_prompt_len = strlen(prompt) + 3;
 }
 

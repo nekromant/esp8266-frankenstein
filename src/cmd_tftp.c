@@ -48,7 +48,7 @@ static  __attribute__ ((section(".iram0.text"))) void commit_handler(void* a)
 	uint32_t numsect = (u->numbytes >> (ffs(SPI_FLASH_SEC_SIZE) - 1));
 	numsect++;
 
-	console_printf("\nCommiting update, %ld sectors %ld bytes\n", numsect, u->numbytes);
+	console_printf("\nCommiting update, %d sectors %d bytes\n", numsect, u->numbytes);
 	
 	for (i=0; i < numsect; i++) { 
 		console_printf("#");

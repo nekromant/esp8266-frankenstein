@@ -129,7 +129,7 @@ static int  do_scan(int argc, const char* const* argv)
 				altered++;
 
 		if (altered) {
-			console_printf("Sector %ld (0x%lx) has been tampered by blobs\n",
+			console_printf("Sector %d (0x%x) has been tampered by blobs\n",
 				       off / 4096, off);
 		}
 		off += 4096;
