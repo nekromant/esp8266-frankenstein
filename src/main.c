@@ -12,6 +12,7 @@
 #include "driver/uart.h" 
 #include "microrl.h"
 #include "console.h"
+#include "flash_layout.h"
 #include <generic/macros.h>
 #include <lwip/netif.h>
 #include <lwip/app/dhcpserver.h>
@@ -81,6 +82,11 @@ void print_hello_banner(void)
 	console_printf("\nMemory Layout:\n");	
 	system_print_meminfo();
 	system_set_os_print(0);
+	console_printf("\n Flash layout:\n"
+		       "Firmware size is     %d KiB (0x%x)\n"
+		       "Filesystem starts at %d KiB (0x%x)\n",
+		       fr_get_firmware_size()/1024, fr_get_firmware_size(),
+		       fr_fs_flash_offset()/1024,   fr_fs_flash_offset());
 	console_printf("\nAvailable services:\n");
   int have_features = 0;
 #if defined(CONFIG_SERVICE_DHCPS) && CONFIG_SERVICE_DHCPS
@@ -166,10 +172,10 @@ void user_init()
 		telnet_start(-1); // use env or 23
 #endif
 	console_init(32);
-
+	
 	PIN_FUNC_SELECT(PERIPHS_IO_MUX_GPIO2_U, FUNC_GPIO2);
 	PIN_FUNC_SELECT(PERIPHS_IO_MUX_GPIO0_U, FUNC_GPIO0);
 	gpio_output_set(0, BIT2, BIT2, 0);
 	gpio_output_set(0, BIT0, BIT0, 0);
-
+	
 }

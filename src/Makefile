@@ -1,4 +1,4 @@
-objects-y+=main.o stdio.o helpers.o
+objects-y+=main.o stdio.o helpers.o flash_end_marker.o
 objects-y+=microrl.o
 objects-y+=console.o
 objects-y+=hostname.o
