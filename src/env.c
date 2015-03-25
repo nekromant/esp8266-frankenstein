@@ -169,7 +169,7 @@ void env_init(uint32_t flashaddr, uint32_t envsize)
 
 	spi_flash_read(flashaddr, (uint32*)current_env, envsize);
 	uint16_t crc = crc16((const unsigned char*)&current_env->occupied, envsize - sizeof(uint16_t));
-	if (crc != current_env->crc) { 
+	if ((current_env->occupied == 0) || (crc != current_env->crc)) { 
 		console_printf("env: Bad CRC (%x vs %x) using defaults\n", crc, current_env->crc);
 		env_reset();
 	}
