@@ -37,7 +37,10 @@ static  int do_chipinfo(int argc, const char* const* argv)
 uint32_t readvdd33(void);
 static  int do_vdd(int argc, const char* const* argv)
 {
-	console_printf("VDD3V3 = %d mV\n", readvdd33());
+	os_intr_lock();
+	uint32_t vdd = readvdd33();
+	os_intr_unlock();
+	console_printf("VDD3V3 = %d mV\n", vdd);
 	return 0;
 }
 
