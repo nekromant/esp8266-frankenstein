@@ -6,7 +6,6 @@ TMPDIR=tmp
 TOPDIR=.
 project_sources=src
 ANTARES_DIR:=./antares
-ANTARES_INSTALL_DIR:=$(abspath ./antares)
 
 CFLAGS+=-I$(abspath ./include/lwip-esp8266/)
 CFLAGS+=-D__ets__ \
