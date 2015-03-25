@@ -71,101 +71,91 @@ static int do_ds18b20(int argc, const char* const* argv)
 	}
 
 	ds_init( gpio );
-
 	dbg( "After init.\n" );
-	for(uint8 stage = 0; stage < 2; stage ++){
 
-		reset_search();
-		do{
-			r = ds_search( addr );
-			if( r )
+	reset();
+	write( DS1820_SKIP_ROM, 1 );
+	write( DS1820_CONVERT_T, 1 );
+
+	//750ms 1x, 375ms 0.5x, 188ms 0.25x, 94ms 0.12x
+	os_delay_us( 750*1000 ); 
+	wdt_feed();
+
+	reset_search();
+	do{
+		r = ds_search( addr );
+		if( r )
+		{
+			dbg( "Found Device @ %02x %02x %02x %02x %02x %02x %02x %02x\n", 
+					addr[0], addr[1], addr[2], addr[3], addr[4], addr[5], addr[6], addr[7] );
+			if( crc8( addr, 7 ) != addr[7] )
+				console_printf( "CRC mismatch, crc=%xd, addr[7]=%xd\n", crc8( addr, 7 ), addr[7] );
+
+			switch( addr[0] )
 			{
-				dbg( "Found Device @ %02x %02x %02x %02x %02x %02x %02x %02x\n", 
-						addr[0], addr[1], addr[2], addr[3], addr[4], addr[5], addr[6], addr[7] );
-				if( crc8( addr, 7 ) != addr[7] )
-					console_printf( "CRC mismatch, crc=%xd, addr[7]=%xd\n", crc8( addr, 7 ), addr[7] );
+				case DS18S20:
+					dbg( "Device is DS18S20 family.\n" );
+					break;
 
-				switch( addr[0] )
-				{
-					case DS18S20:
-						dbg( "Device is DS18S20 family.\n" );
-						break;
+				case DS18B20:
+					dbg( "Device is DS18B20 family.\n" );
+					break;
 
-					case DS18B20:
-						dbg( "Device is DS18B20 family.\n" );
-						break;
-
-					default:
-						console_printf( "Device is unknown family.\n" );
-						return 1;
-				}
-			}
-			else {
-				if(!getall){
-					console_printf( "No DS18x20 detected, sorry\n" );
+				default:
+					console_printf( "Device is unknown family.\n" );
 					return 1;
-				} else break;
 			}
-
-			if(stage == 0){
-				// perform the conversion
-				reset();
-				select( addr );
-				write( DS1820_CONVERT_T, 1 ); // perform temperature conversion
-			} else
-
-			if(stage == 1){
-				dbg( "Scratchpad: " );
-				reset();
-				select( addr );
-				write( DS1820_READ_SCRATCHPAD, 0 );
-				
-				for( i = 0; i < 9; i++ )
-				{
-					data[i] = read();
-					dbg( "%2x ", data[i] );
-				}
-				dbg( "\n" );
-
-				// float arithmetic isn't really necessary, tVal and tFract are in 1/10 °C
-				uint16_t tVal, tFract;
-				char tSign;
-				
-				tVal = (data[1] << 8) | data[0];
-				if (tVal & 0x8000) {
-					tVal = (tVal ^ 0xffff) + 1;				// 2's complement
-					tSign = '-';
-				} else
-					tSign = '+';
-				
-				// datasize differs between DS18S20 and DS18B20 - 9bit vs 12bit
-				if (addr[0] == DS18S20) {
-					tFract = (tVal & 0x01) ? 50 : 0;		// 1bit Fract for DS18S20
-					tVal >>= 1;
-				} else {
-					tFract = (tVal & 0x0f) * 100 / 16;		// 4bit Fract for DS18B20
-					tVal >>= 4;
-				}
-				
-				if(getall){
-					console_printf( "%02x%02x%02x%02x%02x%02x%02x%02x %c%d.%02d\n", 
-						addr[0], addr[1], addr[2], addr[3], addr[4], addr[5], addr[6], addr[7],
-						tSign, tVal, tFract);
-				}else{
-					console_printf( "Temperature: %c%d.%02d °C\n", 
-						tSign, tVal, tFract);
-					return r;
-				}
-			}
-
-		} while(getall);
-
-		if(stage == 0){
-			//750ms 1x, 375ms 0.5x, 188ms 0.25x, 94ms 0.12x
-			os_delay_us( 750*1000 ); 
-			wdt_feed();
 		}
-	}
+		else {
+			if(!getall){
+				console_printf( "No DS18x20 detected, sorry\n" );
+				return 1;
+			} else break;
+		}
+
+		dbg( "Scratchpad: " );
+		reset();
+		select( addr );
+		write( DS1820_READ_SCRATCHPAD, 0 );
+		
+		for( i = 0; i < 9; i++ )
+		{
+			data[i] = read();
+			dbg( "%2x ", data[i] );
+		}
+		dbg( "\n" );
+
+		// float arithmetic isn't really necessary, tVal and tFract are in 1/10 °C
+		uint16_t tVal, tFract;
+		char tSign;
+		
+		tVal = (data[1] << 8) | data[0];
+		if (tVal & 0x8000) {
+			tVal = (tVal ^ 0xffff) + 1;				// 2's complement
+			tSign = '-';
+		} else
+			tSign = '+';
+		
+		// datasize differs between DS18S20 and DS18B20 - 9bit vs 12bit
+		if (addr[0] == DS18S20) {
+			tFract = (tVal & 0x01) ? 50 : 0;		// 1bit Fract for DS18S20
+			tVal >>= 1;
+		} else {
+			tFract = (tVal & 0x0f) * 100 / 16;		// 4bit Fract for DS18B20
+			tVal >>= 4;
+		}
+		
+		if(getall){
+			console_printf( "%02x%02x%02x%02x%02x%02x%02x%02x %c%d.%02d\n", 
+				addr[0], addr[1], addr[2], addr[3], addr[4], addr[5], addr[6], addr[7],
+				tSign, tVal, tFract);
+		}else{
+			console_printf( "Temperature: %c%d.%02d °C\n", 
+				tSign, tVal, tFract);
+			return r;
+		}
+
+	} while(getall);
 
 	return r;
 }
