@@ -104,7 +104,7 @@ void print_hello_banner(void)
 void network_init()
 {
 	struct ip_info info;
-
+	wifi_set_opmode(id_from_wireless_mode(env_get("default-mode")));
 	wifi_get_ip_info(STATION_IF, &info);
 	const char *dhcp = env_get("sta-mode"); 
 	const char *ip, *mask, *gw;
@@ -163,7 +163,6 @@ void user_init()
 
 	env_init(CONFIG_ENV_OFFSET, CONFIG_ENV_LEN);
 	print_hello_banner();
-
 	network_init();
 
 #if defined(CONFIG_SERVICE_TELNET) && CONFIG_SERVICE_TELNET
