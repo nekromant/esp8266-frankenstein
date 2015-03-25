@@ -1,5 +1,3 @@
-#error DO NOT TRT USE THIS MODULE. IT WILL BROKE ESP.
-
 #include "c_types.h"
 #include "ets_sys.h"
 #include "osapi.h"

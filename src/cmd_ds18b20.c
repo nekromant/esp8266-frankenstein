@@ -87,11 +87,11 @@ static int do_ds18b20(int argc, const char* const* argv)
 
 				switch( addr[0] )
 				{
-					case 0x10:
+					case DS18S20:
 						dbg( "Device is DS18S20 family.\n" );
 						break;
 
-					case 0x28:
+					case DS18B20:
 						dbg( "Device is DS18B20 family.\n" );
 						break;
 
@@ -102,7 +102,7 @@ static int do_ds18b20(int argc, const char* const* argv)
 			}
 			else {
 				if(!getall){
-					console_printf( "No DS18B20 detected, sorry\n" );
+					console_printf( "No DS18x20 detected, sorry\n" );
 					return 1;
 				} else break;
 			}
@@ -127,30 +127,38 @@ static int do_ds18b20(int argc, const char* const* argv)
 				}
 				dbg( "\n" );
 
-				int HighByte, LowByte, TReading, SignBit, /*Tc_100,*/ Whole, Fract;
-				LowByte = data[0];
-				HighByte = data[1];
-				TReading = (HighByte << 8) + LowByte;
-				SignBit = TReading & 0x8000;  // test most sig bit
-				if (SignBit) // negative
-					TReading = (TReading ^ 0xffff) + 1; // 2's comp
+				// float arithmetic isn't really necessary, tVal and tFract are in 1/10 °C
+				uint16_t tVal, tFract;
+				char tSign;
 				
-				Whole = TReading >> 4;  // separate off the whole and fractional portions
-				Fract = (TReading & 0xf) * 100 / 16;
-
+				tVal = (data[1] << 8) | data[0];
+				if (tVal & 0x8000) {
+					tVal = (tVal ^ 0xffff) + 1;				// 2's complement
+					tSign = '-';
+				} else
+					tSign = '+';
+				
+				// datasize differs between DS18S20 and DS18B20 - 9bit vs 12bit
+				if (addr[0] == DS18S20) {
+					tFract = (tVal & 0x01) ? 50 : 0;		// 1bit Fract for DS18S20
+					tVal >>= 1;
+				} else {
+					tFract = (tVal & 0x0f) * 100 / 16;		// 4bit Fract for DS18B20
+					tVal >>= 4;
+				}
+				
 				if(getall){
-					console_printf( "%02x%02x%02x%02x%02x%02x%02x%02x %c%d.%d\n", 
+					console_printf( "%02x%02x%02x%02x%02x%02x%02x%02x %c%d.%02d\n", 
 						addr[0], addr[1], addr[2], addr[3], addr[4], addr[5], addr[6], addr[7],
-						SignBit ? '-' : '+', Whole, Fract < 10 ? 0 : Fract);
+						tSign, tVal, tFract);
 				}else{
-					console_printf( "Temperature: %c%d.%d Celsius\n", SignBit ? '-' : '+', 
-						Whole, Fract < 10 ? 0 : Fract);
-
+					console_printf( "Temperature: %c%d.%02d °C\n", 
+						tSign, tVal, tFract);
 					return r;
 				}
 			}
 
-		}while(getall);
+		} while(getall);
 
 		if(stage == 0){
 			//750ms 1x, 375ms 0.5x, 188ms 0.25x, 94ms 0.12x

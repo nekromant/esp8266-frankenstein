@@ -1,7 +1,7 @@
 menu Hacks
 
 config ESP8266_NEED_ESPCONN_INIT
-bool "You need to set this setting to true when using SDK >= 1.0.0 or there will be linker errors"
+bool "SDK >= 1.0 fix"
 default n
 
 endmenu
@@ -78,34 +78,33 @@ config CMD_ADC
 bool "System ADC support"
 
 menuconfig CMD_I2C
-bool "I2C support (experimental)"
+bool "I2C subsystem (experimental)"
 
 if CMD_I2C
 
 config CMD_I2C_BMP180
-bool "I2C bmp180 pressure sensor"
+bool "BMP180 pressure sensor"
 
 config CMD_I2C_SHT21
-bool "I2C sht21 humidity sensor"
+bool "SHT21 humidity sensor"
 
 config CMD_I2C_BH1750
-bool "I2C bh1750 light sensor"
+bool "BH1750 light sensor"
 
 config CMD_I2C_PCF8591
-bool "I2C pcf8591 8-bit ADC DAC"
+bool "PCF8591 8-bit ADC DAC"
 
 config CMD_I2C_INA219
-bool "I2C ina219 current sensor"
+bool "INA219 current sensor"
 
 config CMD_I2C_TCS3414CS
-bool "I2C tcs3414cs color sensor (Needs testing)"
+bool "TCS3414CS color sensor (EXPERIMENTAL)"
 
 config CMD_I2C_MLX90614
-bool "I2C mlx90614 temperature sensor (Needs testing)"
+bool "MLX90614 temperature sensor (EXPERIMENTAL)"
 
-#fatal bugs
-#config CMD_I2C_HMC5883L
-#bool "I2C hmc5883l 3-Axis Digital Compass (Needs testing)"
+config CMD_I2C_HMC5883L
+bool "HMC5883l 3-Axis Digital Compass (Needs testing)"
 
 endif
 
@@ -140,13 +139,15 @@ endif
 
 endmenu
 
+menu "Commandline fine-tuning"
 
 config MICRORL_USE_COMPLETE
-bool "Microrl use autocomplete by tab"
+bool "Command auto-completion"
 
 config MICRORL_USE_HISTORY
-bool "Microrl use history for commands"
+bool "Command history"
 
+endmenu
 
 menu "Environment Settings"
 
