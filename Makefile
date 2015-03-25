@@ -42,3 +42,8 @@ ditch_that_icache_flash_attr:
 defconfig:
 	@cp configs/config_default .config
 	@echo "Reverting to default config"
+
+update:
+	git fetch && git rebase -i
+	cd antares && git fetch && git rebase -i
+
