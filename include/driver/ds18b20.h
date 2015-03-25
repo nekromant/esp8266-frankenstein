@@ -13,4 +13,7 @@
 #define DS1820_ALARMSEARCH		0xEC
 #define DS1820_CONVERT_T		0x44
 
+// DS18x20 family codes
+#define DS18S20		0x10
+#define DS18B20 	0x28
 #endif
