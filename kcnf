@@ -45,6 +45,13 @@ config CMD_SEND
 bool "Send data over TCP"
 depends on SERVICE_TCP
 
+config CMD_NSLOOKUP
+bool "Network tool: nslookup"
+
+#seems broken because of undefined reference
+#config CMD_PING
+#bool "Network tool: ping"
+
 config CMD_TFTP
 bool "TFTP firmware update support"
 
