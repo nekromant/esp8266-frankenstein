@@ -117,7 +117,7 @@ static uint8_t*  add_offer_options(uint8_t *optptr)
 {
         struct ip_addr ipadd;
 
-        ipadd.addr = *( (uint32_t *) &server_address);
+        ipadd.addr = server_address.addr;
 
 #ifdef USE_CLASS_B_NET
         *optptr++ = DHCP_OPTION_SUBNET_MASK;
@@ -226,7 +226,7 @@ static void  create_msg(struct dhcps_msg *m)
 {
         struct ip_addr client;
 
-        client.addr = *( (uint32_t *) &client_address);
+        client.addr = client_address.addr;
 
         m->op = DHCP_REPLY;
         m->htype = DHCP_HTYPE_ETHERNET;
@@ -468,7 +468,7 @@ static uint8_t  parse_options(uint8_t *optptr, sint16_t len)
         struct ip_addr client;
     	bool is_dhcp_parse_end = false;
 
-        client.addr = *( (uint32_t *) &client_address);// Ҫ�����DHCP�ͻ��˵�IP
+        client.addr = client_address.addr;
 
         u8_t *end = optptr + len;
         u16_t type = 0;
