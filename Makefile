@@ -16,7 +16,7 @@ CFLAGS+=-D__ets__ \
 	-DEBUF_LWIP
 
 
-ifeq ($(ANTARES_INSTALL_DIR2),)
+ifeq ($(ANTARES_INSTALL_DIR),)
 antares:
 	git clone $(GITURL) $(ANTARES_DIR) -b$(BRANCH)
 	@echo "I have fetched the antares sources for you to $(ANTARES_DIR)"
