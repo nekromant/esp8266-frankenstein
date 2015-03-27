@@ -9,6 +9,7 @@ objects-$(CONFIG_SERVICE_TCP)+=cbuf.o
 objects-$(CONFIG_SERVICE_TCP)+=cbuftools.o
 objects-$(CONFIG_SERVICE_TCP)+=tcpservice.o
 objects-$(CONFIG_SERVICE_TELNET)+=svc_telnet.o
+objects-$(CONFIG_SERVICE_ECHO)+=svc_echo.o
 
 objects-y+=cmd_common.o cmd_env.o uart.o
 objects-y+=pin_map.o

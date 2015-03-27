@@ -32,7 +32,7 @@ static size_t cbuf_write_available_chunk (cbuf_t* cb)
 		cb->read - cb->write;
 }
 
-cbsize_t cbuf_write (cbuf_t* cb, const char* data, cbsize_t desired_len)
+cbsize_t cbuf_write (cbuf_t* cb, const void* data, cbsize_t desired_len)
 {
 	cbsize_t want = desired_len;
 	cbsize_t ret = 0;
@@ -40,7 +40,7 @@ cbsize_t cbuf_write (cbuf_t* cb, const char* data, cbsize_t desired_len)
 	{
 		cbsize_t writable_len = cbuf_write_available_chunk(cb);
 		cbsize_t chunk = (want > writable_len)? writable_len: want;
-		memcpy(cb->buf + cb->write, data + ret, chunk);
+		memcpy(cb->buf + cb->write, ((const char*)data) + ret, chunk);
 		ret += chunk;
 		want -= chunk;
 		cb->write = (cb->write + chunk) & (cb->size - 1);
@@ -78,7 +78,8 @@ cbsize_t cbuf_read (cbuf_t* cb, char* data, cbsize_t desired_len)
 				cb->size - cb->read:
 				cb->write - cb->read;
 		cbsize_t chunk = (want > readable_len)? readable_len: want;
-		memcpy(data + ret, cb->buf + cb->read, chunk);
+		if (data)
+			memcpy(data + ret, cb->buf + cb->read, chunk);
 		ret += chunk;
 		want -= chunk;
 		cb->read = (cb->read + chunk) & (cb->size - 1);

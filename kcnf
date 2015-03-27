@@ -18,6 +18,10 @@ config SERVICE_TELNET
 bool "Telnet Service"
 depends on SERVICE_TCP
 
+config SERVICE_ECHO
+bool "Echo Service"
+depends on SERVICE_TCP
+
 endmenu
 
 menu "Modules to build"

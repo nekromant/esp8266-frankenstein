@@ -7,23 +7,38 @@
 
 typedef struct tcpservice_s tcpservice_t;
 
+#define STOREPBUF 1
+
+#if STOREPBUF
+#define SPB(x...) x
+#else
+#define SPB(x...)
+#endif
+
 struct tcpservice_s
 {
 	const char* name;
 	struct tcp_pcb* tcp;
 	bool is_closing;
 
-	// circular buffer
-	char* sendbuf;
-	cbuf_t send_buffer;
-
+	// circular buffers
+	char* sendbuf;		// user data (pointed to by send_buffer)
+	cbuf_t send_buffer;	// user circular buffer
+#if STOREPBUF
+	struct
+	{
+		char* pbuf;
+		cbuf_t pbufs;
+		size_t swallowed; // in current buffer
+	} recvwait;
+#endif
 	// listener callbacks
 	tcpservice_t* (*cb_get_new_peer) (tcpservice_t* s);
 
 	// peer callbacks
 	void (*cb_established) (tcpservice_t* s);
 	void (*cb_closing) (tcpservice_t* s);
-	void (*cb_recv) (tcpservice_t* s, const char* data, size_t len);
+	size_t (*cb_recv) (tcpservice_t* s, const char* data, size_t len);
 	void (*cb_poll) (tcpservice_t* s);
 	void (*cb_ack) (tcpservice_t* s);
 	void (*cb_cleanup) (tcpservice_t* s);
@@ -36,6 +51,11 @@ struct tcpservice_s
 	.is_closing = false,			\
 	.sendbuf = NULL,			\
 	.send_buffer = CBUF_INIT(NULL, 0),	\
+SPB(						\
+	.recvwait.pbuf = NULL,			\
+	.recvwait.pbufs = CBUF_INIT(NULL, 0),	\
+	.recvwait.swallowed = 0,		\
+)						\
 	.cb_get_new_peer = (cb_new_peer),	\
 	.cb_established = NULL,			\
 	.cb_closing = NULL,			\

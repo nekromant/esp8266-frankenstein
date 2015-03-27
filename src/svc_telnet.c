@@ -50,7 +50,7 @@ typedef struct telnet_service_s
 static tcpservice_t* telnet_new_peer (tcpservice_t* s);
 static void telnet_established (tcpservice_t* s);
 static void telnet_closing (tcpservice_t* s);
-static void telnet_recv (tcpservice_t* s, const char* data, size_t len);
+static size_t telnet_recv (tcpservice_t* s, const char* data, size_t len);
 static void telnet_poll (tcpservice_t* s);
 static void telnet_cleanup (tcpservice_t* s);
 
@@ -101,7 +101,7 @@ static tcpservice_t* telnet_new_peer (tcpservice_t* s)
 		return NULL;
 	}
 	
-	ts->peer.name = "telnet";
+	ts->peer.name = NULL;
 	cbuf_init(&ts->peer.send_buffer, ts->peer.sendbuf, TELNET_SEND_BUFFER_SIZE_LOG2_DEFAULT);
 	ts->peer.cb_get_new_peer = NULL;
 	ts->peer.cb_established = telnet_established;
@@ -165,9 +165,10 @@ int sendopt (tcpservice_t* s, u8_t option, u8_t value)
 	return cbuf_write(&s->send_buffer, tmp, 4) == 4? 0: -1;
 }
 
-static void telnet_recv (tcpservice_t* s, const char* q, size_t len)
+static size_t telnet_recv (tcpservice_t* s, const char* q, size_t len)
 {
 	telnet_service_t* ts = TS(s);
+	size_t ret = len;
 	
 	CURRENT(ts);
 	
@@ -232,6 +233,8 @@ static void telnet_recv (tcpservice_t* s, const char* q, size_t len)
 			break;
 		}
 	}
+	
+	return ret;
 }
 
 int telnet_start (int port)
