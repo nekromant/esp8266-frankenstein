@@ -52,7 +52,6 @@ static void telnet_established (tcpservice_t* s);
 static void telnet_closing (tcpservice_t* s);
 static size_t telnet_recv (tcpservice_t* s, const char* data, size_t len);
 static void telnet_poll (tcpservice_t* s);
-static void telnet_cleanup (tcpservice_t* s);
 
 ///////////////////////////////////////////////////////////
 // static data (small ram footprint)
@@ -109,7 +108,7 @@ static tcpservice_t* telnet_new_peer (tcpservice_t* s)
 	ts->peer.cb_recv = telnet_recv;
 	ts->peer.cb_poll = telnet_poll;
 	ts->peer.cb_ack = NULL;
-	ts->peer.cb_cleanup = telnet_cleanup;
+	ts->peer.cb_cleanup = NULL; // sendbuf and peer will be free-ed() by tcpservice
 
 	ts->state.state = STATE_NORMAL;
 	ts->state.idle = 0;
@@ -134,14 +133,6 @@ static void telnet_established (tcpservice_t* s)
 static void telnet_closing (tcpservice_t* s)
 {
 	CURRENT(NULL);
-}
-
-static void telnet_cleanup (tcpservice_t* s)
-{
-	telnet_service_t* ts = TS(s);
-	if (ts->peer.sendbuf)
-		os_free(ts->peer.sendbuf);
-	os_free(ts);
 }
 
 static void telnet_poll (tcpservice_t* s)

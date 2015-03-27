@@ -7,7 +7,7 @@
 
 typedef struct tcpservice_s tcpservice_t;
 
-#define STOREPBUF 1
+#define STOREPBUF 0
 
 #if STOREPBUF
 #define SPB(x...) x

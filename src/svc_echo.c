@@ -9,7 +9,6 @@
 
 static tcpservice_t* echo_new_peer (tcpservice_t* s);
 static size_t echo_recv (tcpservice_t* s, const char* data, size_t len);
-static void echo_cleanup (tcpservice_t* s);
 
 ///////////////////////////////////////////////////////////
 // static data (small ram footprint)
@@ -41,16 +40,9 @@ static tcpservice_t* echo_new_peer (tcpservice_t* s)
 	peer->cb_recv = echo_recv;
 	peer->cb_poll = NULL;
 	peer->cb_ack = NULL;
-	peer->cb_cleanup = echo_cleanup;
+	peer->cb_cleanup = NULL; // sendbuf and peer will be free-ed() by tcpservice
 
 	return peer;
-}
-
-static void echo_cleanup (tcpservice_t* s)
-{
-	if (s->sendbuf)
-		os_free(s->sendbuf);
-	os_free(s);
 }
 
 static size_t echo_recv (tcpservice_t* s, const char* data, size_t len)

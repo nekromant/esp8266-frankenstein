@@ -146,7 +146,10 @@ if (pbuf->len != pbuf->tot_len) SERIAL_PRINTF("CHAIN2\n");
 			if (acked != pbuf->len)
 				SERIAL_PRINTF("OOOPS\n");
 			all += pbuf->len;
+			
+			typeof(pbuf) delme = pbuf;
 			pbuf = pbuf->next;
+			pbuf_free(delme);
 		}
 		tcp_recved(peer->tcp, all);
 #endif
@@ -166,9 +169,14 @@ static bool tcp_service_check_shutdown (tcpservice_t* s)
 	if (s->is_closing && cbuf_is_empty(&s->send_buffer))
 	{
 		tcp_close(s->tcp);
+SERIAL_PRINTF("tcpservice:%d pcb:%d\n", sizeof(tcpservice_t), sizeof(*(s->tcp)));
+		//no! os_free(s->tcp);
 		s->tcp = NULL;
 		if (s->cb_cleanup)
 			s->cb_cleanup(s);
+		if (s->sendbuf)
+			os_free(s->sendbuf);
+		os_free(s);
 		return true;
 	}
 	return false;
@@ -187,7 +195,7 @@ static err_t tcp_service_ack (void *svc, struct tcp_pcb *pcb, u16_t len)
 
 #if 1
 	// feed user with awaiting pbufs 
-	tcp_service_give_back(peer, NULL);
+	SPB(tcp_service_give_back(peer, NULL);)
 
 	return tcp_service_check_shutdown(peer)?
 		ERR_OK:
@@ -208,7 +216,7 @@ static err_t tcp_service_poll (void* svc, struct tcp_pcb* pcb)
 
 #if 0 // not here
 	// feed user with awaiting pbufs 
-	tcp_service_give_back(service, NULL);
+	SPB(tcp_service_give_back(service, NULL);)
 
 	// trigger send buffer if needed
 	cbuf_tcp_send(service);
@@ -235,13 +243,13 @@ static err_t tcp_service_incoming_peer (void* svc, struct tcp_pcb * peer_pcb, er
 	tcpservice_t* peer = listener->cb_get_new_peer(listener);
 	if (!peer)
 	{
-		os_free(awaitpbuf);
+		SPB(os_free(awaitpbuf);)
 		return ERR_MEM; //XXX handle this better
 	}
 
 	peer->tcp = peer_pcb;
 	peer->is_closing = 0;
-
+	
 #if STOREPBUF
 	peer->recvwait.pbuf = awaitpbuf;
 	peer->recvwait.swallowed = 0;
