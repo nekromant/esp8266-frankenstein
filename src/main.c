@@ -46,13 +46,13 @@ struct envpair defaultenv[] = {
 	{ "sta-ip",            CONFIG_ENV_DEFAULT_STATION_IP },
 	{ "sta-mask",          CONFIG_ENV_DEFAULT_STATION_MASK },
 	{ "sta-gw",            CONFIG_ENV_DEFAULT_STATION_GW },
-  { "sta-auto",
+	{ "sta-auto",
 #if defined(CONFIG_ENV_DEFAULT_STATION_AUTO_CONNECT) && CONFIG_ENV_DEFAULT_STATION_AUTO_CONNECT
-                         "1" },
-  { "sta-auto-ssid",     CONFIG_ENV_DEFAULT_STATION_AUTO_SSID },
-  { "sta-auto-password", CONFIG_ENV_DEFAULT_STATION_AUTO_PASSWORD },
+	                       "1" },
+	{ "sta-auto-ssid",     CONFIG_ENV_DEFAULT_STATION_AUTO_SSID },
+	{ "sta-auto-password", CONFIG_ENV_DEFAULT_STATION_AUTO_PASSWORD },
 #else
-                         "0" },
+	                       "0" },
 #endif
 
 
