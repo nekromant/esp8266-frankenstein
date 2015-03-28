@@ -169,7 +169,6 @@ const char* fr_request_hostname(void) {
 /* By experimentation we discovered that certain things cant be done from inside user_init... */
 static void main_init_done(void)
 {
-#if defined(CONFIG_ENV_DEFAULT_STATION_AUTO_CONNECT) && CONFIG_ENV_DEFAULT_STATION_AUTO_CONNECT
 	if (wifi_get_opmode() == STATION_MODE) {
     const char *sta_auto = env_get("sta-auto");
     if (sta_auto && atoi(sta_auto)) {
@@ -181,7 +180,6 @@ static void main_init_done(void)
       }
     }
   }
-#endif
 }
 
 void user_init()
