@@ -211,5 +211,9 @@ default "192.168.1.1"
 
 endmenu
 
+config ENABLE_BANNER
+bool "Enable the banner message at boot"
+default y
+
 
 endmenu

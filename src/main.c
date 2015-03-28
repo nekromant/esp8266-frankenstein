@@ -73,6 +73,7 @@ void request_default_environment(void)
 		env_insert(defaultenv[i].key, defaultenv[i].value);
 }
 
+#if defined(CONFIG_ENABLE_BANNER) && CONFIG_ENABLE_BANNER
 void print_hello_banner(void)
 {
 	console_printf("\n\n\nFrankenstein ESP8266 Firmware\n");
@@ -96,10 +97,8 @@ void print_hello_banner(void)
 	console_printf("Telnet server\n"); have_features ++;
 #endif
   if (have_features == 0) { console_printf("None.\n"); }
-
-
 }
-
+#endif
 
 void network_init()
 {
@@ -162,7 +161,9 @@ void user_init()
 	uart_init_io();
 
 	env_init(CONFIG_ENV_OFFSET, CONFIG_ENV_LEN);
+#if defined(CONFIG_ENABLE_BANNER) && CONFIG_ENABLE_BANNER
 	print_hello_banner();
+#endif
 	network_init();
 
 #if defined(CONFIG_SERVICE_TELNET) && CONFIG_SERVICE_TELNET
