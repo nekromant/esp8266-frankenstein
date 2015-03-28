@@ -12,6 +12,7 @@ objects-$(CONFIG_SERVICE_TELNET)+=svc_telnet.o
 
 objects-y+=cmd_common.o cmd_env.o uart.o
 objects-y+=pin_map.o
+objects-y+=iwconnect.o
 
 objects-$(CONFIG_CMD_IW)+=cmd_iw.o
 objects-$(CONFIG_CMD_UART)+=cmd_uart.o

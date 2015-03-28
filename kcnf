@@ -199,6 +199,20 @@ config ENV_DEFAULT_STATION_GW
 string "Station mode IP gateway address at boot"
 default "192.168.0.1"
 
+if WIFI_MODE_STATION
+config ENV_DEFAULT_STATION_AUTO_CONNECT
+bool "Station mode: automatically attempt to connect on boot"
+
+if ENV_DEFAULT_STATION_AUTO_CONNECT
+config ENV_DEFAULT_STATION_AUTO_SSID
+string "SSID to automatically attempt connection"
+
+config ENV_DEFAULT_STATION_AUTO_PASSWORD
+string "Password to attempt connection"
+endif
+
+endif
+
 config ENV_DEFAULT_AP_IP
 string "AP mode IP address at boot"
 default "192.168.1.1"
