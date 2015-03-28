@@ -5,9 +5,10 @@
 
 #include "cbuftools.h"
 
+typedef struct pbuf pbuf_t;
 typedef struct tcpservice_s tcpservice_t;
 
-#define STOREPBUF 0
+#define STOREPBUF 1
 
 #if STOREPBUF
 #define SPB(x...) x
@@ -25,12 +26,8 @@ struct tcpservice_s
 	char* sendbuf;		// user data (pointed to by send_buffer)
 	cbuf_t send_buffer;	// user circular buffer
 #if STOREPBUF
-	struct
-	{
-		char* pbuf;
-		cbuf_t pbufs;
-		size_t swallowed; // in current buffer
-	} recvwait;
+	pbuf_t* pbuf;		// next pbuf to process
+	size_t pbuf_taken;	// already taken from it
 #endif
 	// listener callbacks
 	tcpservice_t* (*cb_get_new_peer) (tcpservice_t* s);
@@ -40,7 +37,6 @@ struct tcpservice_s
 	void (*cb_closing) (tcpservice_t* s);
 	size_t (*cb_recv) (tcpservice_t* s, const char* data, size_t len);
 	void (*cb_poll) (tcpservice_t* s);
-	void (*cb_ack) (tcpservice_t* s);
 	void (*cb_cleanup) (tcpservice_t* s);
 };
 
@@ -52,16 +48,14 @@ struct tcpservice_s
 	.sendbuf = NULL,			\
 	.send_buffer = CBUF_INIT(NULL, 0),	\
 SPB(						\
-	.recvwait.pbuf = NULL,			\
-	.recvwait.pbufs = CBUF_INIT(NULL, 0),	\
-	.recvwait.swallowed = 0,		\
+	.pbuf = NULL,				\
+	.pbuf_taken = 0, 			\
 )						\
 	.cb_get_new_peer = (cb_new_peer),	\
 	.cb_established = NULL,			\
 	.cb_closing = NULL,			\
 	.cb_recv = NULL,			\
 	.cb_poll = NULL,			\
-	.cb_ack = NULL,				\
 	.cb_cleanup = NULL,			\
 }
 

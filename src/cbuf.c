@@ -78,8 +78,7 @@ cbsize_t cbuf_read (cbuf_t* cb, char* data, cbsize_t desired_len)
 				cb->size - cb->read:
 				cb->write - cb->read;
 		cbsize_t chunk = (want > readable_len)? readable_len: want;
-		if (data)
-			memcpy(data + ret, cb->buf + cb->read, chunk);
+		memcpy(data + ret, cb->buf + cb->read, chunk);
 		ret += chunk;
 		want -= chunk;
 		cb->read = (cb->read + chunk) & (cb->size - 1);

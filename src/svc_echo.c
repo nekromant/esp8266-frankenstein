@@ -32,14 +32,13 @@ static tcpservice_t* echo_new_peer (tcpservice_t* s)
 		return NULL;
 	}
 	
-	peer->name = "echo";
+	peer->name = NULL;
 	cbuf_init(&peer->send_buffer, peer->sendbuf, ECHO_SEND_BUFFER_SIZE_LOG2_DEFAULT);
 	peer->cb_get_new_peer = NULL;
 	peer->cb_established = NULL;
 	peer->cb_closing = NULL;
 	peer->cb_recv = echo_recv;
 	peer->cb_poll = NULL;
-	peer->cb_ack = NULL;
 	peer->cb_cleanup = NULL; // sendbuf and peer will be free-ed() by tcpservice
 
 	return peer;

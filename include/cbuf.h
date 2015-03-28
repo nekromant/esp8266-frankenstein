@@ -45,11 +45,6 @@ typedef struct cbuf_s
 #define cbuf_is_full(cb)  		(((cb)->read == (cb)->write) && !(cb)->empty)
 #define cbuf_flush(cb)			do { (cb)->read = (cb)->unread = (cb)->write = 0; (cb)->allread = (cb)->empty = 1; } while (0)
 
-//
-#define cbuf_peek(cb)			((cb)->buf + (cb)->read)
-#define cbuf_forget(cb,s)		cbuf_read(cb, NULL, s)
-//
-
 // return available space for write
 size_t cbuf_write_available (cbuf_t* cb);
 

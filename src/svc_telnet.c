@@ -107,7 +107,6 @@ static tcpservice_t* telnet_new_peer (tcpservice_t* s)
 	ts->peer.cb_closing = telnet_closing;
 	ts->peer.cb_recv = telnet_recv;
 	ts->peer.cb_poll = telnet_poll;
-	ts->peer.cb_ack = NULL;
 	ts->peer.cb_cleanup = NULL; // sendbuf and peer will be free-ed() by tcpservice
 
 	ts->state.state = STATE_NORMAL;
@@ -158,6 +157,8 @@ int sendopt (tcpservice_t* s, u8_t option, u8_t value)
 
 static size_t telnet_recv (tcpservice_t* s, const char* q, size_t len)
 {
+SERIAL_PRINTF("user:%d\n", len);
+
 	telnet_service_t* ts = TS(s);
 	size_t ret = len;
 	

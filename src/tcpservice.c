@@ -8,6 +8,8 @@
 #include "tcpservice.h"
 #include "cbuf.h"
 
+#define D(x...) SERIAL_PRINTF(x)
+
 //XXX a configuration value for this?
 #define TCPVERBERR 2 // 0:silent 1:fatal-only 2:all
 
@@ -15,111 +17,115 @@ static void tcp_service_error (void* svc, err_t err)
 {
 #if TCPVERBERR
 	// verbose
-	tcpservice_t* peer = (tcpservice_t*)svc;
+
 	static const char* lwip_err_msg [] =
 		{
 			"OK", "MEM", "BUF", "TIMEOUT", "ROUTE", "INPROGRESS", "INVAL",
-#if TCPVERBERR > 1
+		#if TCPVERBERR > 1
 			"WBLOCK", "ABORT", "RESET", "CLOSED", "INARG", "INUSE", "IFERR", "ISCONN"
-#endif // TCPVERBERR > 1
+		#endif // TCPVERBERR > 1
 		};
+	tcpservice_t* peer = (tcpservice_t*)svc;
+
 	LOGSERIAL(ERR_IS_FATAL(err)? LOG_ERR: LOG_WARN, "TCP(%s): %serror %d (%s)",
 		peer->name,
 		ERR_IS_FATAL(err)? "fatal ": "",
 		(int)err,
 		err < 0 && -err < sizeof(lwip_err_msg) / sizeof(lwip_err_msg[0])? lwip_err_msg[-err]: "?");
 #endif // TCPVERBERR > 0
+
 	if (ERR_IS_FATAL(err))
 		tcp_service_close(peer);
 }
 
-// tcp_send() is static:
-// tcp_write() cannot be called by user's callbacks (it hangs lwip)
+// tcp_send() is static: tcp_write() cannot be called by user's callbacks (it hangs lwip)
 // trigger write-from-circular-buffer
 static err_t cbuf_tcp_send (tcpservice_t* tcp)
 {
 	err_t err = ERR_OK;
+	size_t sndbuf, sendsize;
 	char* data;
 	
-	size_t sendsize = cbuf_read_ptr(&tcp->send_buffer, &data, tcp_sndbuf(tcp->tcp) /* = sendmax */);
-	if (   sendsize
-	    && (   (err = tcp_write(tcp->tcp, data, sendsize, /*tcpflags=0=PUSH,NOCOPY*/0)) != ERR_OK
-	        || (err = tcp_output(tcp->tcp)) != ERR_OK))
+	while ((sndbuf = tcp_sndbuf(tcp->tcp)) > 0)
 	{
-		tcp_service_error(tcp, err);
+D("sndbuf=%d\n", sndbuf);
+		if ((sendsize = cbuf_read_ptr(&tcp->send_buffer, &data, sndbuf)) == 0)
+			break;
+		if ((err = tcp_write(tcp->tcp, data, sendsize, /*tcpflags=0=PUSH,NOCOPY*/0)) != ERR_OK)
+		{
+D("x1\n");
+			tcp_service_error(tcp, err);
+			break;
+		}
+D("sent: %d\n", sendsize);
 	}
 
+        if ((err = tcp_output(tcp->tcp)) != ERR_OK)
+{D("x2\n");
+		tcp_service_error(tcp, err);
+}
+D("x22=%d\n",err);
 	return err;
 }
 
 #if STOREPBUF
-#define D(x...) SERIAL_PRINTF(x)
 
-static void tcp_service_give_back (tcpservice_t* peer, struct pbuf *pbuf)
+static void tcp_service_give_back (tcpservice_t* peer, pbuf_t* pbuf)
 {
-	while (!cbuf_is_empty(&peer->recvwait.pbufs))
-	{
-		// try first to give already-received data back to user
-		typeof(pbuf) wpbuf = *((typeof(pbuf)*)cbuf_peek(&peer->recvwait.pbufs));
-D("peek %d / %d\n", peer->recvwait.swallowed, wpbuf->len);
-		size_t user_acked = peer->cb_recv(peer, ((char*)wpbuf->payload) + peer->recvwait.swallowed, wpbuf->len - peer->recvwait.swallowed);
-D("uack %d, remain %d\n", user_acked, wpbuf->len - peer->recvwait.swallowed - user_acked);
-	//	if (user_acked)
-	//		tcp_recved(peer->tcp, user_acked);
-if (peer->recvwait.swallowed + user_acked > wpbuf->len) SERIAL_PRINTF("KRAK\n");
-		if ((peer->recvwait.swallowed += user_acked) == wpbuf->len)
-		{
-D("apbfree\n");
-			// this pbuf is now empty, we must free it
-			pbuf_free(wpbuf);
-	tcp_recved(peer->tcp, wpbuf->len);
-			// reset swallowed
-			peer->recvwait.swallowed = 0;
-			// remove this pbuf pointer from circular buffer
-			if (cbuf_forget(&peer->recvwait.pbufs, sizeof(pbuf)) != sizeof(pbuf))
-				SERIAL_PRINTF("forget internal error forget\n"); //XXX remove this test
-		}
-		else
-			// user is stuffed
-			break;
-	}
-	
+
+pbuf_t* pb = pbuf;
+while (pb)
+{
+	D("recv %d -", pb->len);
+	pb = pb->next;
+}
+D("\n");
+
+
 	if (pbuf)
 	{
-		// a new pbuf has come
-		size_t swallowed = 0;
-		
-		if (cbuf_is_empty(&peer->recvwait.pbufs))
+D("x3\n");
+		if (peer->pbuf)
 		{
-			// try to give pbuf to user
-			swallowed = peer->cb_recv(peer, pbuf->payload, pbuf->len);
-//D("npback %d <= %d\n", swallowed, pbuf->len);
-		//	if (swallowed)
-		//		tcp_recved(peer->tcp, swallowed);
-if (swallowed > pbuf->len) SERIAL_PRINTF("KRAK2\n");
-			if (swallowed == pbuf->len)
-			{
-//D("npbfree\n");
-				// user was big eater
-				pbuf_free(pbuf);
-		tcp_recved(peer->tcp, pbuf->len);
-				pbuf = NULL;
-				swallowed = 0;
-			}
+D("x4\n");
+			// a new pbuf comes, we already have pbufs to process
+			// store the new pbuf at the end of the current chain
+			pbuf_t* it = peer->pbuf;
+			while (it->next)
+				it = it->next;
+			it->next = pbuf;
 		}
-		
-		if (pbuf)
-		{
-			// user is really stuffed, store pbuf
-			if (cbuf_write(&peer->recvwait.pbufs, &pbuf, sizeof(pbuf)) != sizeof(pbuf))
-				SERIAL_PRINTF("ALERT awaiting pbuf buffer too small (PBUF_WAIT_SIZE_LOG2)!\n");
-			else if (swallowed)
-				// !!swallowed means cbuf was empty and this pbuf is partially swallowed
-				peer->recvwait.swallowed = swallowed;
-D("stored pbuf, swallowed %d\n", swallowed);
-		}
+		else
+			peer->pbuf = pbuf;
 	}
-//D("out\n");
+
+	size_t swallowed = 0;	
+	while (peer->pbuf)
+	{
+D("x5\n");
+		// give data to user
+		size_t acked_by_user = peer->cb_recv
+			(
+				peer,
+				((char*)peer->pbuf->payload) + peer->pbuf_taken,
+				peer->pbuf->len - peer->pbuf_taken
+			);
+D("f a=%d g=%d\n", acked_by_user, peer->pbuf->len - peer->pbuf_taken);
+		if ((peer->pbuf_taken += acked_by_user) == peer->pbuf->len)
+		{
+D("x51\n");
+			// pbuf fully sallowed, skip/delete
+			pbuf_t* deleteme = peer->pbuf;
+			peer->pbuf_taken = 0;
+			peer->pbuf = peer->pbuf->next;
+			pbuf_free(deleteme);
+		}
+		swallowed += acked_by_user;
+	}
+	// report to lwip how much data have been acknowledged
+D("sw %d\n", swallowed);
+	if (swallowed)
+		tcp_recved(peer->tcp, swallowed);
 }
 #endif // STOREPBUF
 
@@ -133,11 +139,7 @@ if (pbuf->next) SERIAL_PRINTF("CHAIN\n");
 if (pbuf->len != pbuf->tot_len) SERIAL_PRINTF("CHAIN2\n");
 		// feed user with awaiting pbufs, and this pbuf
 #if STOREPBUF
-		while (pbuf)
-		{
-			tcp_service_give_back(peer, pbuf);
-			pbuf = pbuf->next;
-		}
+		tcp_service_give_back(peer, pbuf);
 #else		
 		size_t all = 0;
 		while (pbuf)
@@ -157,6 +159,7 @@ if (pbuf->len != pbuf->tot_len) SERIAL_PRINTF("CHAIN2\n");
 	}
 	else
 	{
+D("x10\n");
 		if (pbuf)
 			pbuf_free(pbuf);
 		tcp_service_close(peer);
@@ -169,14 +172,15 @@ static bool tcp_service_check_shutdown (tcpservice_t* s)
 	if (s->is_closing && cbuf_is_empty(&s->send_buffer))
 	{
 		tcp_close(s->tcp);
-SERIAL_PRINTF("tcpservice:%d pcb:%d\n", sizeof(tcpservice_t), sizeof(*(s->tcp)));
-		//no! os_free(s->tcp);
-		s->tcp = NULL;
+		s->tcp = NULL; // lwip will free this
 		if (s->cb_cleanup)
 			s->cb_cleanup(s);
 		if (s->sendbuf)
 			os_free(s->sendbuf);
 		os_free(s);
+#if STOREPBUF
+		//XXX recursively pbuf_free s->pbuf
+#endif
 		return true;
 	}
 	return false;
@@ -185,13 +189,9 @@ SERIAL_PRINTF("tcpservice:%d pcb:%d\n", sizeof(tcpservice_t), sizeof(*(s->tcp)))
 static err_t tcp_service_ack (void *svc, struct tcp_pcb *pcb, u16_t len)
 {
 	tcpservice_t* peer = (tcpservice_t*)svc;
-
+D("acked:%d\n", len);
 	if (len)
-	{
 		cbuf_ack(&peer->send_buffer, len);
-		if (peer->cb_ack)
-			peer->cb_ack(peer);
-	}
 
 #if 1
 	// feed user with awaiting pbufs 
@@ -231,29 +231,18 @@ static err_t tcp_service_incoming_peer (void* svc, struct tcp_pcb * peer_pcb, er
 	tcpservice_t* listener = (tcpservice_t*)svc;
 	tcp_accepted(listener->tcp);
 
-#if STOREPBUF
-#define PBUF_WAIT_SIZE_LOG2	8	// 8: 256 bytes
-#define PBUF_WAIT_NUM	((1 << (PBUF_WAIT_SIZE_LOG2)) / sizeof(pbuf*))
-
-	char* awaitpbuf = (char*)os_malloc(1 << PBUF_WAIT_SIZE_LOG2);
-	if (!awaitpbuf)
-		return ERR_MEM;
-#endif // STOREPBUF
-
 	tcpservice_t* peer = listener->cb_get_new_peer(listener);
 	if (!peer)
-	{
-		SPB(os_free(awaitpbuf);)
 		return ERR_MEM; //XXX handle this better
-	}
 
 	peer->tcp = peer_pcb;
 	peer->is_closing = 0;
+	if (!peer->name)
+		peer->name = listener->name;
 	
 #if STOREPBUF
-	peer->recvwait.pbuf = awaitpbuf;
-	peer->recvwait.swallowed = 0;
-	cbuf_init(&peer->recvwait.pbufs, peer->recvwait.pbuf, PBUF_WAIT_SIZE_LOG2);
+	peer->pbuf = NULL;
+	peer->pbuf_taken = 0;
 #endif
 	
 	tcp_setprio(peer->tcp, TCP_PRIO_MIN); //XXX???
@@ -327,9 +316,6 @@ void tcp_service_close (tcpservice_t* s)
 		s->is_closing = true;
 		if (s->cb_closing)
 			s->cb_closing(s);
-#if STOREPBUF
-		os_free(s->recvwait.pbuf);
-#endif
 		tcp_service_check_shutdown(s);
 	}
 }
