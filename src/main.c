@@ -157,7 +157,9 @@ const char* fr_request_hostname(void) {
 void user_init()
 {
 	uart_init(0, 115200);
+#if defined(CONFIG_ENABLE_SECOND_UART) && CONFIG_ENABLE_SECOND_UART
 	uart_init(1, 115200);
+#endif
 	uart_init_io();
 
 	env_init(CONFIG_ENV_OFFSET, CONFIG_ENV_LEN);

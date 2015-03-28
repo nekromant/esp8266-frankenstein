@@ -211,6 +211,10 @@ default "192.168.1.1"
 
 endmenu
 
+config ENABLE_SECOND_UART
+bool "Enable the second uart"
+default y
+
 config ENABLE_BANNER
 bool "Enable the banner message at boot"
 default y
