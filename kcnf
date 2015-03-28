@@ -10,6 +10,8 @@ menu "Services to build"
 
 config SERVICE_DHCPS
 bool "DHCP Server"
+help
+	You should execute 'resetenv' and reboot again after flashing, if you change this setting.
 
 config SERVICE_TCP
 bool "TCP/IP services"
