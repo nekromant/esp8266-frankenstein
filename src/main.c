@@ -170,16 +170,16 @@ const char* fr_request_hostname(void) {
 static void main_init_done(void)
 {
 	if (wifi_get_opmode() == STATION_MODE) {
-    const char *sta_auto = env_get("sta-auto");
-    if (sta_auto && atoi(sta_auto)) {
-      const char *ssid = env_get("sta-auto-ssid");
-      const char *pass = env_get("sta-auto-password");
-      if (ssid) {
-        console_printf("STA mode: automatically attempting to connect to %s\n", ssid);
-        exec_iwconnect(ssid, pass);
-      }
-    }
-  }
+	  const char *sta_auto = env_get("sta-auto");
+	  if (sta_auto && atoi(sta_auto)) {
+	    const char *ssid = env_get("sta-auto-ssid");
+	    const char *pass = env_get("sta-auto-password");
+	    if (ssid) {
+	      console_printf("STA mode: automatically attempting to connect to %s\n", ssid);
+	      exec_iwconnect(ssid, pass);
+	    }
+	  }
+	}
 }
 
 void user_init()
