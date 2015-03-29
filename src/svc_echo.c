@@ -15,38 +15,21 @@ static size_t echo_recv (tcpservice_t* s, const char* data, size_t len);
 
 // tcp server only, takes no space
 // (the "socketserver" awaiting for incoming request only)
-static tcpservice_t echo_listener = TCP_SERVICE_LISTENER("echo listener", echo_new_peer);
+static tcpservice_t echo_listener = TCP_SERVICE_LISTENER("echo", echo_new_peer);
 
 ///////////////////////////////////////////////////////////
 
-static tcpservice_t* echo_new_peer (tcpservice_t* s)
+static tcpservice_t* echo_new_peer (tcpservice_t* service)
 {
-	// allocate a new echo service structure
-	tcpservice_t* peer = (tcpservice_t*)os_malloc(sizeof(tcpservice_t));
-	if (!peer)
-		return NULL;
-	peer->sendbuf = (char*)os_malloc(1 << (ECHO_SEND_BUFFER_SIZE_LOG2_DEFAULT));
-	if (!peer->sendbuf)
-	{
-		os_free(peer);
-		return NULL;
-	}
-	
-	peer->name = NULL;
-	cbuf_init(&peer->send_buffer, peer->sendbuf, ECHO_SEND_BUFFER_SIZE_LOG2_DEFAULT);
-	peer->cb_get_new_peer = NULL;
-	peer->cb_established = NULL;
-	peer->cb_closing = NULL;
-	peer->cb_recv = echo_recv;
-	peer->cb_poll = NULL;
-	peer->cb_cleanup = NULL; // sendbuf and peer will be free-ed() by tcpservice
-
+	tcpservice_t* peer = tcp_service_init_new_peer(ECHO_SEND_BUFFER_SIZE_LOG2_DEFAULT);
+	if (peer)
+		peer->cb_recv = echo_recv;
 	return peer;
 }
 
-static size_t echo_recv (tcpservice_t* s, const char* data, size_t len)
+static size_t echo_recv (tcpservice_t* peer, const char* data, size_t len)
 {
-	return cbuf_write(&s->send_buffer, data, len);
+	return cbuf_write(&peer->send_buffer, data, len);
 }
 
 int echo_start (int port)
@@ -65,7 +48,6 @@ static int  do_echo(int argc, const char* const* argv)
 	
 	return 0;
 }
-
 
 CONSOLE_CMD(echo, 2, 2, 
 	    do_echo, NULL, NULL, 

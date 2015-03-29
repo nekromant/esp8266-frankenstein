@@ -19,7 +19,7 @@ size_t cbuf_write_available (cbuf_t* cb)
 
 void cbuf_init (cbuf_t* cb, char* userbuf, char sizelog2)
 {
-	cb->size = ((cbsize_t)1) << sizelog2;
+	cb->size = userbuf? ((cbsize_t)1) << sizelog2: 0;
 	cb->buf = userbuf;
 	cb->write = cb->read = cb->unread = 0;
 	cb->empty = cb->allread = 1;

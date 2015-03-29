@@ -48,10 +48,10 @@ typedef struct telnet_service_s
 // callbacks for tcp service
 
 static tcpservice_t* telnet_new_peer (tcpservice_t* s);
-static void telnet_established (tcpservice_t* s);
+static err_t telnet_established (tcpservice_t* s);
 static void telnet_closing (tcpservice_t* s);
 static size_t telnet_recv (tcpservice_t* s, const char* data, size_t len);
-static void telnet_poll (tcpservice_t* s);
+static err_t telnet_poll (tcpservice_t* s);
 
 ///////////////////////////////////////////////////////////
 // static data (small ram footprint)
@@ -118,7 +118,7 @@ static tcpservice_t* telnet_new_peer (tcpservice_t* s)
 	return &ts->peer;
 }
 
-static void telnet_established (tcpservice_t* s)
+static err_t telnet_established (tcpservice_t* s)
 {
 	console_printf("\ntelnet: Incoming connection, switching to telnet console...\n"); 
 	console_printf = telnet_printf;
@@ -127,6 +127,8 @@ static void telnet_established (tcpservice_t* s)
 	CURRENT(s);
 	console_printf("Welcome to %s!\n", env_get("hostname"));
 	console_printf("Press enter to activate this console\n");
+	
+	return ERR_OK;
 }
 
 static void telnet_closing (tcpservice_t* s)
@@ -134,7 +136,7 @@ static void telnet_closing (tcpservice_t* s)
 	CURRENT(NULL);
 }
 
-static void telnet_poll (tcpservice_t* s)
+static err_t telnet_poll (tcpservice_t* s)
 { 
 	telnet_service_t* ts = TS(s);
 	if (ts->state.max_idle != -1 && ++ts->state.idle >= ts->state.max_idle)
@@ -143,6 +145,7 @@ static void telnet_poll (tcpservice_t* s)
 		telnet_printf("\nYou have been idle for %d seconds, goodbye\n", ts->state.max_idle);
 		tcp_service_close(s);
 	}
+	return ERR_OK;
 }
 
 int sendopt (tcpservice_t* s, u8_t option, u8_t value)

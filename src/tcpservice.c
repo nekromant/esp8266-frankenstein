@@ -8,10 +8,47 @@
 #include "tcpservice.h"
 #include "cbuf.h"
 
-#define D(x...) SERIAL_PRINTF(x)
-
 //XXX a configuration value for this?
 #define TCPVERBERR 2 // 0:silent 1:fatal-only 2:all
+
+static void pbuf_kill (pbuf_t* pbuf)
+{
+	pbuf_t* kill;
+	while (pbuf)
+	{
+		kill = pbuf;
+		pbuf = pbuf->next;
+		pbuf_free(kill);
+	}
+}
+
+static bool tcp_service_check_shutdown (tcpservice_t* s)
+{
+	if (s->is_closing && cbuf_is_empty(&s->send_buffer))
+	{
+		tcp_close(s->tcp);
+		s->tcp = NULL; // lwip will free this
+		if (s->cb_cleanup)
+			s->cb_cleanup(s);
+		if (s->sendbuf)
+			os_free(s->sendbuf);
+		os_free(s);
+		pbuf_kill(s->pbuf);
+		return true;
+	}
+	return false;
+}
+
+void tcp_service_close (tcpservice_t* s)
+{
+	if (s->tcp)
+	{
+		s->is_closing = true;
+		if (s->cb_closing)
+			s->cb_closing(s);
+		tcp_service_check_shutdown(s);
+	}
+}
 
 static void tcp_service_error (void* svc, err_t err)
 {
@@ -48,61 +85,45 @@ static err_t cbuf_tcp_send (tcpservice_t* tcp)
 	
 	while ((sndbuf = tcp_sndbuf(tcp->tcp)) > 0)
 	{
-D("sndbuf=%d\n", sndbuf);
 		if ((sendsize = cbuf_read_ptr(&tcp->send_buffer, &data, sndbuf)) == 0)
 			break;
 		if ((err = tcp_write(tcp->tcp, data, sendsize, /*tcpflags=0=PUSH,NOCOPY*/0)) != ERR_OK)
 		{
-D("x1\n");
 			tcp_service_error(tcp, err);
 			break;
 		}
-D("sent: %d\n", sendsize);
 	}
 
         if ((err = tcp_output(tcp->tcp)) != ERR_OK)
-{D("x2\n");
 		tcp_service_error(tcp, err);
-}
-D("x22=%d\n",err);
 	return err;
 }
 
-#if STOREPBUF
-
 static void tcp_service_give_back (tcpservice_t* peer, pbuf_t* pbuf)
 {
-
-pbuf_t* pb = pbuf;
-while (pb)
-{
-	D("recv %d -", pb->len);
-	pb = pb->next;
-}
-D("\n");
-
+	// pbuf chains are chained, pbuf->tot_len is irrelevant here
 
 	if (pbuf)
 	{
-D("x3\n");
+		// a new pbuf has come
 		if (peer->pbuf)
 		{
-D("x4\n");
-			// a new pbuf comes, we already have pbufs to process
-			// store the new pbuf at the end of the current chain
+			// we already have pbufs to process,
+			// store the new one at the end of the
+			// current chain
 			pbuf_t* it = peer->pbuf;
 			while (it->next)
 				it = it->next;
 			it->next = pbuf;
 		}
 		else
+			// store our only pbuf
 			peer->pbuf = pbuf;
 	}
 
 	size_t swallowed = 0;	
 	while (peer->pbuf)
 	{
-D("x5\n");
 		// give data to user
 		size_t acked_by_user = peer->cb_recv
 			(
@@ -110,11 +131,10 @@ D("x5\n");
 				((char*)peer->pbuf->payload) + peer->pbuf_taken,
 				peer->pbuf->len - peer->pbuf_taken
 			);
-D("f a=%d g=%d\n", acked_by_user, peer->pbuf->len - peer->pbuf_taken);
+
 		if ((peer->pbuf_taken += acked_by_user) == peer->pbuf->len)
 		{
-D("x51\n");
-			// pbuf fully sallowed, skip/delete
+			// current pbuf is fully sallowed, skip+delete
 			pbuf_t* deleteme = peer->pbuf;
 			peer->pbuf_taken = 0;
 			peer->pbuf = peer->pbuf->next;
@@ -122,106 +142,54 @@ D("x51\n");
 		}
 		swallowed += acked_by_user;
 	}
-	// report to lwip how much data have been acknowledged
-D("sw %d\n", swallowed);
+
+	// report to lwip how much data
+	// have been acknowledged by peer receive callback
 	if (swallowed)
 		tcp_recved(peer->tcp, swallowed);
 }
-#endif // STOREPBUF
 
-static err_t tcp_service_receive (void* svc, struct tcp_pcb *pcb, struct pbuf *pbuf, err_t err)
+static err_t tcp_service_receive (void* svc, struct tcp_pcb* pcb, pbuf_t* pbuf, err_t err)
 {
 	tcpservice_t* peer = (tcpservice_t*)svc;
 
-	if (err == ERR_OK && pbuf != NULL)
+	if (err == ERR_OK)
 	{
+if (pbuf)
+{
 if (pbuf->next) SERIAL_PRINTF("CHAIN\n");
 if (pbuf->len != pbuf->tot_len) SERIAL_PRINTF("CHAIN2\n");
-		// feed user with awaiting pbufs, and this pbuf
-#if STOREPBUF
+}
+		// feed user with new and awaiting pbufs
 		tcp_service_give_back(peer, pbuf);
-#else		
-		size_t all = 0;
-		while (pbuf)
-		{
-			size_t acked = peer->cb_recv(peer, pbuf->payload, pbuf->len);
-			if (acked != pbuf->len)
-				SERIAL_PRINTF("OOOPS\n");
-			all += pbuf->len;
-			
-			typeof(pbuf) delme = pbuf;
-			pbuf = pbuf->next;
-			pbuf_free(delme);
-		}
-		tcp_recved(peer->tcp, all);
-#endif
+		// send our output buffer
 		return cbuf_tcp_send(peer);
 	}
-	else
-	{
-D("x10\n");
-		if (pbuf)
-			pbuf_free(pbuf);
-		tcp_service_close(peer);
-		return ERR_OK;
-	}
-}
 
-static bool tcp_service_check_shutdown (tcpservice_t* s)
-{
-	if (s->is_closing && cbuf_is_empty(&s->send_buffer))
-	{
-		tcp_close(s->tcp);
-		s->tcp = NULL; // lwip will free this
-		if (s->cb_cleanup)
-			s->cb_cleanup(s);
-		if (s->sendbuf)
-			os_free(s->sendbuf);
-		os_free(s);
-#if STOREPBUF
-		//XXX recursively pbuf_free s->pbuf
-#endif
-		return true;
-	}
-	return false;
+	pbuf_kill(pbuf);
+	tcp_service_close(peer);
+	return err;
 }
 
 static err_t tcp_service_ack (void *svc, struct tcp_pcb *pcb, u16_t len)
 {
 	tcpservice_t* peer = (tcpservice_t*)svc;
-D("acked:%d\n", len);
 	if (len)
 		cbuf_ack(&peer->send_buffer, len);
 
-#if 1
 	// feed user with awaiting pbufs 
-	SPB(tcp_service_give_back(peer, NULL);)
+	tcp_service_give_back(peer, NULL);
 
 	return tcp_service_check_shutdown(peer)?
 		ERR_OK:
 		cbuf_tcp_send(peer);
-#else
-	tcp_service_check_shutdown(peer);
-	return ERR_OK;
-#endif
 }
 
 static err_t tcp_service_poll (void* svc, struct tcp_pcb* pcb)
 { 
 	LWIP_UNUSED_ARG(pcb);
 	tcpservice_t* service = (tcpservice_t*)svc;
-
-	if (service->cb_poll)
-		service->cb_poll(service);
-
-#if 0 // not here
-	// feed user with awaiting pbufs 
-	SPB(tcp_service_give_back(service, NULL);)
-
-	// trigger send buffer if needed
-	cbuf_tcp_send(service);
-#endif
-	return ERR_OK;
+	return service->cb_poll? service->cb_poll(service): ERR_OK;
 }
 
 static err_t tcp_service_incoming_peer (void* svc, struct tcp_pcb * peer_pcb, err_t err)
@@ -240,10 +208,8 @@ static err_t tcp_service_incoming_peer (void* svc, struct tcp_pcb * peer_pcb, er
 	if (!peer->name)
 		peer->name = listener->name;
 	
-#if STOREPBUF
 	peer->pbuf = NULL;
 	peer->pbuf_taken = 0;
-#endif
 	
 	tcp_setprio(peer->tcp, TCP_PRIO_MIN); //XXX???
 	tcp_recv(peer->tcp, tcp_service_receive);
@@ -262,10 +228,7 @@ static err_t tcp_service_incoming_peer (void* svc, struct tcp_pcb * peer_pcb, er
 #endif
 
 	// start fighting
-	if (peer->cb_established)
-		peer->cb_established(peer);
-		
-	return ERR_OK;
+	return peer->cb_established? peer->cb_established(peer): ERR_OK;
 }
 
 int tcp_service_install (const char* name, tcpservice_t* s, int port)
@@ -309,13 +272,27 @@ int tcp_service_install (const char* name, tcpservice_t* s, int port)
 	return 0;
 }
 
-void tcp_service_close (tcpservice_t* s)
+tcpservice_t* tcp_service_init_new_peer (char sendbufsizelog2)
 {
-	if (s->tcp)
+	tcpservice_t* peer = (tcpservice_t*)os_malloc(sizeof(tcpservice_t));
+	if (!peer)
+		return NULL;
+	if (!sendbufsizelog2)
+		peer->sendbuf = NULL;
+	else if ((peer->sendbuf = (char*)os_malloc(1 << sendbufsizelog2)) == NULL)
 	{
-		s->is_closing = true;
-		if (s->cb_closing)
-			s->cb_closing(s);
-		tcp_service_check_shutdown(s);
+		os_free(peer);
+		return NULL;
 	}
+
+	cbuf_init(&peer->send_buffer, peer->sendbuf, sendbufsizelog2);
+	
+	peer->name = NULL;
+	peer->cb_get_new_peer = NULL;
+	peer->cb_established = NULL;
+	peer->cb_closing = NULL;
+	peer->cb_recv = NULL;
+	peer->cb_poll = NULL;
+	peer->cb_cleanup = NULL;
+	return peer;
 }
