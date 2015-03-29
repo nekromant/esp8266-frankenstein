@@ -27,7 +27,7 @@ static void conn_checker_handler(void *arg)
 	struct pokerface *p = arg;
 	/* Lazy gc */
 	os_free(p);
-	console_printf("free!\n");
+	LOG(LOG_DEBUG, "free!\n");
 	
 }
 
