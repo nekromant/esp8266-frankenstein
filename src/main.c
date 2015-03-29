@@ -46,6 +46,7 @@ struct envpair defaultenv[] = {
 	{ "sta-ip",            CONFIG_ENV_DEFAULT_STATION_IP },
 	{ "sta-mask",          CONFIG_ENV_DEFAULT_STATION_MASK },
 	{ "sta-gw",            CONFIG_ENV_DEFAULT_STATION_GW },
+	{ "log-level",         "3", },
 	{ "sta-auto",
 #if defined(CONFIG_ENV_DEFAULT_STATION_AUTO_CONNECT) && CONFIG_ENV_DEFAULT_STATION_AUTO_CONNECT
 	                       "1" },
@@ -202,6 +203,9 @@ void user_init()
 		telnet_start(-1); // use env or 23
 #endif
 	console_init(32);
+
+	const char* loglevel = env_get("log-level");
+	if (loglevel) { set_log_level(atoi(loglevel)); }
 	
 	PIN_FUNC_SELECT(PERIPHS_IO_MUX_GPIO2_U, FUNC_GPIO2);
 	PIN_FUNC_SELECT(PERIPHS_IO_MUX_GPIO0_U, FUNC_GPIO0);
