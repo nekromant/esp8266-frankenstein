@@ -82,6 +82,11 @@ static int   do_send(int argc, const char* const* argv)
 	int i; 
 	p->databuf[0] = 0;
 	for (i=3; i<argc; i++) { 
+		if ( (strlen(p->databuf) + strlen(argv[i]) + 1) >= sizeof(p->databuf)) {
+			console_printf("Total length of data exceeds buffer (max: %d characters)\n", sizeof(p->databuf)-1);
+			os_free(p);
+			return -1;
+		}
 		strcat(p->databuf, argv[i]);
 		strcat(p->databuf, " ");
 	}
