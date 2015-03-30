@@ -35,14 +35,7 @@ typedef struct telnet_state_s
 	int max_idle;
 } telnet_state_t;
 
-// embed tcp_service in a more global telnet specific structure
-typedef struct telnet_service_s
-{
-	tcpservice_t peer;	// tcp service - COMES FIRST HERE
-	telnet_state_t state;	// telnet state
-} telnet_service_t;
-
-#define TS(s)		((telnet_service_t*)(s))
+#define state(s)	((telnet_state_t*)(s->sendbuf + s->send_buffer.size))
 	
 ///////////////////////////////////////////////////////////
 // callbacks for tcp service
@@ -61,22 +54,19 @@ static err_t telnet_poll (tcpservice_t* s);
 static tcpservice_t telnet_listener = TCP_SERVICE_LISTENER("telnet listener", telnet_new_peer);
 
 // the current talking telnet peer, which is a hack
-static telnet_service_t* current_telnet = NULL;
-#define CURRENT(s)	do microrl_set_echo(!(current_telnet = TS(s))); while (0)
+static tcpservice_t*	current_telnet = NULL;
+#define CURRENT(s)	do microrl_set_echo(!(current_telnet = (s))); while (0)
 
 ///////////////////////////////////////////////////////////
 
 static int telnet_printf (const char *fmt, ...)
 {
-
-// something is wrong with telnet printf, or global console_printf
-
 	int ret;
 
 	va_list ap;
 	va_start(ap, fmt);
-	if (current_telnet && current_telnet->peer.tcp)
-		ret = cbuf_vprintf(&current_telnet->peer.send_buffer, fmt, ap);
+	if (current_telnet && current_telnet->tcp)
+		ret = cbuf_vprintf(&current_telnet->send_buffer, fmt, ap);
 	else
 	{
 		vsnprintf(sprintbuf, SPRINTBUFSIZE, fmt, ap);
@@ -89,33 +79,25 @@ static int telnet_printf (const char *fmt, ...)
 
 static tcpservice_t* telnet_new_peer (tcpservice_t* s)
 {
-	// allocate a new telnet service structure
-	telnet_service_t* ts = (telnet_service_t*)os_malloc(sizeof(telnet_service_t));
-	if (!ts)
+	// allocate send_buffer + telnet state structure
+	char* sendbuf = (char*)os_malloc((1 << (TELNET_SEND_BUFFER_SIZE_LOG2_DEFAULT)) + sizeof(telnet_state_t));
+	if (sendbuf == NULL)
 		return NULL;
-	ts->peer.sendbuf = (char*)os_malloc(1 << (TELNET_SEND_BUFFER_SIZE_LOG2_DEFAULT));
-	if (!ts->peer.sendbuf)
-	{
-		os_free(ts);
+	tcpservice_t* peer = tcp_service_init_new_peer_sendbuf_sizelog2(sendbuf, TELNET_SEND_BUFFER_SIZE_LOG2_DEFAULT);
+	if (!peer)
 		return NULL;
-	}
-	
-	ts->peer.name = NULL;
-	cbuf_init(&ts->peer.send_buffer, ts->peer.sendbuf, TELNET_SEND_BUFFER_SIZE_LOG2_DEFAULT);
-	ts->peer.cb_get_new_peer = NULL;
-	ts->peer.cb_established = telnet_established;
-	ts->peer.cb_closing = telnet_closing;
-	ts->peer.cb_recv = telnet_recv;
-	ts->peer.cb_poll = telnet_poll;
-	ts->peer.cb_cleanup = NULL; // sendbuf and peer will be free-ed() by tcpservice
 
-	ts->state.state = STATE_NORMAL;
-	ts->state.idle = 0;
-	ts->state.max_idle = 60;
-	const char *tmp = env_get("telnet-drop");
-	if (tmp)
-		ts->state.max_idle = atoi(tmp);
-	return &ts->peer;
+	peer->cb_established = telnet_established;
+	peer->cb_closing = telnet_closing;
+	peer->cb_recv = telnet_recv;
+	peer->cb_poll = telnet_poll;
+	
+	const char* tmp = env_get("telnet-drop");
+	state(peer)->state = STATE_NORMAL;
+	state(peer)->idle = 0;
+	state(peer)->max_idle = tmp? atoi(tmp): 60;
+
+	return peer;
 }
 
 static err_t telnet_established (tcpservice_t* s)
@@ -131,19 +113,18 @@ static err_t telnet_established (tcpservice_t* s)
 	return ERR_OK;
 }
 
-static void telnet_closing (tcpservice_t* s)
+static void telnet_closing (tcpservice_t* peer)
 {
 	CURRENT(NULL);
 }
 
-static err_t telnet_poll (tcpservice_t* s)
+static err_t telnet_poll (tcpservice_t* peer)
 { 
-	telnet_service_t* ts = TS(s);
-	if (ts->state.max_idle != -1 && ++ts->state.idle >= ts->state.max_idle)
+	if (state(peer)->max_idle > 0 && ++state(peer)->idle >= state(peer)->max_idle)
 	{
-		CURRENT(ts);
-		telnet_printf("\nYou have been idle for %d seconds, goodbye\n", ts->state.max_idle);
-		tcp_service_close(s);
+		CURRENT(peer);
+		telnet_printf("\nYou have been idle for %d seconds, goodbye\n", state(peer)->max_idle);
+		tcp_service_close(peer);
 	}
 	return ERR_OK;
 }
@@ -158,42 +139,39 @@ int sendopt (tcpservice_t* s, u8_t option, u8_t value)
 	return cbuf_write(&s->send_buffer, tmp, 4) == 4? 0: -1;
 }
 
-static size_t telnet_recv (tcpservice_t* s, const char* q, size_t len)
+static size_t telnet_recv (tcpservice_t* ts, const char* q, size_t len)
 {
-SERIAL_PRINTF("user:%d\n", len);
-
-	telnet_service_t* ts = TS(s);
 	size_t ret = len;
 	
 	CURRENT(ts);
 	
-	ts->state.idle = 0;
+	state(ts)->idle = 0;
 	while (len > 0)
 	{
 		char c = *q++;
 		--len;
 	       
-		switch (ts->state.state) {
+		switch (state(ts)->state) {
 		case STATE_IAC:
 			if(c == TELNET_IAC) {
 				console_insert(c);
-				ts->state.state = STATE_NORMAL;
+				state(ts)->state = STATE_NORMAL;
 			} else {
 				switch(c) {
 				case TELNET_WILL:
-					ts->state.state = STATE_WILL;
+					state(ts)->state = STATE_WILL;
 					break;
 				case TELNET_WONT:
-					ts->state.state = STATE_WONT;
+					state(ts)->state = STATE_WONT;
 					break;
 				case TELNET_DO:
-					ts->state.state = STATE_DO;
+					state(ts)->state = STATE_DO;
 					break;
 				case TELNET_DONT:
-					ts->state.state = STATE_DONT;
+					state(ts)->state = STATE_DONT;
 					break;
 				default:
-					ts->state.state = STATE_NORMAL;
+					state(ts)->state = STATE_NORMAL;
 					break;
 				}
 			}
@@ -201,27 +179,27 @@ SERIAL_PRINTF("user:%d\n", len);
 
 		case STATE_WILL:
 			/* Reply with a DONT */
-			sendopt(s, TELNET_DONT, c);
-			ts->state.state = STATE_NORMAL;
+			sendopt(ts, TELNET_DONT, c);
+			state(ts)->state = STATE_NORMAL;
 			break;
 		case STATE_WONT:
 			/* Reply with a DONT */
-			sendopt(s, TELNET_DONT, c);
-			ts->state.state = STATE_NORMAL;
+			sendopt(ts, TELNET_DONT, c);
+			state(ts)->state = STATE_NORMAL;
 			break;
 		case STATE_DO:
 			/* Reply with a WONT */
-			sendopt(s, TELNET_WONT, c);
-			ts->state.state = STATE_NORMAL;
+			sendopt(ts, TELNET_WONT, c);
+			state(ts)->state = STATE_NORMAL;
 			break;
 		case STATE_DONT:
 			/* Reply with a WONT */
-			sendopt(s, TELNET_WONT, c);
-			ts->state.state = STATE_NORMAL;
+			sendopt(ts, TELNET_WONT, c);
+			state(ts)->state = STATE_NORMAL;
 			break;
 		case STATE_NORMAL:
 			if(c == TELNET_IAC) {
-				ts->state.state = STATE_IAC;
+				state(ts)->state = STATE_IAC;
 			} else {
 				console_insert(c);
 			}
@@ -263,7 +241,7 @@ static int  do_telnet(int argc, const char* const* argv)
 		if (current_telnet)
 		{
 			console_printf("telnet: See you!\n");
-			tcp_service_close(&current_telnet->peer);
+			tcp_service_close(current_telnet);
 		}
 	}
 	else

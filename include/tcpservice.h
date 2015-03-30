@@ -59,7 +59,10 @@ int tcp_service_install (const char* name, tcpservice_t* s, int port);
 void tcp_service_connect_peer (tcpservice_t* s, const char* host, int port);
 
 // initialize/allocate new peer common fields
-tcpservice_t* tcp_service_init_new_peer (char sendbufsizelog2);
+tcpservice_t* tcp_service_init_new_peer_sizelog2 (char sendbufsizelog2);
+
+// initialize/allocate new peer common fields
+tcpservice_t* tcp_service_init_new_peer_sendbuf_sizelog2 (char* sendbuf, char sendbufsizelog2);
 
 // gracefully close connection
 void tcp_service_close (tcpservice_t* s);

@@ -21,7 +21,7 @@ static tcpservice_t echo_listener = TCP_SERVICE_LISTENER("echo", echo_new_peer);
 
 static tcpservice_t* echo_new_peer (tcpservice_t* service)
 {
-	tcpservice_t* peer = tcp_service_init_new_peer(ECHO_SEND_BUFFER_SIZE_LOG2_DEFAULT);
+	tcpservice_t* peer = tcp_service_init_new_peer_sizelog2(ECHO_SEND_BUFFER_SIZE_LOG2_DEFAULT);
 	if (peer)
 		peer->cb_recv = echo_recv;
 	return peer;

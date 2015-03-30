@@ -935,6 +935,7 @@
  */
 //#ifndef TCP_MSS
 //#define TCP_MSS                         1460
+//#define TCP_MSS                         536
 #define TCP_MSS                         1024
 //#endif
 

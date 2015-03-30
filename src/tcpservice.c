@@ -26,14 +26,14 @@ static bool tcp_service_check_shutdown (tcpservice_t* s)
 {
 	if (s->is_closing && cbuf_is_empty(&s->send_buffer))
 	{
+		// everything is acked (pbuf are freed)
 		tcp_close(s->tcp);
-		s->tcp = NULL; // lwip will free this
+		s->tcp = NULL; // lwip has/will free this
 		if (s->cb_cleanup)
 			s->cb_cleanup(s);
 		if (s->sendbuf)
 			os_free(s->sendbuf);
 		os_free(s);
-		pbuf_kill(s->pbuf);
 		return true;
 	}
 	return false;
@@ -188,8 +188,8 @@ static err_t tcp_service_ack (void *svc, struct tcp_pcb *pcb, u16_t len)
 static err_t tcp_service_poll (void* svc, struct tcp_pcb* pcb)
 { 
 	LWIP_UNUSED_ARG(pcb);
-	tcpservice_t* service = (tcpservice_t*)svc;
-	return service->cb_poll? service->cb_poll(service): ERR_OK;
+	tcpservice_t* peer = (tcpservice_t*)svc;
+	return peer->cb_poll? peer->cb_poll(peer): ERR_OK;
 }
 
 static err_t tcp_service_incoming_peer (void* svc, struct tcp_pcb * peer_pcb, err_t err)
@@ -272,20 +272,16 @@ int tcp_service_install (const char* name, tcpservice_t* s, int port)
 	return 0;
 }
 
-tcpservice_t* tcp_service_init_new_peer (char sendbufsizelog2)
+tcpservice_t* tcp_service_init_new_peer_sendbuf_sizelog2 (char* sendbuf, char sendbufsizelog2)
 {
 	tcpservice_t* peer = (tcpservice_t*)os_malloc(sizeof(tcpservice_t));
 	if (!peer)
-		return NULL;
-	if (!sendbufsizelog2)
-		peer->sendbuf = NULL;
-	else if ((peer->sendbuf = (char*)os_malloc(1 << sendbufsizelog2)) == NULL)
 	{
-		os_free(peer);
+		os_free(sendbuf);
 		return NULL;
 	}
 
-	cbuf_init(&peer->send_buffer, peer->sendbuf, sendbufsizelog2);
+	cbuf_init(&peer->send_buffer, peer->sendbuf = sendbuf, sendbufsizelog2);
 	
 	peer->name = NULL;
 	peer->cb_get_new_peer = NULL;
@@ -295,4 +291,14 @@ tcpservice_t* tcp_service_init_new_peer (char sendbufsizelog2)
 	peer->cb_poll = NULL;
 	peer->cb_cleanup = NULL;
 	return peer;
+}
+
+tcpservice_t* tcp_service_init_new_peer_sizelog2 (char sendbufsizelog2)
+{
+	char* sendbuf;
+	if (!sendbufsizelog2)
+		sendbuf = NULL;
+	else if ((sendbuf = (char*)os_malloc(1 << sendbufsizelog2)) == NULL)
+		return NULL;
+	return tcp_service_init_new_peer_sendbuf_sizelog2(sendbuf, sendbufsizelog2);
 }
