@@ -10,6 +10,7 @@
 #include "microrl.h"
 #include "console.h"
 #include "helpers.h"
+#include "iwconnect.h"
 
 static void  scan_done_cb(void *arg, STATUS status)
 {
@@ -69,38 +70,7 @@ static int  do_iwmode(int argc, const char* const* argv)
 	return 0;
 }
 
-
-static int conntimes = 0;
-static /*volatile*/ os_timer_t conn_checker;
-static void conn_checker_handler(void *arg)
-{
-	int state = wifi_station_get_connect_status();
-	switch (state) {
-	case STATION_CONNECT_FAIL:
-		console_printf("Failed\n");
-		goto bailout;		
-	case STATION_NO_AP_FOUND:
-		console_printf("NotFound\n");
-		goto bailout;		
-	case STATION_GOT_IP:
-		console_printf("Connected\n");
-		goto bailout;
-	}
-
-	conntimes++;
-	if (conntimes > 20) {
-		console_printf("Timeout, still trying\n");
-		goto bailout;
-	}
-
-	return;
-bailout:
-	os_timer_disarm(&conn_checker);
-	console_lock(0);
-	return;
-}
-
-static int  do_iwconnect(int argc, const char* const* argv)
+static int do_iwconnect(int argc, const char* const* argv)
 {
 	int mode;
 	mode = wifi_get_opmode();
@@ -114,24 +84,7 @@ static int  do_iwconnect(int argc, const char* const* argv)
 		return 0;
 	} 
 
-	struct station_config sta_conf;
-	os_strncpy((char*)sta_conf.ssid, argv[1], sizeof sta_conf.ssid);
-
-	sta_conf.password[0] = 0x0;
-	if (argc == 3)
-		os_strncpy((char*)&sta_conf.password, argv[2], 32);
-
-	wifi_station_set_config(&sta_conf);		
-	wifi_station_disconnect();
-	wifi_station_connect();
-
-	os_timer_disarm(&conn_checker);
-	os_timer_setfn(&conn_checker, (os_timer_func_t *)conn_checker_handler, NULL);
-	os_timer_arm(&conn_checker, 300, 1);
-	conntimes = 0;
-	console_lock(1);
-
-	return 0;
+  return exec_iwconnect(argv[1], argc==3?argv[2]:NULL);
 }
 
 static int  do_apconfig(int argc, const char* const* argv)
