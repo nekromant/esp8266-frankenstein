@@ -164,14 +164,17 @@ void env_init(uint32_t flashaddr, uint32_t envsize)
 	current_env = os_malloc(envsize);
 	current_env_flash_addr = flashaddr;
 	current_env_size=envsize - sizeof(struct environment);
+#if defined(CONFIG_ENABLE_BANNER) && CONFIG_ENABLE_BANNER
 	console_printf("env: Environment @ %p size %d bytes (%d real) \n", 
 		       (void*)flashaddr, (int)envsize, (int)current_env_size);
-
+#endif
 	spi_flash_read(flashaddr, (uint32*)current_env, envsize);
 	uint16_t crc = crc16((const unsigned char*)&current_env->occupied, envsize - sizeof(uint16_t));
 	if ((current_env->occupied == 0) || (crc != current_env->crc)) { 
 		console_printf("env: Bad CRC (%x vs %x) using defaults\n", crc, current_env->crc);
 		env_reset();
 	}
+#if defined(CONFIG_ENABLE_BANNER) && CONFIG_ENABLE_BANNER
 	env_dump();
+#endif
 }

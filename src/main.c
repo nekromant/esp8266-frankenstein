@@ -12,6 +12,7 @@
 #include "driver/uart.h" 
 #include "microrl.h"
 #include "console.h"
+#include "helpers.h"
 #include "flash_layout.h"
 #include <generic/macros.h>
 #include <lwip/netif.h>
@@ -21,6 +22,8 @@
 #if defined(CONFIG_SERVICE_TELNET) && CONFIG_SERVICE_TELNET
 #include "svc_telnet.h"
 #endif
+
+#include "iwconnect.h"
 
 struct envpair {
 	char *key, *value;
@@ -43,6 +46,16 @@ struct envpair defaultenv[] = {
 	{ "sta-ip",            CONFIG_ENV_DEFAULT_STATION_IP },
 	{ "sta-mask",          CONFIG_ENV_DEFAULT_STATION_MASK },
 	{ "sta-gw",            CONFIG_ENV_DEFAULT_STATION_GW },
+	{ "log-level",         "3", },
+	{ "sta-auto",
+#if defined(CONFIG_ENV_DEFAULT_STATION_AUTO_CONNECT) && CONFIG_ENV_DEFAULT_STATION_AUTO_CONNECT
+	                       "1" },
+	{ "sta-auto-ssid",     CONFIG_ENV_DEFAULT_STATION_AUTO_SSID },
+	{ "sta-auto-password", CONFIG_ENV_DEFAULT_STATION_AUTO_PASSWORD },
+#else
+	                       "0" },
+#endif
+
 
 	{ "ap-ip",             CONFIG_ENV_DEFAULT_AP_IP },
 	{ "ap-mask",           CONFIG_ENV_DEFAULT_AP_MASK },
@@ -73,6 +86,7 @@ void request_default_environment(void)
 		env_insert(defaultenv[i].key, defaultenv[i].value);
 }
 
+#if defined(CONFIG_ENABLE_BANNER) && CONFIG_ENABLE_BANNER
 void print_hello_banner(void)
 {
 	console_printf("\n\n\nFrankenstein ESP8266 Firmware\n");
@@ -96,10 +110,8 @@ void print_hello_banner(void)
 	console_printf("Telnet server\n"); have_features ++;
 #endif
   if (have_features == 0) { console_printf("None.\n"); }
-
-
 }
-
+#endif
 
 void network_init()
 {
@@ -155,14 +167,34 @@ const char* fr_request_hostname(void) {
 	return env_get("hostname");
 }
 
+/* By experimentation we discovered that certain things cant be done from inside user_init... */
+static void main_init_done(void)
+{
+	if (wifi_get_opmode() == STATION_MODE) {
+	  const char *sta_auto = env_get("sta-auto");
+	  if (sta_auto && atoi(sta_auto)) {
+	    const char *ssid = env_get("sta-auto-ssid");
+	    const char *pass = env_get("sta-auto-password");
+	    if (ssid) {
+	      console_printf("STA mode: automatically attempting to connect to %s\n", ssid);
+	      exec_iwconnect(ssid, pass);
+	    }
+	  }
+	}
+}
+
 void user_init()
 {
 	uart_init(0, 115200);
+#if defined(CONFIG_ENABLE_SECOND_UART) && CONFIG_ENABLE_SECOND_UART
 	uart_init(1, 115200);
+#endif
 	uart_init_io();
 
 	env_init(CONFIG_ENV_OFFSET, CONFIG_ENV_LEN);
+#if defined(CONFIG_ENABLE_BANNER) && CONFIG_ENABLE_BANNER
 	print_hello_banner();
+#endif
 	network_init();
 
 #if defined(CONFIG_SERVICE_TELNET) && CONFIG_SERVICE_TELNET
@@ -171,10 +203,14 @@ void user_init()
 		telnet_start(-1); // use env or 23
 #endif
 	console_init(32);
+
+	const char* loglevel = env_get("log-level");
+	if (loglevel) { set_log_level(atoi(loglevel)); }
 	
 	PIN_FUNC_SELECT(PERIPHS_IO_MUX_GPIO2_U, FUNC_GPIO2);
 	PIN_FUNC_SELECT(PERIPHS_IO_MUX_GPIO0_U, FUNC_GPIO0);
 	gpio_output_set(0, BIT2, BIT2, 0);
 	gpio_output_set(0, BIT0, BIT0, 0);
-	
+
+	system_init_done_cb(main_init_done);
 }
