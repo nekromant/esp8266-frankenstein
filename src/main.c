@@ -19,7 +19,7 @@
 #include <lwip/app/dhcpserver.h>
 
 #include "env.h"
-#if defined(CONFIG_SERVICE_TELNET) && CONFIG_SERVICE_TELNET
+#if defined(CONFIG_SERVICE_TELNET)
 #include "svc_telnet.h"
 #endif
 
@@ -33,11 +33,11 @@ struct envpair defaultenv[] = {
 	{ "sta-mode",          "dhcp" },
 	{ "default-mode",
 /* ideally, this should somehow be tied into helpers.c, id_from_wireless_mode... */
-#if defined(CONFIG_WIFI_MODE_AP) && CONFIG_WIFI_MODE_AP
+#if defined(CONFIG_WIFI_MODE_AP)
                          "AP" },
-#elif defined(CONFIG_WIFI_MODE_STATION) && CONFIG_WIFI_MODE_STATION
+#elif defined(CONFIG_WIFI_MODE_STATION)
                          "STA" },
-#elif defined(CONFIG_WIFI_MODE_SOFTAP) && CONFIG_WIFI_MODE_SOFTAP
+#elif defined(CONFIG_WIFI_MODE_SOFTAP)
                          "APSTA" },
 #else
                          "" },
@@ -48,7 +48,7 @@ struct envpair defaultenv[] = {
 	{ "sta-gw",            CONFIG_ENV_DEFAULT_STATION_GW },
 	{ "log-level",         "3", },
 	{ "sta-auto",
-#if defined(CONFIG_ENV_DEFAULT_STATION_AUTO_CONNECT) && CONFIG_ENV_DEFAULT_STATION_AUTO_CONNECT
+#if defined(CONFIG_ENV_DEFAULT_STATION_AUTO_CONNECT)
 	                       "1" },
 	{ "sta-auto-ssid",     CONFIG_ENV_DEFAULT_STATION_AUTO_SSID },
 	{ "sta-auto-password", CONFIG_ENV_DEFAULT_STATION_AUTO_PASSWORD },
@@ -63,16 +63,16 @@ struct envpair defaultenv[] = {
 
 	{ "hostname",          CONFIG_ENV_DEFAULT_HOSTNAME },
 	{ "bootdelay",         "5" },
-#if defined(CONFIG_SERVICE_DHCPS) && CONFIG_SERVICE_DHCPS
+#if defined(CONFIG_SERVICE_DHCPS)
 	{ "dhcps-enable",      "1" },
 #endif
-#if defined(CONFIG_SERVICE_TELNET) && CONFIG_SERVICE_TELNET
+#if defined(CONFIG_SERVICE_TELNET)
   /* Note: modules requiring their own config might be able to have a 'registration' struct that adds to here */
 	{ "telnet-port",       "23" },
 	{ "telnet-autostart",  "1" },
 	{ "telnet-drop",       "60" },
 #endif
-#if defined(CONFIG_CMD_TFTP) && CONFIG_CMD_TFTP
+#if defined(CONFIG_CMD_TFTP)
 	{ "tftp-server",       CONFIG_ENV_DEFAULT_TFTP_SERVER_IP}, 
 	{ "tftp-dir",          CONFIG_ENV_DEFAULT_TFTP_SERVER_DIR}, 
 	{ "tftp-file",         CONFIG_ENV_DEFAULT_TFTP_SERVER_FILE},
@@ -86,7 +86,7 @@ void request_default_environment(void)
 		env_insert(defaultenv[i].key, defaultenv[i].value);
 }
 
-#if defined(CONFIG_ENABLE_BANNER) && CONFIG_ENABLE_BANNER
+#if defined(CONFIG_ENABLE_BANNER)
 void print_hello_banner(void)
 {
 	console_printf("\n\n\nFrankenstein ESP8266 Firmware\n");
@@ -103,10 +103,10 @@ void print_hello_banner(void)
 		       fr_fs_flash_offset()/1024,   fr_fs_flash_offset());
 	console_printf("\nAvailable services:\n");
   int have_features = 0;
-#if defined(CONFIG_SERVICE_DHCPS) && CONFIG_SERVICE_DHCPS
+#if defined(CONFIG_SERVICE_DHCPS)
 	console_printf("DHCP server\n"); have_features ++;
 #endif
-#if defined(CONFIG_SERVICE_TELNET) && CONFIG_SERVICE_TELNET
+#if defined(CONFIG_SERVICE_TELNET)
 	console_printf("Telnet server\n"); have_features ++;
 #endif
   if (have_features == 0) { console_printf("None.\n"); }
@@ -149,7 +149,7 @@ void network_init()
 	if (wifi_get_opmode() != STATION_MODE)
 		wifi_set_ip_info(SOFTAP_IF, &info);
 
-#if defined(CONFIG_SERVICE_DHCPS) && CONFIG_SERVICE_DHCPS
+#if defined(CONFIG_SERVICE_DHCPS)
 	const char *dhcps = env_get("dhcps-enable"); 
 	if (dhcps && (*dhcps == '1')) {
 		dhcps_start(&info);
@@ -186,18 +186,18 @@ static void main_init_done(void)
 void user_init()
 {
 	uart_init(0, 115200);
-#if defined(CONFIG_ENABLE_SECOND_UART) && CONFIG_ENABLE_SECOND_UART
+#if defined(CONFIG_ENABLE_SECOND_UART)
 	uart_init(1, 115200);
 #endif
 	uart_init_io();
 
 	env_init(CONFIG_ENV_OFFSET, CONFIG_ENV_LEN);
-#if defined(CONFIG_ENABLE_BANNER) && CONFIG_ENABLE_BANNER
+#if defined(CONFIG_ENABLE_BANNER)
 	print_hello_banner();
 #endif
 	network_init();
 
-#if defined(CONFIG_SERVICE_TELNET) && CONFIG_SERVICE_TELNET
+#if defined(CONFIG_SERVICE_TELNET)
 	const char *enabled = env_get("telnet-autostart"); 
 	if (enabled && (*enabled=='1'))
 		telnet_start(-1); // use env or 23
