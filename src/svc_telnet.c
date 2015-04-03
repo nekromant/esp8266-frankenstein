@@ -35,7 +35,7 @@ typedef struct telnet_state_s
 	int max_idle;
 } telnet_state_t;
 
-#define state(s)	((telnet_state_t*)(s->sendbuf + s->send_buffer.size))
+#define state(s)	((telnet_state_t*)((s)->sendbuf + (s)->send_buffer.size))
 	
 ///////////////////////////////////////////////////////////
 // callbacks for tcp service
@@ -77,12 +77,13 @@ static int telnet_printf (const char *fmt, ...)
 	return ret;
 }
 
-static tcpservice_t* telnet_new_peer (tcpservice_t* s)
+static tcpservice_t* telnet_new_peer (tcpservice_t* listener)
 {
 	// allocate send_buffer + telnet state structure
 	char* sendbuf = (char*)os_malloc((1 << (TELNET_SEND_BUFFER_SIZE_LOG2_DEFAULT)) + sizeof(telnet_state_t));
 	if (sendbuf == NULL)
 		return NULL;
+	// generic initialization with provided buffer
 	tcpservice_t* peer = tcp_service_init_new_peer_sendbuf_sizelog2(sendbuf, TELNET_SEND_BUFFER_SIZE_LOG2_DEFAULT);
 	if (!peer)
 		return NULL;
@@ -131,12 +132,17 @@ static err_t telnet_poll (tcpservice_t* peer)
 
 int sendopt (tcpservice_t* s, u8_t option, u8_t value)
 {
-	char tmp[4];
-	tmp[0] = TELNET_IAC;
-	tmp[1] = option;
-	tmp[2] = value;
-	tmp[3] = 0;
-	return cbuf_write(&s->send_buffer, tmp, 4) == 4? 0: -1;
+	char* tmp;
+	if (cbuf_write_ptr(&s->send_buffer, &tmp, 4) == 4)
+	{
+		tmp[0] = TELNET_IAC;
+		tmp[1] = option;
+		tmp[2] = value;
+		tmp[3] = 0;
+		return 0;
+	}
+	//XXX error should be managed
+	return -1;
 }
 
 static size_t telnet_recv (tcpservice_t* ts, const char* q, size_t len)
@@ -198,11 +204,10 @@ static size_t telnet_recv (tcpservice_t* ts, const char* q, size_t len)
 			state(ts)->state = STATE_NORMAL;
 			break;
 		case STATE_NORMAL:
-			if(c == TELNET_IAC) {
+			if(c == TELNET_IAC)
 				state(ts)->state = STATE_IAC;
-			} else {
+			else
 				console_insert(c);
-			}
 			break;
 		}
 	}
@@ -242,6 +247,7 @@ static int  do_telnet(int argc, const char* const* argv)
 		{
 			console_printf("telnet: See you!\n");
 			tcp_service_close(current_telnet);
+			current_telnet = NULL;
 		}
 	}
 	else

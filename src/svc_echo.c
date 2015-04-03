@@ -19,7 +19,7 @@ static tcpservice_t echo_listener = TCP_SERVICE_LISTENER("echo", echo_new_peer);
 
 ///////////////////////////////////////////////////////////
 
-static tcpservice_t* echo_new_peer (tcpservice_t* service)
+static tcpservice_t* echo_new_peer (tcpservice_t* listener)
 {
 	tcpservice_t* peer = tcp_service_init_new_peer_sizelog2(ECHO_SEND_BUFFER_SIZE_LOG2_DEFAULT);
 	if (peer)

@@ -1,4 +1,11 @@
 
+config:
+nagle disabled
+#define TCP_WND                         (4 * TCP_MSS)
+#define TCP_MSS                         1460
+#define ECHO_SEND_BUFFER_SIZE_LOG2_DEFAULT      13 // 13: 8KB
+
+tcpdump on pc host with echo service on esp8266+lwip1.4.0 from espressif:
 
 13:21:31.408450 IP PCHOST.39938 > LWIP140.10102: Flags [S], seq 3433824767, win 29200, options [mss 1460,sackOK,TS val 1423473579 ecr 0,nop,wscale 10], length 0
 13:21:31.521485 IP LWIP140.10102 > PCHOST.39938: Flags [S.], seq 6594, ack 3433824768, win 5840, options [mss 1416], length 0
@@ -29,5 +36,5 @@ Here is a problem, lwip sends seq 3945 but last sent seq was 2441 :
 13:21:32.819873 IP PCHOST.39938 > LWIP140.10102: Flags [.], ack 2441, win 36816, length 0
 13:21:35.099885 IP PCHOST.39938 > LWIP140.10102: Flags [.], ack 2441, win 36816, length 0
 
-and pc host is always asking for 2441 and lwip ignores these
-requests (it should respond this very seq at the third same seq request)
+pc host is always asking for 2441 and lwip ignores these requests:
+it should respond this very seq at the third same seq request

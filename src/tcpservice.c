@@ -1,6 +1,4 @@
 
-/// TODO virer await, utiliser pbuf->next?
-
 #include <stdlib.h>
 #include <stdarg.h>
 
@@ -8,27 +6,24 @@
 #include "tcpservice.h"
 #include "cbuf.h"
 
-//XXX a configuration value for this?
+#if 1 // 0 => debug tcpservice
+#define D(x...)
+#define TCPVERBERR 1 // 0:silent 1:fatal-only 2:all
+#else
+#define D(x...) SERIAL_PRINTF(x)
 #define TCPVERBERR 2 // 0:silent 1:fatal-only 2:all
+#endif
 
-static void pbuf_kill (pbuf_t* pbuf)
-{
-	pbuf_t* kill;
-	while (pbuf)
-	{
-		kill = pbuf;
-		pbuf = pbuf->next;
-		pbuf_free(kill);
-	}
-}
+//XXX a configuration value for this?
+//#define TCPVERBERR 2 // 0:silent 1:fatal-only 2:all
 
 static bool tcp_service_check_shutdown (tcpservice_t* s)
 {
-	if (s->is_closing && cbuf_is_empty(&s->send_buffer))
+	if (s->is_closing && s->tcp && cbuf_is_empty(&s->send_buffer) && s->pbuf == NULL)
 	{
-		// everything is acked (pbuf are freed)
+		// everything is sent and received pbuf are freed
 		tcp_close(s->tcp);
-		s->tcp = NULL; // lwip has/will free this
+		s->tcp = NULL;
 		if (s->cb_cleanup)
 			s->cb_cleanup(s);
 		if (s->sendbuf)
@@ -41,12 +36,11 @@ static bool tcp_service_check_shutdown (tcpservice_t* s)
 
 void tcp_service_close (tcpservice_t* s)
 {
-	if (s->tcp)
+	if (s->tcp && !s->is_closing)
 	{
 		s->is_closing = true;
 		if (s->cb_closing)
 			s->cb_closing(s);
-		tcp_service_check_shutdown(s);
 	}
 }
 
@@ -82,48 +76,47 @@ static err_t cbuf_tcp_send (tcpservice_t* tcp)
 	err_t err = ERR_OK;
 	size_t sndbuf, sendsize;
 	char* data;
-	
+
+D("1");
+	if (!tcp->tcp)
+		return ERR_OK;
+
 	while ((sndbuf = tcp_sndbuf(tcp->tcp)) > 0)
 	{
+D("2(%d)", sndbuf);
 		if ((sendsize = cbuf_read_ptr(&tcp->send_buffer, &data, sndbuf)) == 0)
 			break;
+D("3(%d)", sendsize);
 		if ((err = tcp_write(tcp->tcp, data, sendsize, /*tcpflags=0=PUSH,NOCOPY*/0)) != ERR_OK)
 		{
+D("e(%d)",err);
 			tcp_service_error(tcp, err);
 			break;
 		}
 	}
 
-        if ((err = tcp_output(tcp->tcp)) != ERR_OK)
+        if (err == ERR_OK && (err = tcp_output(tcp->tcp)) != ERR_OK)
 		tcp_service_error(tcp, err);
+D("4");
 	return err;
 }
 
 static void tcp_service_give_back (tcpservice_t* peer, pbuf_t* pbuf)
 {
-	// pbuf chains are chained, pbuf->tot_len is irrelevant here
-
 	if (pbuf)
 	{
+D("5");
 		// a new pbuf has come
 		if (peer->pbuf)
-		{
-			// we already have pbufs to process,
-			// store the new one at the end of the
-			// current chain
-			pbuf_t* it = peer->pbuf;
-			while (it->next)
-				it = it->next;
-			it->next = pbuf;
-		}
+			pbuf_cat(peer->pbuf, pbuf);
 		else
-			// store our only pbuf
 			peer->pbuf = pbuf;
 	}
 
 	size_t swallowed = 0;	
 	while (peer->pbuf)
 	{
+D("6");
 		// give data to user
 		size_t acked_by_user = peer->cb_recv
 			(
@@ -132,21 +125,25 @@ static void tcp_service_give_back (tcpservice_t* peer, pbuf_t* pbuf)
 				peer->pbuf->len - peer->pbuf_taken
 			);
 
+		if (acked_by_user == 0)
+			break;
+D("7(%d)", acked_by_user);
 		if ((peer->pbuf_taken += acked_by_user) == peer->pbuf->len)
 		{
 			// current pbuf is fully sallowed, skip+delete
 			pbuf_t* deleteme = peer->pbuf;
+			peer->pbuf = pbuf_dechain(peer->pbuf);
 			peer->pbuf_taken = 0;
-			peer->pbuf = peer->pbuf->next;
 			pbuf_free(deleteme);
 		}
 		swallowed += acked_by_user;
 	}
-
+D("8(%d)",swallowed);
 	// report to lwip how much data
 	// have been acknowledged by peer receive callback
 	if (swallowed)
 		tcp_recved(peer->tcp, swallowed);
+D("9");
 }
 
 static err_t tcp_service_receive (void* svc, struct tcp_pcb* pcb, pbuf_t* pbuf, err_t err)
@@ -155,18 +152,17 @@ static err_t tcp_service_receive (void* svc, struct tcp_pcb* pcb, pbuf_t* pbuf, 
 
 	if (err == ERR_OK)
 	{
-if (pbuf)
-{
-if (pbuf->next) SERIAL_PRINTF("CHAIN\n");
-if (pbuf->len != pbuf->tot_len) SERIAL_PRINTF("CHAIN2\n");
-}
+D("\nr");pbuf_t* x=peer->pbuf;while(x){D("(%d)",x->len);x=x->next;}D("N");x=pbuf;while(x){D("(%d)",x->len);x=x->next;}
 		// feed user with new and awaiting pbufs
 		tcp_service_give_back(peer, pbuf);
+D("b");
 		// send our output buffer
 		return cbuf_tcp_send(peer);
 	}
 
-	pbuf_kill(pbuf);
+	// bad state
+	tcp_service_error(peer, err);
+	pbuf_free(pbuf);
 	tcp_service_close(peer);
 	return err;
 }
@@ -174,12 +170,13 @@ if (pbuf->len != pbuf->tot_len) SERIAL_PRINTF("CHAIN2\n");
 static err_t tcp_service_ack (void *svc, struct tcp_pcb *pcb, u16_t len)
 {
 	tcpservice_t* peer = (tcpservice_t*)svc;
+D("\nc(%d)", len);
 	if (len)
 		cbuf_ack(&peer->send_buffer, len);
 
 	// feed user with awaiting pbufs 
 	tcp_service_give_back(peer, NULL);
-
+D("d");
 	return tcp_service_check_shutdown(peer)?
 		ERR_OK:
 		cbuf_tcp_send(peer);
@@ -189,16 +186,15 @@ static err_t tcp_service_poll (void* svc, struct tcp_pcb* pcb)
 { 
 	LWIP_UNUSED_ARG(pcb);
 	tcpservice_t* peer = (tcpservice_t*)svc;
-	return peer->cb_poll? peer->cb_poll(peer): ERR_OK;
+	return tcp_service_check_shutdown(peer)? ERR_OK: peer->cb_poll? peer->cb_poll(peer): ERR_OK;
 }
 
 static err_t tcp_service_incoming_peer (void* svc, struct tcp_pcb * peer_pcb, err_t err)
 {
 	LWIP_UNUSED_ARG(err);
-
 	tcpservice_t* listener = (tcpservice_t*)svc;
-	tcp_accepted(listener->tcp);
 
+	tcp_accepted(listener->tcp);
 	tcpservice_t* peer = listener->cb_get_new_peer(listener);
 	if (!peer)
 		return ERR_MEM; //XXX handle this better
