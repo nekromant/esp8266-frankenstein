@@ -38,7 +38,6 @@
 #ifndef __LWIPOPTS_H__
 #define __LWIPOPTS_H__
 
-
 /*
    -----------------------------------------------
    ---------- Platform specific locking ----------
@@ -886,9 +885,10 @@
  * TCP_WND: The size of a TCP window.  This must be at least 
  * (2 * TCP_MSS) for things to work well
  */
-#ifndef TCP_WND
-#define TCP_WND                         (4 * TCP_MSS)
-#endif 
+//#ifndef TCP_WND
+//#define TCP_WND                         (4 * TCP_MSS)
+#define TCP_WND                         (2 * TCP_MSS)
+//#endif 
 
 /**
  * TCP_MAXRTX: Maximum number of retransmissions of data segments.
@@ -933,9 +933,11 @@
  * when opening a connection. For the transmit size, this MSS sets
  * an upper limit on the MSS advertised by the remote host.
  */
-#ifndef TCP_MSS
-#define TCP_MSS                         1460
-#endif
+//#ifndef TCP_MSS
+//#define TCP_MSS                         1460
+//#define TCP_MSS                         536
+#define TCP_MSS                         1024
+//#endif
 
 /**
  * TCP_CALCULATE_EFF_SEND_MSS: "The maximum size of a segment that TCP really

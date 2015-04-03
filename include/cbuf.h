@@ -2,8 +2,9 @@
 #define _CBUF_H_
 
 #include <stdlib.h>
+#include <c_types.h>
 
-typedef size_t	cbsize_t;
+typedef uint16_t cbsize_t;
 
 // Circular buffer object
 typedef struct cbuf_s
@@ -14,7 +15,7 @@ typedef struct cbuf_s
 	cbsize_t	unread;		// index of next unread data
 	char*		buf;		// data buffer
 	char		empty;		// no data
-	char		allread;	// ((read == unread) == all is swallowed)
+	char		allread;	// (=(read == unread)) => all is swallowed)
 } cbuf_t;
 
 // GIVE log2() of desired size
@@ -54,7 +55,7 @@ void cbuf_init (cbuf_t* cb, char* userbuf, char sizelog2);
 
 // regular write/copy user data into buffer
 // return effective size copied <= desired_len
-cbsize_t	cbuf_write	(cbuf_t* cb, const char* data, cbsize_t desired_len);
+cbsize_t	cbuf_write	(cbuf_t* cb, const void* data, cbsize_t desired_len);
 
 // regular read/copy buffer into user data
 // return effctive size copied <= desired_len
