@@ -151,5 +151,5 @@ static int do_udplisten(int argc, const char* const* argv)
 CONSOLE_CMD(udplisten, 2, 2, 
 	    do_udplisten, do_listen_interrupt, NULL,
 	    "Listen for incoming data on udp port. CTRL+C to terminate."
-	    HELPSTR_NEWLINE "listen 8080"
+	    HELPSTR_NEWLINE "udplisten 8080"
 );
