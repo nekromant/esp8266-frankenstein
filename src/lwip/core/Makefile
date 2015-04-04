@@ -9,7 +9,6 @@ objects-y+=netif.o
 objects-y+=pbuf.o
 objects-y+=raw.o
 objects-y+=stats.o
-objects-y+=sys_arch.o
 objects-y+=sys.o
 objects-y+=tcp.o
 objects-y+=tcp_in.o

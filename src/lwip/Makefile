@@ -1,1 +1,1 @@
-subdirs-y += api app core netif
+subdirs-y += api core netif
