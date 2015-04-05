@@ -179,20 +179,19 @@ static u8_t memp_memory[MEM_ALIGNMENT - 1
 
 #if MEMP_SANITY_CHECK
 /**
- * Check that memp-lists don't form a circle, modify by ives at 2014.4.23.
+ * Check that memp-lists don't form a circle
  */
 static int 
 memp_sanity(void)
 {
-  s16_t i;
-  struct memp *t, *h;
+  s16_t i, c;
+  struct memp *m, *n;
 
   for (i = 0; i < MEMP_MAX; i++) {
-    t = memp_tab[i];
-    if(t != NULL) {
-      for (h = t->next; (t != NULL) && (h != NULL); t = t->next,
-        h = (((h->next != NULL) && (h->next->next != NULL)) ? h->next->next : NULL)) {
-        if (t == h) {
+    for (m = memp_tab[i]; m != NULL; m = m->next) {
+      c = 1;
+      for (n = memp_tab[i]; n != NULL; n = n->next) {
+        if (n == m && --c < 0) {
           return 0;
         }
       }
@@ -471,20 +470,3 @@ memp_free(memp_t type, void *mem)
 }
 
 #endif /* MEMP_MEM_MALLOC */
-#if 0
-void memp_dump(void)
-{
-	  printf("sizeof raw_pcb %u, memp_s1 %u, %s\n", sizeof(struct raw_pcb), memp_sizes[0], memp_desc[0]);
-	  printf("sizeof udp_pcb %u, memp_s2 %u, %s\n", sizeof(struct udp_pcb), memp_sizes[1], memp_desc[1]);
-	  printf("sizeof tcp_pcb %u, memp_s3 %u, %s\n", sizeof(struct tcp_pcb), memp_sizes[2], memp_desc[2]);
-	  printf("sizeof tcp_pcb_listen %u, memp_s4 %u, %s\n", sizeof(struct tcp_pcb_listen), memp_sizes[3], memp_desc[3]);
-	  printf("sizeof tcp_seg %u, memp_s5 %u, %s\n", sizeof(struct tcp_seg), memp_sizes[4], memp_desc[4]);
-	  printf("sizeof sys_timeo %u, memp_s6 %u, %s\n", sizeof(struct sys_timeo), memp_sizes[5], memp_desc[5]);
-	  printf("sizeof pbuf %u, memp_s7 %u, %s\n", sizeof(struct pbuf), memp_sizes[6], memp_desc[6]);
-	  printf("align pbuf size %u, memp_s8 %u, %s\n", (PBUF_POOL_BUFSIZE), memp_sizes[7], memp_desc[7]);
-	  printf("TCP_MSS %d PBUF_LINK_HLEN %d ETH_PAD_SIZE %d\n", TCP_MSS, PBUF_LINK_HLEN, ETH_PAD_SIZE);
-	  printf("TCP_MSS + PBUF_LINK_HLEN + ETH_PAD_SIZE %d \n", TCP_MSS+PBUF_LINK_HLEN+ETH_PAD_SIZE+40);
-	  printf("test size %u\n",memp_sizes_test[0]);
-	  printf("sizeof memp_memory_PBUF_pool %u \n", sizeof(memp_memory_PBUF_POOL_base));
-}
-#endif //0000

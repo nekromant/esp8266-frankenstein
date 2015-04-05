@@ -291,6 +291,7 @@ tcp_input(struct pbuf *p, struct netif *inp)
     /* Set up a tcp_seg structure. */
     inseg.next = NULL;
     inseg.len = p->tot_len;
+    inseg.dataptr = p->payload;
     inseg.p = p;
     inseg.tcphdr = tcphdr;
 
@@ -331,12 +332,6 @@ tcp_input(struct pbuf *p, struct netif *inp)
       } else if (recv_flags & TF_CLOSED) {
         /* The connection has been closed and we will deallocate the
            PCB. */
-        if (!(pcb->flags & TF_RXCLOSED)) {
-          /* Connection closed although the application has only shut down the
-             tx side: call the PCB's err callback and indicate the closure to
-             ensure the application doesn't continue using the PCB. */
-          TCP_EVENT_ERR(pcb->errf, pcb->callback_arg, ERR_CLSD);
-        }
         tcp_pcb_remove(&tcp_active_pcbs, pcb);
         memp_free(MEMP_TCP_PCB, pcb);
       } else {
@@ -448,8 +443,6 @@ static err_t
 tcp_listen_input(struct tcp_pcb_listen *pcb)
 {
   struct tcp_pcb *npcb;
-  struct tcp_pcb *pactive_pcb;
-  u8_t active_pcb_num = 0;
   err_t rc;
 
   /* In the LISTEN state, we check for incoming SYN segments,
@@ -469,13 +462,6 @@ tcp_listen_input(struct tcp_pcb_listen *pcb)
       return ERR_ABRT;
     }
 #endif /* TCP_LISTEN_BACKLOG */
-    for(pactive_pcb = tcp_active_pcbs; pactive_pcb != NULL; pactive_pcb = pactive_pcb->next)
-    	active_pcb_num ++;
-    if (active_pcb_num == MEMP_NUM_TCP_PCB){
-    	LWIP_DEBUGF(TCP_DEBUG, ("tcp_listen_input: exceed the number of active TCP connections\n"));
-    	TCP_STATS_INC(tcp.memerr);
-    	return ERR_MEM;
-    }
     npcb = tcp_alloc(pcb->prio);
     /* If a new PCB could not be created (probably due to lack of memory),
        we don't do anything, but rely on the sender will retransmit the
@@ -1181,15 +1167,16 @@ tcp_receive(struct tcp_pcb *pcb)
           LWIP_ASSERT("pbuf_header failed", 0);
         }
       }
+      /* KJM following line changed to use p->payload rather than inseg->p->payload
+         to fix bug #9076 */
+      inseg.dataptr = p->payload;
       inseg.len -= (u16_t)(pcb->rcv_nxt - seqno);
       inseg.tcphdr->seqno = seqno = pcb->rcv_nxt;
     }
     else {
-      if (TCP_SEQ_LT(seqno, pcb->rcv_nxt)){//seqno < rcv_nxt
+      if (TCP_SEQ_LT(seqno, pcb->rcv_nxt)){
         /* the whole segment is < rcv_nxt */
         /* must be a duplicate of a packet that has already been correctly handled */
-
-
 
         LWIP_DEBUGF(TCP_INPUT_DEBUG, ("tcp_receive: duplicate seqno %"U32_F"\n", seqno));
         tcp_ack_now(pcb);

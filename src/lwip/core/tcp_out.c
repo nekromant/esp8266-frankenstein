@@ -166,6 +166,7 @@ tcp_create_segment(struct tcp_pcb *pcb, struct pbuf *p, u8_t flags, u32_t seqno,
   seg->flags = optflags;
   seg->next = NULL;
   seg->p = p;
+  seg->dataptr = p->payload;
   seg->len = p->tot_len - optlen;
 #if TCP_OVERSIZE_DBGCHECK
   seg->oversize_left = 0;
@@ -589,6 +590,10 @@ tcp_write(struct tcp_pcb *pcb, const void *arg, u16_t len, u8_t apiflags)
     seg->chksum_swapped = chksum_swapped;
     seg->flags |= TF_SEG_DATA_CHECKSUMMED;
 #endif /* TCP_CHECKSUM_ON_COPY */
+    /* Fix dataptr for the nocopy case */
+    if ((apiflags & TCP_WRITE_FLAG_COPY) == 0) {
+      seg->dataptr = (u8_t*)arg + pos;
+    }
 
     /* first segment of to-be-queued data? */
     if (queue == NULL) {
@@ -1078,12 +1083,6 @@ tcp_output_segment(struct tcp_seg *seg, struct tcp_pcb *pcb)
   }
 #endif
 
-  /* Set retransmission timer running if it is not currently enabled 
-     This must be set before checking the route. modify by ives at 2014.4.24*/
-  if (pcb->rtime == -1) {
-    pcb->rtime = 0;
-  }
-
   /* If we don't have a local IP address, we get one by
      calling ip_route(). */
   if (ip_addr_isany(&(pcb->local_ip))) {
@@ -1092,6 +1091,11 @@ tcp_output_segment(struct tcp_seg *seg, struct tcp_pcb *pcb)
       return;
     }
     ip_addr_copy(pcb->local_ip, netif->ip_addr);
+  }
+
+  /* Set retransmission timer running if it is not currently enabled */
+  if(pcb->rtime == -1) {
+    pcb->rtime = 0;
   }
 
   if (pcb->rttest == 0) {
@@ -1440,9 +1444,7 @@ tcp_zero_window_probe(struct tcp_pcb *pcb)
     TCPH_FLAGS_SET(tcphdr, TCP_ACK | TCP_FIN);
   } else {
     /* Data segment, copy in one byte from the head of the unacked queue */
-    struct tcp_hdr *thdr = (struct tcp_hdr *)seg->p->payload;
-    char *d = ((char *)p->payload + TCP_HLEN);
-    pbuf_copy_partial(seg->p, d, 1, TCPH_HDRLEN(thdr) * 4);
+    *((char *)p->payload + TCP_HLEN) = *(char *)seg->dataptr;
   }
 
 #if CHECKSUM_GEN_TCP

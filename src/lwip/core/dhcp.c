@@ -958,11 +958,6 @@ dhcp_bind(struct netif *netif)
     LWIP_DEBUGF(DHCP_DEBUG | LWIP_DBG_TRACE | LWIP_DBG_STATE, ("dhcp_bind(): set request timeout %"U32_F" msecs\n", dhcp->offered_t2_rebind*1000));
   }
 
-  /* If we have sub 1 minute lease, t2 and t1 will kick in at the same time. modify by ives at 2014.4.22*/
-  if ((dhcp->t1_timeout >= dhcp->t2_timeout) && (dhcp->t2_timeout > 0)) {
-    dhcp->t1_timeout = 0;
-  }
-
   if (dhcp->subnet_mask_given) {
     /* copy offered network mask */
     ip_addr_copy(sn_mask, dhcp->offered_sn_mask);
@@ -980,8 +975,7 @@ dhcp_bind(struct netif *netif)
 
   ip_addr_copy(gw_addr, dhcp->offered_gw_addr);
   /* gateway address not given? */
-  typeof(gw_addr)* gw_addr2 = &gw_addr; // sickly trying to keep gcc mouth shut
-  if (ip_addr_isany(/*&gw_addr*/gw_addr2)) {
+  if (ip_addr_isany(&gw_addr)) {
     /* copy network address */
     ip_addr_get_network(&gw_addr, &dhcp->offered_ip_addr, &sn_mask);
     /* use first host address on network as gateway */
@@ -1190,9 +1184,6 @@ dhcp_release(struct netif *netif)
   err_t result;
   u16_t msecs;
   LWIP_DEBUGF(DHCP_DEBUG | LWIP_DBG_TRACE, ("dhcp_release()\n"));
-  if (dhcp == NULL) {
-    return ERR_ARG;
-  }
 
   /* idle DHCP client */
   dhcp_set_state(dhcp, DHCP_OFF);
@@ -1474,14 +1465,8 @@ decode_next:
     if (offset >= q->len) {
       offset -= q->len;
       offset_max -= q->len;
-      if ((offset < offset_max) && offset_max) { //modify by ives at 2014.4.22
         q = q->next;
-        LWIP_ASSERT("next pbuf was null", q);
         options = (u8_t*)q->payload;
-      } else {
-        /* We've run out of bytes, probably no end marker. Don't proceed. */
-        break;
-      }
     }
   }
   /* is this an overloaded message? */
@@ -1666,14 +1651,11 @@ dhcp_create_msg(struct netif *netif, struct dhcp *dhcp, u8_t message_type)
   LWIP_ASSERT("dhcp_create_msg: check that first pbuf can hold struct dhcp_msg",
            (dhcp->p_out->len >= sizeof(struct dhcp_msg)));
 
-  /* DHCP_REQUEST should reuse 'xid' from DHCPOFFER modify by ives at 2014.4.22*/
-  if (message_type != DHCP_REQUEST) {
   	/* reuse transaction identifier in retransmissions */
   	if (dhcp->tries == 0) {
       	xid++;
   	}
   	dhcp->xid = xid;
-  }
   LWIP_DEBUGF(DHCP_DEBUG | LWIP_DBG_TRACE,
               ("transaction id xid(%"X32_F")\n", xid));
 
@@ -1701,7 +1683,7 @@ dhcp_create_msg(struct netif *netif, struct dhcp *dhcp, u8_t message_type)
   ip_addr_set_zero(&dhcp->msg_out->giaddr);
   for (i = 0; i < DHCP_CHADDR_LEN; i++) {
     /* copy netif hardware address, pad with zeroes */
-    dhcp->msg_out->chaddr[i] = (i < netif->hwaddr_len && i < NETIF_MAX_HWADDR_LEN) ? netif->hwaddr[i] : 0/* pad byte*/;
+    dhcp->msg_out->chaddr[i] = (i < netif->hwaddr_len) ? netif->hwaddr[i] : 0/* pad byte*/;
   }
   for (i = 0; i < DHCP_SNAME_LEN; i++) {
     dhcp->msg_out->sname[i] = 0;
@@ -1755,8 +1737,7 @@ dhcp_option_trailer(struct dhcp *dhcp)
   LWIP_ASSERT("dhcp_option_trailer: dhcp->options_out_len < DHCP_OPTIONS_LEN\n", dhcp->options_out_len < DHCP_OPTIONS_LEN);
   dhcp->msg_out->options[dhcp->options_out_len++] = DHCP_OPTION_END;
   /* packet is too small, or not 4 byte aligned? */
-  while (((dhcp->options_out_len < DHCP_MIN_OPTIONS_LEN) || (dhcp->options_out_len & 3)) &&
-         (dhcp->options_out_len < DHCP_OPTIONS_LEN)) {
+  while ((dhcp->options_out_len < DHCP_MIN_OPTIONS_LEN) || (dhcp->options_out_len & 3)) {
     /* LWIP_DEBUGF(DHCP_DEBUG,("dhcp_option_trailer:dhcp->options_out_len=%"U16_F", DHCP_OPTIONS_LEN=%"U16_F, dhcp->options_out_len, DHCP_OPTIONS_LEN)); */
     LWIP_ASSERT("dhcp_option_trailer: dhcp->options_out_len < DHCP_OPTIONS_LEN\n", dhcp->options_out_len < DHCP_OPTIONS_LEN);
     /* add a fill/padding byte */

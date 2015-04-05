@@ -91,7 +91,7 @@ struct tcp_pcb *tcp_tw_pcbs;
 #define NUM_TCP_PCB_LISTS               4
 #define NUM_TCP_PCB_LISTS_NO_TIME_WAIT  3
 /** An array with all (non-temporary) PCB lists, mainly used for smaller code size */
-struct tcp_pcb ** const tcp_pcb_lists[] = {&tcp_listen_pcbs.pcbs, &tcp_bound_pcbs,
+struct tcp_pcb **tcp_pcb_lists[] = {&tcp_listen_pcbs.pcbs, &tcp_bound_pcbs,
   &tcp_active_pcbs, &tcp_tw_pcbs};
 
 /** Only used for temporary storage. */
@@ -173,9 +173,7 @@ tcp_close_shutdown(struct tcp_pcb *pcb, u8_t rst_on_unacked_data)
      * is erroneous, but this should never happen as the pcb has in those cases
      * been freed, and so any remaining handles are bogus. */
     err = ERR_OK;
-    if (pcb->local_port != 0) {
     	TCP_RMV(&tcp_bound_pcbs, pcb); 
-    }
     memp_free(MEMP_TCP_PCB, pcb);
     pcb = NULL;
     break;
@@ -357,12 +355,12 @@ tcp_abandon(struct tcp_pcb *pcb, int reset)
       tcp_segs_free(pcb->ooseq);
     }
 #endif /* TCP_QUEUE_OOSEQ */
+    memp_free(MEMP_TCP_PCB, pcb);
+    TCP_EVENT_ERR(errf, errf_arg, ERR_ABRT);
     if (reset) {
       LWIP_DEBUGF(TCP_RST_DEBUG, ("tcp_abandon: sending RST\n"));
       tcp_rst(seqno, ackno, &local_ip, &remote_ip, local_port, remote_port);
     }
-	TCP_EVENT_ERR(errf, errf_arg, ERR_ABRT);
-	memp_free(MEMP_TCP_PCB, pcb);
   }
 }
 
@@ -434,7 +432,6 @@ tcp_bind(struct tcp_pcb *pcb, ip_addr_t *ipaddr, u16_t port)
           if (ip_addr_isany(&(cpcb->local_ip)) ||
               ip_addr_isany(ipaddr) ||
               ip_addr_cmp(&(cpcb->local_ip), ipaddr)) {
-              //os_printf("Address in use\n");
             return ERR_USE;
           }
         }
@@ -519,9 +516,7 @@ tcp_listen_with_backlog(struct tcp_pcb *pcb, u8_t backlog)
   lpcb->ttl = pcb->ttl;
   lpcb->tos = pcb->tos;
   ip_addr_copy(lpcb->local_ip, pcb->local_ip);
-  if (pcb->local_port != 0) {
     TCP_RMV(&tcp_bound_pcbs, pcb);
-  }
   memp_free(MEMP_TCP_PCB, pcb);
 #if LWIP_CALLBACK_API
   lpcb->accept = tcp_accept_null;
@@ -617,7 +612,7 @@ tcp_new_port(void)
   static u16_t port = TCP_LOCAL_PORT_RANGE_START;
   
  again:
-  if (++port >= TCP_LOCAL_PORT_RANGE_END) {
+  if (++port > TCP_LOCAL_PORT_RANGE_END) {
     port = TCP_LOCAL_PORT_RANGE_START;
   }
   /* Check all PCB lists. */
@@ -649,7 +644,6 @@ tcp_connect(struct tcp_pcb *pcb, ip_addr_t *ipaddr, u16_t port,
 {
   err_t ret;
   u32_t iss;
-  u16_t old_local_port;
 
   LWIP_ERROR("tcp_connect: can only connected from state CLOSED", pcb->state == CLOSED, return ERR_ISCONN);
 
@@ -674,10 +668,8 @@ tcp_connect(struct tcp_pcb *pcb, ip_addr_t *ipaddr, u16_t port,
     ip_addr_copy(pcb->local_ip, netif->ip_addr);
   }
 
-  old_local_port = pcb->local_port;
   if (pcb->local_port == 0) {
     pcb->local_port = tcp_new_port();
-
   }
 #if SO_REUSE
   if ((pcb->so_options & SOF_REUSEADDR) != 0) {
@@ -725,10 +717,9 @@ tcp_connect(struct tcp_pcb *pcb, ip_addr_t *ipaddr, u16_t port,
   /* Send a SYN together with the MSS option. */
   ret = tcp_enqueue_flags(pcb, TCP_SYN);
   if (ret == ERR_OK) {
+    /* SYN segment was enqueued, changed the pcbs state now */
     pcb->state = SYN_SENT;
-    if (old_local_port != 0) {
       TCP_RMV(&tcp_bound_pcbs, pcb);
-    }
     TCP_REG(&tcp_active_pcbs, pcb);
     snmp_inc_tcpactiveopens();
 
@@ -806,8 +797,6 @@ tcp_slowtmr(void)
            * connect to somebody (i.e., we are in SYN_SENT). */
           if (pcb->state != SYN_SENT) {
             pcb->rto = ((pcb->sa >> 3) + pcb->sv) << tcp_backoff[pcb->nrtx];
-//			if (pcb->rto >= TCP_MAXRTO)
-//            	pcb->rto >>= 1;
           }
 
           /* Reset the retransmission timer. */
@@ -917,12 +906,12 @@ tcp_slowtmr(void)
         tcp_active_pcbs = pcb->next;
       }
       
+      TCP_EVENT_ERR(pcb->errf, pcb->callback_arg, ERR_ABRT);
       if (pcb_reset) {
         tcp_rst(pcb->snd_nxt, pcb->rcv_nxt, &pcb->local_ip, &pcb->remote_ip,
           pcb->local_port, pcb->remote_port);
       }
 	  
-	  TCP_EVENT_ERR(pcb->errf, pcb->callback_arg, ERR_ABRT);
       pcb2 = pcb;
       pcb = pcb->next;
       memp_free(MEMP_TCP_PCB, pcb2);
@@ -1184,7 +1173,6 @@ tcp_alloc(u8_t prio)
   
   pcb = (struct tcp_pcb *)memp_malloc(MEMP_TCP_PCB);
   if (pcb == NULL) {
-	//os_printf("tcp_pcb memory is fail\n");
 	/* Try killing oldest connection in TIME-WAIT. */
     LWIP_DEBUGF(TCP_DEBUG, ("tcp_alloc: killing off oldest TIME-WAIT connection\n"));
     tcp_kill_timewait();
@@ -1218,9 +1206,9 @@ tcp_alloc(u8_t prio)
     /* As initial send MSS, we use TCP_MSS but limit it to 536.
        The send MSS is updated when an MSS option is received. */
     pcb->mss = (TCP_MSS > 536) ? 536 : TCP_MSS;
-    pcb->rto = 1000 / TCP_SLOW_INTERVAL;
+    pcb->rto = 3000 / TCP_SLOW_INTERVAL;
     pcb->sa = 0;
-    pcb->sv = 1000 / TCP_SLOW_INTERVAL;
+    pcb->sv = 3000 / TCP_SLOW_INTERVAL;
     pcb->rtime = -1;
     pcb->cwnd = 1;
     iss = tcp_next_iss();

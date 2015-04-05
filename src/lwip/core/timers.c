@@ -59,7 +59,7 @@
 
 
 /** The one and only timeout list */
-static struct sys_timeo *next_timeout = NULL;
+static struct sys_timeo *next_timeout;
 #if NO_SYS
 static u32_t timeouts_last_time;
 #endif /* NO_SYS */

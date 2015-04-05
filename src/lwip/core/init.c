@@ -267,52 +267,37 @@ lwip_init(void)
 #if !NO_SYS
   sys_init();
 #endif /* !NO_SYS */
-#if 0
-  mem_init(&_bss_end);
-#endif
+  //mem_init();
   memp_init();
-
   pbuf_init();
-
   netif_init();
- 
 #if LWIP_SOCKET
   lwip_socket_init();
 #endif /* LWIP_SOCKET */
   ip_init();
- 
 #if LWIP_ARP
   etharp_init();
-
 #endif /* LWIP_ARP */
 #if LWIP_RAW
   raw_init();
- 
 #endif /* LWIP_RAW */
 #if LWIP_UDP
   udp_init();
- 
 #endif /* LWIP_UDP */
 #if LWIP_TCP
-  MEMP_NUM_TCP_PCB = 5;
   tcp_init();
-  
 #endif /* LWIP_TCP */
 #if LWIP_SNMP
   snmp_init();
-  
 #endif /* LWIP_SNMP */
 #if LWIP_AUTOIP
   autoip_init();
- 
 #endif /* LWIP_AUTOIP */
 #if LWIP_IGMP
   igmp_init();
-
 #endif /* LWIP_IGMP */
 #if LWIP_DNS
   dns_init();
-
 #endif /* LWIP_DNS */
 
 #if LWIP_TIMERS

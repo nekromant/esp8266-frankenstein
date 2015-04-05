@@ -447,8 +447,7 @@ ip_input(struct pbuf *p, struct netif *inp)
   /* broadcast or multicast packet source address? Compliant with RFC 1122: 3.2.1.3 */
 #if IP_ACCEPT_LINK_LAYER_ADDRESSING
   /* DHCP servers need 0.0.0.0 to be allowed as source address (RFC 1.1.2.2: 3.2.1.3/a) */
-  typeof(current_iphdr_src)* current_iphdr_src2 = &current_iphdr_src; // sickly trying to keep gcc mouth shut
-  if (check_ip_src && !ip_addr_isany(current_iphdr_src2))
+  if (check_ip_src && !ip_addr_isany(&current_iphdr_src))
 #endif /* IP_ACCEPT_LINK_LAYER_ADDRESSING */
   {  if ((ip_addr_isbroadcast(&current_iphdr_src, inp)) ||
          (ip_addr_ismulticast(&current_iphdr_src))) {
@@ -771,7 +770,7 @@ err_t ip_output_if_opt(struct pbuf *p, ip_addr_t *src, ip_addr_t *dest,
   }
 #endif /* IP_FRAG */
 
-  LWIP_DEBUGF(IP_DEBUG, ("netif->output()\n"));
+  LWIP_DEBUGF(IP_DEBUG, ("netif->output()"));
   return netif->output(netif, p, dest);
 }
 
