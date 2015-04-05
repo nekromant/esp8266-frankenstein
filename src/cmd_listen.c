@@ -119,3 +119,37 @@ CONSOLE_CMD(listen, 2, 2,
 	    "Listen for incoming data ona port"
 	    HELPSTR_NEWLINE "listen 8080"
 );
+
+LOCAL void ICACHE_FLASH_ATTR udp_recv(void *arg, char *pusrdata, unsigned short length)
+{
+	struct espconn *pesp_conn = arg;
+	console_printf("client %d.%d.%d.%d:%d -> ", pesp_conn->proto.udp->remote_ip[0],
+		   pesp_conn->proto.udp->remote_ip[1],pesp_conn->proto.udp->remote_ip[2],
+    		pesp_conn->proto.udp->remote_ip[3],pesp_conn->proto.udp->remote_port);
+	console_printf("received %d bytes of data\n", length);
+}
+
+LOCAL struct espconn udpconn;
+static int do_udplisten(int argc, const char* const* argv)
+{
+	int port = atoi(argv[1]);
+
+	console_printf("Listening (UDP) on port %d\n", port);
+	memset(&udpconn, 0, sizeof(struct espconn));
+	//espconn_create(&udpconn);
+	udpconn.type = ESPCONN_UDP;
+	udpconn.proto.udp = (esp_udp *)os_zalloc(sizeof(esp_udp));
+	udpconn.proto.udp->local_port = port;
+	espconn_regist_recvcb(&udpconn, udp_recv);
+	//espconn_accept(&udpconn);
+	espconn_create(&udpconn);
+
+	console_lock(1);
+	return 0;
+}
+
+CONSOLE_CMD(udplisten, 2, 2, 
+	    do_udplisten, do_listen_interrupt, NULL,
+	    "Listen for incoming data on udp port. CTRL+C to terminate."
+	    HELPSTR_NEWLINE "udplisten 8080"
+);
