@@ -148,7 +148,8 @@ struct stats_ {
 
 extern struct stats_ lwip_stats;
 
-void stats_init(void)ICACHE_FLASH_ATTR;
+ICACHE_FLASH_ATTR
+void stats_init(void);
 
 #define STATS_INC(x) ++lwip_stats.x
 #define STATS_DEC(x) --lwip_stats.x
@@ -270,12 +271,18 @@ void stats_init(void)ICACHE_FLASH_ATTR;
 
 /* Display of statistics */
 #if LWIP_STATS_DISPLAY
-void stats_display(void)ICACHE_FLASH_ATTR;
-void stats_display_proto(struct stats_proto *proto, char *name)ICACHE_FLASH_ATTR;
-void stats_display_igmp(struct stats_igmp *igmp)ICACHE_FLASH_ATTR;
-void stats_display_mem(struct stats_mem *mem, char *name)ICACHE_FLASH_ATTR;
-void stats_display_memp(struct stats_mem *mem, int index)ICACHE_FLASH_ATTR;
-void stats_display_sys(struct stats_sys *sys)ICACHE_FLASH_ATTR;
+ICACHE_FLASH_ATTR
+void stats_display(void);
+ICACHE_FLASH_ATTR
+void stats_display_proto(struct stats_proto *proto, char *name);
+ICACHE_FLASH_ATTR
+void stats_display_igmp(struct stats_igmp *igmp);
+ICACHE_FLASH_ATTR
+void stats_display_mem(struct stats_mem *mem, char *name);
+ICACHE_FLASH_ATTR
+void stats_display_memp(struct stats_mem *mem, int index);
+ICACHE_FLASH_ATTR
+void stats_display_sys(struct stats_sys *sys);
 #else /* LWIP_STATS_DISPLAY */
 #define stats_display()
 #define stats_display_proto(proto, name)

@@ -52,25 +52,36 @@ extern "C" {
 
 /* Lower layer interface to TCP: */
 #define tcp_init() /* Compatibility define, no init needed. */
-void             tcp_tmr     (void)ICACHE_FLASH_ATTR;  /* Must be called every
+ICACHE_FLASH_ATTR
+void             tcp_tmr     (void);  /* Must be called every
                                          TCP_TMR_INTERVAL
                                          ms. (Typically 250 ms). */
 /* It is also possible to call these two functions at the right
    intervals (instead of calling tcp_tmr()). */
-void             tcp_slowtmr (void)ICACHE_FLASH_ATTR;
-void             tcp_fasttmr (void)ICACHE_FLASH_ATTR;
+ICACHE_FLASH_ATTR
+void             tcp_slowtmr (void);
+ICACHE_FLASH_ATTR
+void             tcp_fasttmr (void);
 
 
 /* Only used by IP to pass a TCP segment to TCP: */
-void             tcp_input   (struct pbuf *p, struct netif *inp)ICACHE_FLASH_ATTR;
+ICACHE_FLASH_ATTR
+void             tcp_input   (struct pbuf *p, struct netif *inp);
 /* Used within the TCP code only: */
-struct tcp_pcb * tcp_alloc   (u8_t prio)ICACHE_FLASH_ATTR;
-void             tcp_abandon (struct tcp_pcb *pcb, int reset)ICACHE_FLASH_ATTR;
-err_t            tcp_send_empty_ack(struct tcp_pcb *pcb)ICACHE_FLASH_ATTR;
-void             tcp_rexmit  (struct tcp_pcb *pcb)ICACHE_FLASH_ATTR;
-void             tcp_rexmit_rto  (struct tcp_pcb *pcb)ICACHE_FLASH_ATTR;
-void             tcp_rexmit_fast (struct tcp_pcb *pcb)ICACHE_FLASH_ATTR;
-u32_t            tcp_update_rcv_ann_wnd(struct tcp_pcb *pcb)ICACHE_FLASH_ATTR;
+ICACHE_FLASH_ATTR
+struct tcp_pcb * tcp_alloc   (u8_t prio);
+ICACHE_FLASH_ATTR
+void             tcp_abandon (struct tcp_pcb *pcb, int reset);
+ICACHE_FLASH_ATTR
+err_t            tcp_send_empty_ack(struct tcp_pcb *pcb);
+ICACHE_FLASH_ATTR
+void             tcp_rexmit  (struct tcp_pcb *pcb);
+ICACHE_FLASH_ATTR
+void             tcp_rexmit_rto  (struct tcp_pcb *pcb);
+ICACHE_FLASH_ATTR
+void             tcp_rexmit_fast (struct tcp_pcb *pcb);
+ICACHE_FLASH_ATTR
+u32_t            tcp_update_rcv_ann_wnd(struct tcp_pcb *pcb);
 
 /**
  * This is the Nagle algorithm: try to combine user data to send as few TCP
@@ -398,13 +409,19 @@ extern struct tcp_pcb *tcp_tmp_pcb;      /* Only used for temporary storage. */
 
 
 /* Internal functions: */
-struct tcp_pcb *tcp_pcb_copy(struct tcp_pcb *pcb)ICACHE_FLASH_ATTR;
-void tcp_pcb_purge(struct tcp_pcb *pcb)ICACHE_FLASH_ATTR;
-void tcp_pcb_remove(struct tcp_pcb **pcblist, struct tcp_pcb *pcb)ICACHE_FLASH_ATTR;
+ICACHE_FLASH_ATTR
+struct tcp_pcb *tcp_pcb_copy(struct tcp_pcb *pcb);
+ICACHE_FLASH_ATTR
+void tcp_pcb_purge(struct tcp_pcb *pcb);
+ICACHE_FLASH_ATTR
+void tcp_pcb_remove(struct tcp_pcb **pcblist, struct tcp_pcb *pcb);
 
-void tcp_segs_free(struct tcp_seg *seg)ICACHE_FLASH_ATTR;
-void tcp_seg_free(struct tcp_seg *seg)ICACHE_FLASH_ATTR;
-struct tcp_seg *tcp_seg_copy(struct tcp_seg *seg)ICACHE_FLASH_ATTR;
+ICACHE_FLASH_ATTR
+void tcp_segs_free(struct tcp_seg *seg);
+ICACHE_FLASH_ATTR
+void tcp_seg_free(struct tcp_seg *seg);
+ICACHE_FLASH_ATTR
+struct tcp_seg *tcp_seg_copy(struct tcp_seg *seg);
 
 #define tcp_ack(pcb)                               \
   do {                                             \
@@ -422,34 +439,48 @@ struct tcp_seg *tcp_seg_copy(struct tcp_seg *seg)ICACHE_FLASH_ATTR;
     (pcb)->flags |= TF_ACK_NOW;                    \
   } while (0)
 
-err_t tcp_send_fin(struct tcp_pcb *pcb)ICACHE_FLASH_ATTR;
-err_t tcp_enqueue_flags(struct tcp_pcb *pcb, u8_t flags)ICACHE_FLASH_ATTR;
+ICACHE_FLASH_ATTR
+err_t tcp_send_fin(struct tcp_pcb *pcb);
+ICACHE_FLASH_ATTR
+err_t tcp_enqueue_flags(struct tcp_pcb *pcb, u8_t flags);
 
-void tcp_rexmit_seg(struct tcp_pcb *pcb, struct tcp_seg *seg)ICACHE_FLASH_ATTR;
+ICACHE_FLASH_ATTR
+void tcp_rexmit_seg(struct tcp_pcb *pcb, struct tcp_seg *seg);
 
+ICACHE_FLASH_ATTR
 void tcp_rst(u32_t seqno, u32_t ackno,
        ip_addr_t *local_ip, ip_addr_t *remote_ip,
-       u16_t local_port, u16_t remote_port)ICACHE_FLASH_ATTR;
+       u16_t local_port, u16_t remote_port);
 
-u32_t tcp_next_iss(void)ICACHE_FLASH_ATTR;
+ICACHE_FLASH_ATTR
+u32_t tcp_next_iss(void);
 
-void tcp_keepalive(struct tcp_pcb *pcb)ICACHE_FLASH_ATTR;
-void tcp_zero_window_probe(struct tcp_pcb *pcb)ICACHE_FLASH_ATTR;
+ICACHE_FLASH_ATTR
+void tcp_keepalive(struct tcp_pcb *pcb);
+ICACHE_FLASH_ATTR
+void tcp_zero_window_probe(struct tcp_pcb *pcb);
 
 #if TCP_CALCULATE_EFF_SEND_MSS
-u16_t tcp_eff_send_mss(u16_t sendmss, ip_addr_t *addr)ICACHE_FLASH_ATTR;
+ICACHE_FLASH_ATTR
+u16_t tcp_eff_send_mss(u16_t sendmss, ip_addr_t *addr);
 #endif /* TCP_CALCULATE_EFF_SEND_MSS */
 
 #if LWIP_CALLBACK_API
-err_t tcp_recv_null(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err)ICACHE_FLASH_ATTR;
+ICACHE_FLASH_ATTR
+err_t tcp_recv_null(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err);
 #endif /* LWIP_CALLBACK_API */
 
 #if TCP_DEBUG || TCP_INPUT_DEBUG || TCP_OUTPUT_DEBUG
-void tcp_debug_print(struct tcp_hdr *tcphdr)ICACHE_FLASH_ATTR;
-void tcp_debug_print_flags(u8_t flags)ICACHE_FLASH_ATTR;
-void tcp_debug_print_state(enum tcp_state s)ICACHE_FLASH_ATTR;
-void tcp_debug_print_pcbs(void)ICACHE_FLASH_ATTR;
-s16_t tcp_pcbs_sane(void)ICACHE_FLASH_ATTR;
+ICACHE_FLASH_ATTR
+void tcp_debug_print(struct tcp_hdr *tcphdr);
+ICACHE_FLASH_ATTR
+void tcp_debug_print_flags(u8_t flags);
+ICACHE_FLASH_ATTR
+void tcp_debug_print_state(enum tcp_state s);
+ICACHE_FLASH_ATTR
+void tcp_debug_print_pcbs(void);
+ICACHE_FLASH_ATTR
+s16_t tcp_pcbs_sane(void);
 #else
 #  define tcp_debug_print(tcphdr)
 #  define tcp_debug_print_flags(flags)
@@ -460,7 +491,8 @@ s16_t tcp_pcbs_sane(void)ICACHE_FLASH_ATTR;
 
 /** External function (implemented in timers.c), called when TCP detects
  * that a timer is needed (i.e. active- or time-wait-pcb found). */
-void tcp_timer_needed(void)ICACHE_FLASH_ATTR;
+ICACHE_FLASH_ATTR
+void tcp_timer_needed(void);
 
 
 #ifdef __cplusplus

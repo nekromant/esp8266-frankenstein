@@ -182,12 +182,17 @@ struct etharp_q_entry {
 #endif /* ARP_QUEUEING */
 
 #define etharp_init() /* Compatibility define, not init needed. */
-void etharp_tmr(void)ICACHE_FLASH_ATTR;
+ICACHE_FLASH_ATTR
+void etharp_tmr(void);
+ICACHE_FLASH_ATTR
 s8_t etharp_find_addr(struct netif *netif, ip_addr_t *ipaddr,
-         struct eth_addr **eth_ret, ip_addr_t **ip_ret)ICACHE_FLASH_ATTR;
-err_t etharp_output(struct netif *netif, struct pbuf *q, ip_addr_t *ipaddr)ICACHE_FLASH_ATTR;
-err_t etharp_query(struct netif *netif, ip_addr_t *ipaddr, struct pbuf *q)ICACHE_FLASH_ATTR;
-err_t etharp_request(struct netif *netif, ip_addr_t *ipaddr)ICACHE_FLASH_ATTR;
+         struct eth_addr **eth_ret, ip_addr_t **ip_ret);
+ICACHE_FLASH_ATTR
+err_t etharp_output(struct netif *netif, struct pbuf *q, ip_addr_t *ipaddr);
+ICACHE_FLASH_ATTR
+err_t etharp_query(struct netif *netif, ip_addr_t *ipaddr, struct pbuf *q);
+ICACHE_FLASH_ATTR
+err_t etharp_request(struct netif *netif, ip_addr_t *ipaddr);
 /** For Ethernet network interfaces, we might want to send "gratuitous ARP";
  *  this is an ARP packet sent by a node in order to spontaneously cause other
  *  nodes to update an entry in their ARP cache.
@@ -196,21 +201,25 @@ err_t etharp_request(struct netif *netif, ip_addr_t *ipaddr)ICACHE_FLASH_ATTR;
 void etharp_cleanup_netif(struct netif *netif);
 
 #if ETHARP_SUPPORT_STATIC_ENTRIES
-err_t etharp_add_static_entry(ip_addr_t *ipaddr, struct eth_addr *ethaddr)ICACHE_FLASH_ATTR;
-err_t etharp_remove_static_entry(ip_addr_t *ipaddr)ICACHE_FLASH_ATTR;
+ICACHE_FLASH_ATTR
+err_t etharp_add_static_entry(ip_addr_t *ipaddr, struct eth_addr *ethaddr);
+ICACHE_FLASH_ATTR
+err_t etharp_remove_static_entry(ip_addr_t *ipaddr);
 #endif /* ETHARP_SUPPORT_STATIC_ENTRIES */
 
 #if LWIP_AUTOIP
+ICACHE_FLASH_ATTR
 err_t etharp_raw(struct netif *netif, const struct eth_addr *ethsrc_addr,
                  const struct eth_addr *ethdst_addr,
                  const struct eth_addr *hwsrc_addr, const ip_addr_t *ipsrc_addr,
                  const struct eth_addr *hwdst_addr, const ip_addr_t *ipdst_addr,
-                 const u16_t opcode)ICACHE_FLASH_ATTR;
+                 const u16_t opcode);
 #endif /* LWIP_AUTOIP */
 
 #endif /* LWIP_ARP */
 
-err_t ethernet_input(struct pbuf *p, struct netif *netif)ICACHE_FLASH_ATTR;
+ICACHE_FLASH_ATTR
+err_t ethernet_input(struct pbuf *p, struct netif *netif);
 
 #define eth_addr_cmp(addr1, addr2) (memcmp((addr1)->addr, (addr2)->addr, ETHARP_HWADDR_LEN) == 0)
 

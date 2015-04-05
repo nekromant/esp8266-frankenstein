@@ -105,12 +105,17 @@ typedef u16_t mem_size_t;
 #define mem_trim(mem, size) (mem)
 #else /* MEM_USE_POOLS */
 /* lwIP alternative malloc */
-void  mem_init(void)ICACHE_FLASH_ATTR;
-void *mem_trim(void *mem, mem_size_t size)ICACHE_FLASH_ATTR;
+ICACHE_FLASH_ATTR
+void  mem_init(void);
+ICACHE_FLASH_ATTR
+void *mem_trim(void *mem, mem_size_t size);
 #endif /* MEM_USE_POOLS */
-void *mem_malloc(mem_size_t size)ICACHE_FLASH_ATTR;
-void *mem_calloc(mem_size_t count, mem_size_t size)ICACHE_FLASH_ATTR;
-void  mem_free(void *mem)ICACHE_FLASH_ATTR;
+ICACHE_FLASH_ATTR
+void *mem_malloc(mem_size_t size);
+ICACHE_FLASH_ATTR
+void *mem_calloc(mem_size_t count, mem_size_t size);
+ICACHE_FLASH_ATTR
+void  mem_free(void *mem);
 #endif /* MEM_LIBC_MALLOC */
 
 /** Calculate memory size for an aligned buffer - returns the next highest

@@ -70,16 +70,21 @@
 extern "C" {
 #endif
 
-u16_t inet_chksum(void *dataptr, u16_t len)ICACHE_FLASH_ATTR;
-u16_t inet_chksum_pbuf(struct pbuf *p)ICACHE_FLASH_ATTR;
+ICACHE_FLASH_ATTR
+u16_t inet_chksum(void *dataptr, u16_t len);
+ICACHE_FLASH_ATTR
+u16_t inet_chksum_pbuf(struct pbuf *p);
+ICACHE_FLASH_ATTR
 u16_t inet_chksum_pseudo(struct pbuf *p,
        ip_addr_t *src, ip_addr_t *dest,
-       u8_t proto, u16_t proto_len)ICACHE_FLASH_ATTR;
+       u8_t proto, u16_t proto_len);
+ICACHE_FLASH_ATTR
 u16_t inet_chksum_pseudo_partial(struct pbuf *p,
        ip_addr_t *src, ip_addr_t *dest,
-       u8_t proto, u16_t proto_len, u16_t chksum_len)ICACHE_FLASH_ATTR;
+       u8_t proto, u16_t proto_len, u16_t chksum_len);
 #if LWIP_CHKSUM_COPY_ALGORITHM
-u16_t lwip_chksum_copy(void *dst, const void *src, u16_t len)ICACHE_FLASH_ATTR;
+ICACHE_FLASH_ATTR
+u16_t lwip_chksum_copy(void *dst, const void *src, u16_t len);
 #endif /* LWIP_CHKSUM_COPY_ALGORITHM */
 
 #ifdef __cplusplus

@@ -76,17 +76,24 @@ struct raw_pcb {
 
 /* The following functions is the application layer interface to the
    RAW code. */
-struct raw_pcb * raw_new        (u8_t proto)ICACHE_FLASH_ATTR;
-void             raw_remove     (struct raw_pcb *pcb)ICACHE_FLASH_ATTR;
-err_t            raw_bind       (struct raw_pcb *pcb, ip_addr_t *ipaddr)ICACHE_FLASH_ATTR;
-err_t            raw_connect    (struct raw_pcb *pcb, ip_addr_t *ipaddr)ICACHE_FLASH_ATTR;
+ICACHE_FLASH_ATTR
+struct raw_pcb * raw_new        (u8_t proto);
+ICACHE_FLASH_ATTR
+void             raw_remove     (struct raw_pcb *pcb);
+ICACHE_FLASH_ATTR
+err_t            raw_bind       (struct raw_pcb *pcb, ip_addr_t *ipaddr);
+ICACHE_FLASH_ATTR
+err_t            raw_connect    (struct raw_pcb *pcb, ip_addr_t *ipaddr);
 
-void             raw_recv       (struct raw_pcb *pcb, raw_recv_fn recv, void *recv_arg)ICACHE_FLASH_ATTR;
-err_t            raw_sendto     (struct raw_pcb *pcb, struct pbuf *p, ip_addr_t *ipaddr)ICACHE_FLASH_ATTR;
+ICACHE_FLASH_ATTR
+void             raw_recv       (struct raw_pcb *pcb, raw_recv_fn recv, void *recv_arg);
+ICACHE_FLASH_ATTR
+err_t            raw_sendto     (struct raw_pcb *pcb, struct pbuf *p, ip_addr_t *ipaddr);
 err_t            raw_send       (struct raw_pcb *pcb, struct pbuf *p);
 
 /* The following functions are the lower layer interface to RAW. */
-u8_t             raw_input      (struct pbuf *p, struct netif *inp)ICACHE_FLASH_ATTR;
+ICACHE_FLASH_ATTR
+u8_t             raw_input      (struct pbuf *p, struct netif *inp);
 #define raw_init() /* Compatibility define, not init needed. */
 
 #ifdef __cplusplus

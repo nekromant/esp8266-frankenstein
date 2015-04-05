@@ -97,15 +97,19 @@ struct memp_malloc_helper
 };
 #endif /* MEM_USE_POOLS */
 
-void  memp_init(void)ICACHE_FLASH_ATTR;
+ICACHE_FLASH_ATTR
+void  memp_init(void);
 
 #if MEMP_OVERFLOW_CHECK
-void *memp_malloc_fn(memp_t type, const char* file, const int line)ICACHE_FLASH_ATTR;
+ICACHE_FLASH_ATTR
+void *memp_malloc_fn(memp_t type, const char* file, const int line);
 #define memp_malloc(t) memp_malloc_fn((t), __FILE__, __LINE__)
 #else
-void *memp_malloc(memp_t type)ICACHE_FLASH_ATTR;
+ICACHE_FLASH_ATTR
+void *memp_malloc(memp_t type);
 #endif
-void  memp_free(memp_t type, void *mem)ICACHE_FLASH_ATTR;
+ICACHE_FLASH_ATTR
+void  memp_free(memp_t type, void *mem);
 
 #endif /* MEMP_MEM_MALLOC */
 
