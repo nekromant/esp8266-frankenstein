@@ -294,8 +294,6 @@ icmp_send_response(struct pbuf *p, u8_t type, u8_t code)
   ip_addr_t iphdr_src;
 
   /* ICMP header + IP header + 8 bytes of data */
-
-
   q = pbuf_alloc(PBUF_IP, sizeof(struct icmp_echo_hdr) + IP_HLEN + ICMP_DEST_UNREACH_DATASIZE,
                  PBUF_RAM);
   if (q == NULL) {
@@ -317,6 +315,8 @@ icmp_send_response(struct pbuf *p, u8_t type, u8_t code)
   icmphdr->code = code;
   icmphdr->id = 0;
   icmphdr->seqno = 0;
+
+  /* copy fields from original packet */
   SMEMCPY((u8_t *)q->payload + sizeof(struct icmp_echo_hdr), (u8_t *)p->payload,
           IP_HLEN + ICMP_DEST_UNREACH_DATASIZE);
 

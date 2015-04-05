@@ -464,6 +464,21 @@ tcp_accept_null(void *arg, struct tcp_pcb *pcb, err_t err)
   return ERR_ABRT;
 }
 #endif /* LWIP_CALLBACK_API */
+
+/**
+ * Set the state of the connection to be LISTEN, which means that it
+ * is able to accept incoming connections. The protocol control block
+ * is reallocated in order to consume less memory. Setting the
+ * connection to LISTEN is an irreversible process.
+ *
+ * @param pcb the original tcp_pcb
+ * @param backlog the incoming connections queue limit
+ * @return tcp_pcb used for listening, consumes less memory.
+ *
+ * @note The original tcp_pcb is freed. This function therefore has to be
+ *       called like this:
+ *             tpcb = tcp_listen(tpcb);
+ */
 struct tcp_pcb *
 tcp_listen_with_backlog(struct tcp_pcb *pcb, u8_t backlog)
 {
@@ -547,6 +562,15 @@ u32_t tcp_update_rcv_ann_wnd(struct tcp_pcb *pcb)
     return 0;
   }
 }
+
+/**
+ * This function should be called by the application when it has
+ * processed the data. The purpose is to advertise a larger window
+ * when the data has been processed.
+ *
+ * @param pcb the tcp_pcb for which data is read
+ * @param len the amount of bytes that have been read by the application
+ */
 void
 tcp_recved(struct tcp_pcb *pcb, u16_t len)
 {
@@ -606,6 +630,19 @@ tcp_new_port(void)
   }
   return port;
 }
+
+/**
+ * Connects to another host. The function given as the "connected"
+ * argument will be called when the connection has been established.
+ *
+ * @param pcb the tcp_pcb used to establish the connection
+ * @param ipaddr the remote ip address to connect to
+ * @param port the remote tcp port to connect to
+ * @param connected callback function to call when connected (or on error)
+ * @return ERR_VAL if invalid arguments are given
+ *         ERR_OK if connect request has been sent
+ *         other err_t values if connect request couldn't be sent
+ */
 err_t
 tcp_connect(struct tcp_pcb *pcb, ip_addr_t *ipaddr, u16_t port,
       tcp_connected_fn connected)
@@ -1132,6 +1169,13 @@ tcp_kill_timewait(void)
     tcp_abort(inactive);
   }
 }
+
+/**
+ * Allocate a new tcp_pcb structure.
+ *
+ * @param prio priority for the new pcb
+ * @return a new tcp_pcb that initially is in state CLOSED
+ */
 struct tcp_pcb *
 tcp_alloc(u8_t prio)
 {
@@ -1222,33 +1266,83 @@ tcp_new(void)
 {
   return tcp_alloc(TCP_PRIO_NORMAL);
 }
+
+/**
+ * Used to specify the argument that should be passed callback
+ * functions.
+ *
+ * @param pcb tcp_pcb to set the callback argument
+ * @param arg void pointer argument to pass to callback functions
+ */ 
 void
 tcp_arg(struct tcp_pcb *pcb, void *arg)
 {  
   pcb->callback_arg = arg;
 }
 #if LWIP_CALLBACK_API
+
+/**
+ * Used to specify the function that should be called when a TCP
+ * connection receives data.
+ *
+ * @param pcb tcp_pcb to set the recv callback
+ * @param recv callback function to call for this pcb when data is received
+ */ 
 void
 tcp_recv(struct tcp_pcb *pcb, tcp_recv_fn recv)
 {
   pcb->recv = recv;
 }
+
+/**
+ * Used to specify the function that should be called when TCP data
+ * has been successfully delivered to the remote host.
+ *
+ * @param pcb tcp_pcb to set the sent callback
+ * @param sent callback function to call for this pcb when data is successfully sent
+ */ 
 void
 tcp_sent(struct tcp_pcb *pcb, tcp_sent_fn sent)
 {
   pcb->sent = sent;
 }
+
+/**
+ * Used to specify the function that should be called when a fatal error
+ * has occured on the connection.
+ *
+ * @param pcb tcp_pcb to set the err callback
+ * @param err callback function to call for this pcb when a fatal error
+ *        has occured on the connection
+ */ 
 void
 tcp_err(struct tcp_pcb *pcb, tcp_err_fn err)
 {
   pcb->errf = err;
 }
+
+/**
+ * Used for specifying the function that should be called when a
+ * LISTENing connection has been connected to another host.
+ *
+ * @param pcb tcp_pcb to set the accept callback
+ * @param accept callback function to call for this pcb when LISTENing
+ *        connection has been connected to another host
+ */ 
 void
 tcp_accept(struct tcp_pcb *pcb, tcp_accept_fn accept)
 {
   pcb->accept = accept;
 }
 #endif /* LWIP_CALLBACK_API */
+
+
+/**
+ * Used to specify the function that should be called periodically
+ * from TCP. The interval is specified in terms of the TCP coarse
+ * timer interval, which is called twice a second.
+ *
+ */ 
 void
 tcp_poll(struct tcp_pcb *pcb, tcp_poll_fn poll, u8_t interval)
 {

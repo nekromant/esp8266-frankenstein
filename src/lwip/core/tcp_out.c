@@ -330,6 +330,23 @@ tcp_write_checks(struct tcp_pcb *pcb, u16_t len)
   }
   return ERR_OK;
 }
+
+/**
+ * Write data for sending (but does not send it immediately).
+ *
+ * It waits in the expectation of more data being sent soon (as
+ * it can send them more efficiently by combining them together).
+ * To prompt the system to send data now, call tcp_output() after
+ * calling tcp_write().
+ *
+ * @param pcb Protocol control block for the TCP connection to enqueue data for.
+ * @param arg Pointer to the data to be enqueued for sending.
+ * @param len Data length in bytes
+ * @param apiflags combination of following flags :
+ * - TCP_WRITE_FLAG_COPY (0x01) data will be copied into memory belonging to the stack
+ * - TCP_WRITE_FLAG_MORE (0x02) for TCP connection, PSH flag will be set on last segment sent,
+ * @return ERR_OK if enqueued, another err_t on error
+ */
 err_t
 tcp_write(struct tcp_pcb *pcb, const void *arg, u16_t len, u8_t apiflags)
 {
@@ -863,6 +880,14 @@ tcp_send_empty_ack(struct tcp_pcb *pcb)
 
   return ERR_OK;
 }
+
+/**
+ * Find out what we can send and send it
+ *
+ * @param pcb Protocol control block for the TCP connection to send data
+ * @return ERR_OK if data has been sent or nothing to send
+ *         another err_t on error
+ */
 err_t 
 tcp_output(struct tcp_pcb *pcb)
 {
@@ -871,6 +896,11 @@ tcp_output(struct tcp_pcb *pcb)
 #if TCP_CWND_DEBUG
   s16_t i = 0;
 #endif /* TCP_CWND_DEBUG */
+
+  /* First, check if we are invoked by the TCP input processing
+     code. If so, we do not output anything. Instead, we rely on the
+     input processing code to call us when input processing is done
+     with. */
   if (tcp_input_pcb == pcb) {
     return ERR_OK;
   }
@@ -918,6 +948,7 @@ tcp_output(struct tcp_pcb *pcb)
                  ntohl(seg->tcphdr->seqno), pcb->lastack));
   }
 #endif /* TCP_CWND_DEBUG */
+  /* data available and window allows it to be sent? */
   while (seg != NULL &&
          ntohl(seg->tcphdr->seqno) - pcb->lastack + seg->len <= wnd) {
     LWIP_ASSERT("RST not expected here!", 
@@ -950,21 +981,22 @@ tcp_output(struct tcp_pcb *pcb)
     }
 
     tcp_output_segment(seg, pcb);
-    
     snd_nxt = ntohl(seg->tcphdr->seqno) + TCP_TCPLEN(seg);
     if (TCP_SEQ_LT(pcb->snd_nxt, snd_nxt)) {
       pcb->snd_nxt = snd_nxt;
     }
+    /* put segment on unacknowledged list if length > 0 */
     if (TCP_TCPLEN(seg) > 0) {
       seg->next = NULL;
+      /* unacked list is empty? */
       if (pcb->unacked == NULL) {
         pcb->unacked = seg;
         useg = seg;
+      /* unacked list is not empty? */
       } else {
         /* In the case of fast retransmit, the packet should not go to the tail
          * of the unacked queue, but rather somewhere before it. We need to check for
          * this case. -STJ Jul 27, 2004 */
-
 		if (TCP_SEQ_LT(ntohl(seg->tcphdr->seqno), ntohl(useg->tcphdr->seqno))) {
           /* add segment to before tail of unacked list, keeping the list sorted */
           struct tcp_seg **cur_seg = &(pcb->unacked);
@@ -993,7 +1025,6 @@ tcp_output(struct tcp_pcb *pcb)
   }
 #endif /* TCP_OVERSIZE */
 
-
   if (seg != NULL && pcb->persist_backoff == 0 && 
       ntohl(seg->tcphdr->seqno) - pcb->lastack + seg->len > pcb->snd_wnd) {
     /* prepare for persist timer */
@@ -1011,13 +1042,13 @@ tcp_output(struct tcp_pcb *pcb)
  * @param seg the tcp_seg to send
  * @param pcb the tcp_pcb for the TCP connection used to send the segment
  */
-
 static void
 tcp_output_segment(struct tcp_seg *seg, struct tcp_pcb *pcb)
 {
   u16_t len;
   struct netif *netif;
   u32_t *opts;
+
   /** @bug Exclude retransmitted segments from this count. */
   snmp_inc_tcpoutsegs();
 
