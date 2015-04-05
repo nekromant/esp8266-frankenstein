@@ -76,7 +76,7 @@ tcpip_thread(void *arg)
   struct tcpip_msg *msg;
   LWIP_UNUSED_ARG(arg);
 
-  if (tcpip_init_done != NULL) {//用户注册了自定义初始化函数
+  if (tcpip_init_done != NULL) {
     tcpip_init_done(tcpip_init_done_arg);
   }
 
@@ -89,22 +89,22 @@ tcpip_thread(void *arg)
     LOCK_TCPIP_CORE();
     switch (msg->type) {
 #if LWIP_NETCONN
-    case TCPIP_MSG_API://API调用
+    case TCPIP_MSG_API:
       LWIP_DEBUGF(TCPIP_DEBUG, ("tcpip_thread: API message %p\n", (void *)msg));
       msg->msg.apimsg->function(&(msg->msg.apimsg->msg));
       break;
 #endif /* LWIP_NETCONN */
 
 #if !LWIP_TCPIP_CORE_LOCKING_INPUT
-    case TCPIP_MSG_INPKT://底层数据包输入
+    case TCPIP_MSG_INPKT:
       LWIP_DEBUGF(TCPIP_DEBUG, ("tcpip_thread: PACKET %p\n", (void *)msg));
 #if LWIP_ETHERNET
-      if (msg->msg.inp.netif->flags & (NETIF_FLAG_ETHARP | NETIF_FLAG_ETHERNET)) {//支持ARP
-        ethernet_input(msg->msg.inp.p, msg->msg.inp.netif);//交给ARP处理
+      if (msg->msg.inp.netif->flags & (NETIF_FLAG_ETHARP | NETIF_FLAG_ETHERNET)) {
+        ethernet_input(msg->msg.inp.p, msg->msg.inp.netif);
       } else
 #endif /* LWIP_ETHERNET */
       {
-        ip_input(msg->msg.inp.p, msg->msg.inp.netif);//交给IP处理
+        ip_input(msg->msg.inp.p, msg->msg.inp.netif);
       }
       memp_free(MEMP_TCPIP_MSG_INPKT, msg);
       break;
@@ -117,19 +117,19 @@ tcpip_thread(void *arg)
       break;
 #endif /* LWIP_NETIF_API */
 
-    case TCPIP_MSG_CALLBACK://上层回调方式执行一个函数
+    case TCPIP_MSG_CALLBACK:
       LWIP_DEBUGF(TCPIP_DEBUG, ("tcpip_thread: CALLBACK %p\n", (void *)msg));
       msg->msg.cb.function(msg->msg.cb.ctx);
       memp_free(MEMP_TCPIP_MSG_API, msg);
       break;
 
 #if LWIP_TCPIP_TIMEOUT
-    case TCPIP_MSG_TIMEOUT://上层注册一个定时事件
+    case TCPIP_MSG_TIMEOUT:
       LWIP_DEBUGF(TCPIP_DEBUG, ("tcpip_thread: TIMEOUT %p\n", (void *)msg));
       sys_timeout(msg->msg.tmo.msecs, msg->msg.tmo.h, msg->msg.tmo.arg);
       memp_free(MEMP_TCPIP_MSG_API, msg);
       break;
-    case TCPIP_MSG_UNTIMEOUT://上层删除一个定时事件
+    case TCPIP_MSG_UNTIMEOUT:
       LWIP_DEBUGF(TCPIP_DEBUG, ("tcpip_thread: UNTIMEOUT %p\n", (void *)msg));
       sys_untimeout(msg->msg.tmo.h, msg->msg.tmo.arg);
       memp_free(MEMP_TCPIP_MSG_API, msg);
@@ -306,11 +306,11 @@ tcpip_apimsg(struct api_msg *apimsg)
   apimsg->msg.err = ERR_VAL;
 #endif
   
-  if (sys_mbox_valid(&mbox)) {//内核邮箱有效
+  if (sys_mbox_valid(&mbox)) {
     msg.type = TCPIP_MSG_API;
     msg.msg.apimsg = apimsg;
-    sys_mbox_post(&mbox, &msg);//投递消息
-    sys_arch_sem_wait(&apimsg->msg.conn->op_completed, 0);//等待消息处理完毕
+    sys_mbox_post(&mbox, &msg);
+    sys_arch_sem_wait(&apimsg->msg.conn->op_completed, 0);
     return apimsg->msg.err;
   }
   return ERR_VAL;
@@ -403,11 +403,11 @@ tcpip_netifapi_lock(struct netifapi_msg* netifapimsg)
 void
 tcpip_init(tcpip_init_done_fn initfunc, void *arg)
 {
-  lwip_init();//初始化内核
+  lwip_init();
 
-  tcpip_init_done = initfunc;//注册用户自定义函数
-  tcpip_init_done_arg = arg;//函数参数
-  if(sys_mbox_new(&mbox, TCPIP_MBOX_SIZE) != ERR_OK) {//创建内核邮箱
+  tcpip_init_done = initfunc;
+  tcpip_init_done_arg = arg;
+  if(sys_mbox_new(&mbox, TCPIP_MBOX_SIZE) != ERR_OK) {
     LWIP_ASSERT("failed to create tcpip_thread mbox", 0);
   }
 #if LWIP_TCPIP_CORE_LOCKING
@@ -416,7 +416,7 @@ tcpip_init(tcpip_init_done_fn initfunc, void *arg)
   }
 #endif /* LWIP_TCPIP_CORE_LOCKING */
 
-  sys_thread_new(TCPIP_THREAD_NAME, tcpip_thread, NULL, TCPIP_THREAD_STACKSIZE, TCPIP_THREAD_PRIO);//创建内核进程
+  sys_thread_new(TCPIP_THREAD_NAME, tcpip_thread, NULL, TCPIP_THREAD_STACKSIZE, TCPIP_THREAD_PRIO);
 }
 
 /**

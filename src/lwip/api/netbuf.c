@@ -44,14 +44,6 @@
 #include "lwip/memp.h"
 
 #include <string.h>
-
-/**
- * Create (allocate) and initialize a new netbuf.
- * The netbuf doesn't yet contain a packet buffer!
- * 申请一个新的netbuf空间，但不分配任何数据空间
- * @return a pointer to a new netbuf
- *         NULL on lack of memory
- */
 struct
 netbuf *netbuf_new(void)
 {
@@ -77,12 +69,6 @@ netbuf *netbuf_new(void)
     return NULL;
   }
 }
-
-/**
- * Deallocate a netbuf allocated by netbuf_new().
- * 释放一个netbuf空间
- * @param buf pointer to a netbuf allocated by netbuf_new()
- */
 void
 netbuf_delete(struct netbuf *buf)
 {
@@ -94,15 +80,6 @@ netbuf_delete(struct netbuf *buf)
     memp_free(MEMP_NETBUF, buf);
   }
 }
-
-/**
- * Allocate memory for a packet buffer for a given netbuf.
- *为netbuf结构分配size大小的数据空间
- * @param buf the netbuf for which to allocate a packet buffer
- * @param size the size of the packet buffer to allocate
- * @return pointer to the allocated memory
- *         NULL if no memory could be allocated
- */
 void *
 netbuf_alloc(struct netbuf *buf, u16_t size)
 {
@@ -121,12 +98,6 @@ netbuf_alloc(struct netbuf *buf, u16_t size)
   buf->ptr = buf->p;
   return buf->p->payload;
 }
-
-/**
- * Free the packet buffer included in a netbuf
- *释放netbuf结构指向的数据pbuf
- * @param buf pointer to the netbuf which contains the packet buffer to free
- */
 void
 netbuf_free(struct netbuf *buf)
 {

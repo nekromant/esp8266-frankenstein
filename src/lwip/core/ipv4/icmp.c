@@ -294,44 +294,42 @@ icmp_send_response(struct pbuf *p, u8_t type, u8_t code)
   ip_addr_t iphdr_src;
 
   /* ICMP header + IP header + 8 bytes of data */
-  //为差错报文申请pbuf空间，pbuf中预留IP首部和以太网首部空间，pbuf数据区
-  //长度=差错报文首部+差错报文数据长度(IP首部长度+8)
+
+
   q = pbuf_alloc(PBUF_IP, sizeof(struct icmp_echo_hdr) + IP_HLEN + ICMP_DEST_UNREACH_DATASIZE,
                  PBUF_RAM);
-  if (q == NULL) {//失败，返回
+  if (q == NULL) {
     LWIP_DEBUGF(ICMP_DEBUG, ("icmp_time_exceeded: failed to allocate pbuf for ICMP packet.\n"));
     return;
   }
   LWIP_ASSERT("check that first pbuf can hold icmp message",
              (q->len >= (sizeof(struct icmp_echo_hdr) + IP_HLEN + ICMP_DEST_UNREACH_DATASIZE)));
 
-  iphdr = (struct ip_hdr *)p->payload;//指向引起差错的IP数据包首部
+  iphdr = (struct ip_hdr *)p->payload;
   LWIP_DEBUGF(ICMP_DEBUG, ("icmp_time_exceeded from "));
   ip_addr_debug_print(ICMP_DEBUG, &(iphdr->src));
   LWIP_DEBUGF(ICMP_DEBUG, (" to "));
   ip_addr_debug_print(ICMP_DEBUG, &(iphdr->dest));
   LWIP_DEBUGF(ICMP_DEBUG, ("\n"));
 
-  icmphdr = (struct icmp_echo_hdr *)q->payload;//指向差错报文首部
-  icmphdr->type = type;//填写类型字段
-  icmphdr->code = code;//填写代码字段
-  icmphdr->id = 0;//对于目的不可达和数据报超时
-  icmphdr->seqno = 0;//报文，首部剩余的4个字节都为0
-
-  /* copy fields from original packet 将引起差错的IP数据报的IP首部+8字节数据拷贝到差错报文数据区*/
+  icmphdr = (struct icmp_echo_hdr *)q->payload;
+  icmphdr->type = type;
+  icmphdr->code = code;
+  icmphdr->id = 0;
+  icmphdr->seqno = 0;
   SMEMCPY((u8_t *)q->payload + sizeof(struct icmp_echo_hdr), (u8_t *)p->payload,
           IP_HLEN + ICMP_DEST_UNREACH_DATASIZE);
 
   /* calculate checksum */
-  icmphdr->chksum = 0;//报文校验和字段清0
-  icmphdr->chksum = inet_chksum(icmphdr, q->len);//计算填写校验和
+  icmphdr->chksum = 0;
+  icmphdr->chksum = inet_chksum(icmphdr, q->len);
   ICMP_STATS_INC(icmp.xmit);
   /* increase number of messages attempted to send */
   snmp_inc_icmpoutmsgs();
   /* increase number of destination unreachable messages attempted to send */
   snmp_inc_icmpouttimeexcds();
   ip_addr_copy(iphdr_src, iphdr->src);
-  ip_output(q, NULL, &iphdr_src, ICMP_TTL, 0, IP_PROTO_ICMP);//调用IP层函数输出ICMP报文
+  ip_output(q, NULL, &iphdr_src, ICMP_TTL, 0, IP_PROTO_ICMP);
   pbuf_free(q);
 }
 

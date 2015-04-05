@@ -59,17 +59,17 @@
 /* These variables are global to all functions involved in the input
    processing of TCP segments. They are set by the tcp_input()
    function. */
-static struct tcp_seg inseg;		//tcp_seg结构，描述输入的报文段
-static struct tcp_hdr *tcphdr;		//报文段中TCP首部
-static struct ip_hdr *iphdr;		//IP数据包首部
-static u32_t seqno, ackno;		//TCP首部中序号字段与确认号字段
-static u8_t flags;				//首部标志字段
-static u16_t tcplen;				//TCP报文长度
+static struct tcp_seg inseg;
+static struct tcp_hdr *tcphdr;
+static struct ip_hdr *iphdr;
+static u32_t seqno, ackno;
+static u8_t flags;
+static u16_t tcplen;
 
-static u8_t recv_flags;			//当前报文处理结果
-static struct pbuf *recv_data;		//报文段数据pbuf
+static u8_t recv_flags;
+static struct pbuf *recv_data;
 
-struct tcp_pcb *tcp_input_pcb;	//当前报文控制块
+struct tcp_pcb *tcp_input_pcb;
 
 /* Forward declarations. */
 static err_t tcp_process(struct tcp_pcb *pcb);
@@ -88,12 +88,6 @@ static err_t tcp_timewait_input(struct tcp_pcb *pcb);
  * @param p received TCP segment to process (p->payload pointing to the IP header)
  * @param inp network interface on which this segment was received
  */
- /** 
- *  TCP初始化输入处理，验证了TCP头，这个函数被IP层调用 
- 
- * @参数p:处理接收的TCP段(指向IP头的负载) 
- * @参数inp:接收段的网络接口 
- */ 
 void
 tcp_input(struct pbuf *p, struct netif *inp)
 {
@@ -108,16 +102,10 @@ tcp_input(struct pbuf *p, struct netif *inp)
 
   PERF_START;
 
-  TCP_STATS_INC(tcp.recv);	//状态加1 
-  snmp_inc_tcpinsegs();			//tcp输入段加1
+  TCP_STATS_INC(tcp.recv);
+  snmp_inc_tcpinsegs();
 
   iphdr = (struct ip_hdr *)p->payload;// pointer to the actual data in the buffer
-  /* 
-  *包头长度(IHL)：4位，IP协议包头的长度，指明IPv4协议包头长度的字节数包含多少个32位。 
-  *由于IPv4的包头可能包含可变数量的可选 项，所以这个字段可以用来确定IPv4数据报中数据部分的偏移量。 
-  *IPv4包头的最小长度是20个字节，因此IHL这个字段的最小值用十进制表示就是5 (5x4 = 20字节)。 
-  *就是说，它表示的包头的总字节数是4字节的倍数  
-  */
   tcphdr = (struct tcp_hdr *)((u8_t *)p->payload + IPH_HL(iphdr) * 4);
 
 #if TCP_INPUT_DEBUG
@@ -128,17 +116,17 @@ tcp_input(struct pbuf *p, struct netif *inp)
   if (pbuf_header(p, -((s16_t)(IPH_HL(iphdr) * 4))) || (p->tot_len < sizeof(struct tcp_hdr))) {
     /* drop short packets */
     LWIP_DEBUGF(TCP_INPUT_DEBUG, ("tcp_input: short packet (%"U16_F" bytes) discarded\n", p->tot_len));
-    TCP_STATS_INC(tcp.lenerr);//错误长度计数
-    TCP_STATS_INC(tcp.drop);//终止计数
+    TCP_STATS_INC(tcp.lenerr);
+    TCP_STATS_INC(tcp.drop);
     snmp_inc_tcpinerrs();
-    pbuf_free(p);//释放buffer 
+    pbuf_free(p);
     return;
   }
 
   /* Don't even process incoming broadcasts/multicasts. */
   if (ip_addr_isbroadcast(&current_iphdr_dest, inp) ||
       ip_addr_ismulticast(&current_iphdr_dest)) {
-    TCP_STATS_INC(tcp.proterr);//协议错误计数
+    TCP_STATS_INC(tcp.proterr);
     TCP_STATS_INC(tcp.drop);
     snmp_inc_tcpinerrs();
     pbuf_free(p);
@@ -155,7 +143,7 @@ tcp_input(struct pbuf *p, struct netif *inp)
 #if TCP_DEBUG
     tcp_debug_print(tcphdr);
 #endif /* TCP_DEBUG */
-    TCP_STATS_INC(tcp.chkerr);//校验错误计数
+    TCP_STATS_INC(tcp.chkerr);
     TCP_STATS_INC(tcp.drop);
     snmp_inc_tcpinerrs();
     pbuf_free(p);
@@ -165,11 +153,11 @@ tcp_input(struct pbuf *p, struct netif *inp)
 
   /* Move the payload pointer in the pbuf so that it points to the
      TCP data instead of the TCP header. */
-  hdrlen = TCPH_HDRLEN(tcphdr);//计算头的长度
-  if(pbuf_header(p, -(hdrlen * 4))){//跨过TCP头，返回0为成功，否则
+  hdrlen = TCPH_HDRLEN(tcphdr);
+  if(pbuf_header(p, -(hdrlen * 4))){
     /* drop short packets */
     LWIP_DEBUGF(TCP_INPUT_DEBUG, ("tcp_input: short packet\n"));
-    TCP_STATS_INC(tcp.lenerr);//tcp长度错误计数
+    TCP_STATS_INC(tcp.lenerr);
     TCP_STATS_INC(tcp.drop);
     snmp_inc_tcpinerrs();
     pbuf_free(p);
@@ -177,53 +165,44 @@ tcp_input(struct pbuf *p, struct netif *inp)
   }
 
   /* Convert fields in TCP header to host byte order. */
-  tcphdr->src = ntohs(tcphdr->src);				//转换源地址
-  tcphdr->dest = ntohs(tcphdr->dest);				//转换目的地址
-  seqno = tcphdr->seqno = ntohl(tcphdr->seqno);	//转换序列号 
-  ackno = tcphdr->ackno = ntohl(tcphdr->ackno);	//转换应答号
-  tcphdr->wnd = ntohs(tcphdr->wnd);				//转换tcp窗口
+  tcphdr->src = ntohs(tcphdr->src);
+  tcphdr->dest = ntohs(tcphdr->dest);
+  seqno = tcphdr->seqno = ntohl(tcphdr->seqno);
+  ackno = tcphdr->ackno = ntohl(tcphdr->ackno);
+  tcphdr->wnd = ntohs(tcphdr->wnd);
 
-  flags = TCPH_FLAGS(tcphdr);//得到tcp header的标志 
-  /* 
-  *标志：3位控制字段，包含： 
-  *    保留位：1位 
-  *    不分段位：1位，取值：0（允许数据报分段）、1（数据报不能分段） 
-  *    更多段位：1位，取值：0（数据包后面没有包）、1（数据包后面有更多的包） 
-  */ 
-  tcplen = p->tot_len + ((flags & (TCP_FIN | TCP_SYN)) ? 1 : 0);//TCP_FIN 和 TCP_SYN 置位加1；否则加0
-
-  /* Demultiplex an incoming segment. First, we check if it is destined
-     for an active connection. 首先，检查是否一定要激活一个连接*/
+  flags = TCPH_FLAGS(tcphdr);
+  tcplen = p->tot_len + ((flags & (TCP_FIN | TCP_SYN)) ? 1 : 0);
  ////////////////////////////////////////////////////////////////////////////////////////
   prev = NULL;  
-  for(pcb = tcp_active_pcbs; pcb != NULL; pcb = pcb->next) {//遍历激活列表
+  for(pcb = tcp_active_pcbs; pcb != NULL; pcb = pcb->next) {
     LWIP_ASSERT("tcp_input: active pcb->state != CLOSED", pcb->state != CLOSED);
     LWIP_ASSERT("tcp_input: active pcb->state != TIME-WAIT", pcb->state != TIME_WAIT);
     LWIP_ASSERT("tcp_input: active pcb->state != LISTEN", pcb->state != LISTEN);
     if (pcb->remote_port == tcphdr->src &&
        pcb->local_port == tcphdr->dest &&
        ip_addr_cmp(&(pcb->remote_ip), &current_iphdr_src) &&
-       ip_addr_cmp(&(pcb->local_ip), &current_iphdr_dest)) {//检查相关的地址
+       ip_addr_cmp(&(pcb->local_ip), &current_iphdr_dest)) {
 
       /* Move this PCB to the front of the list so that subsequent
          lookups will be faster (we exploit locality in TCP segment
          arrivals). */
       LWIP_ASSERT("tcp_input: pcb->next != pcb (before cache)", pcb->next != pcb);
-      if (prev != NULL) {//如果前一个节点不为空
+      if (prev != NULL) {
         prev->next = pcb->next;
         pcb->next = tcp_active_pcbs;
-        tcp_active_pcbs = pcb;//pcb插入最前面
+        tcp_active_pcbs = pcb;
       }
       LWIP_ASSERT("tcp_input: pcb->next != pcb (after cache)", pcb->next != pcb);
       break;
     }
-    prev = pcb;//prev指向pcb
+    prev = pcb;
   }
 
   if (pcb == NULL) {
     /* If it did not go to an active connection, we check the connections
        in the TIME-WAIT state. */
-    for(pcb = tcp_tw_pcbs; pcb != NULL; pcb = pcb->next) {//遍历等待状态下的pcb
+    for(pcb = tcp_tw_pcbs; pcb != NULL; pcb = pcb->next) {
       LWIP_ASSERT("tcp_input: TIME-WAIT pcb->state == TIME-WAIT", pcb->state == TIME_WAIT);
       if (pcb->remote_port == tcphdr->src &&
          pcb->local_port == tcphdr->dest &&
@@ -233,7 +212,7 @@ tcp_input(struct pbuf *p, struct netif *inp)
            of the list since we are not very likely to receive that
            many segments for connections in TIME-WAIT. */
         LWIP_DEBUGF(TCP_INPUT_DEBUG, ("tcp_input: packed for TIME_WAITing connection.\n"));
-        tcp_timewait_input(pcb);//发送tcp timewait 的包
+        tcp_timewait_input(pcb);
         pbuf_free(p);
         return;
       }
@@ -242,7 +221,7 @@ tcp_input(struct pbuf *p, struct netif *inp)
     /* Finally, if we still did not get a match, we check all PCBs that
        are LISTENing for incoming connections. */
     prev = NULL;
-    for(lpcb = tcp_listen_pcbs.listen_pcbs; lpcb != NULL; lpcb = lpcb->next) {//遍历监听状态下所有的pcb
+    for(lpcb = tcp_listen_pcbs.listen_pcbs; lpcb != NULL; lpcb = lpcb->next) {
       if (lpcb->local_port == tcphdr->dest) {
 #if SO_REUSE
         if (ip_addr_cmp(&(lpcb->local_ip), &current_iphdr_dest)) {
@@ -284,7 +263,7 @@ tcp_input(struct pbuf *p, struct netif *inp)
       }
     
       LWIP_DEBUGF(TCP_INPUT_DEBUG, ("tcp_input: packed for LISTENing connection.\n"));
-      tcp_listen_input(lpcb);//发出tcp监听数据包 
+      tcp_listen_input(lpcb);
       pbuf_free(p);
       return;
     }
@@ -318,7 +297,7 @@ tcp_input(struct pbuf *p, struct netif *inp)
     if (pcb->refused_data != NULL) {
       /* Notify again application with data previously received. */
       LWIP_DEBUGF(TCP_INPUT_DEBUG, ("tcp_input: notify kept packet\n"));
-      TCP_EVENT_RECV(pcb, pcb->refused_data, ERR_OK, err);//pcb接收数据
+      TCP_EVENT_RECV(pcb, pcb->refused_data, ERR_OK, err);
       if (err == ERR_OK) {
         pcb->refused_data = NULL;
       } else if ((err == ERR_ABRT) || (tcplen > 0)) {
@@ -326,14 +305,14 @@ tcp_input(struct pbuf *p, struct netif *inp)
         /* Drop incoming packets because pcb is "full" (only if the incoming
            segment contains data). */
         LWIP_DEBUGF(TCP_INPUT_DEBUG, ("tcp_input: drop incoming packets, because pcb is \"full\"\n"));
-        TCP_STATS_INC(tcp.drop);//tcp丢弃计数
+        TCP_STATS_INC(tcp.drop);
         snmp_inc_tcpinerrs();
         pbuf_free(p);
         return;
       }
     }
-    tcp_input_pcb = pcb;//记录当前报文处理的控制块
-    err = tcp_process(pcb);//处理报文
+    tcp_input_pcb = pcb;
+    err = tcp_process(pcb);
     /* A return value of ERR_ABRT means that tcp_abort() was called
        and that the pcb has been freed. If so, we don't do anything. */
     if (err != ERR_ABRT) {
@@ -343,7 +322,7 @@ tcp_input(struct pbuf *p, struct netif *inp)
            application that the connection is dead before we
            deallocate the PCB. */
         TCP_EVENT_ERR(pcb->errf, pcb->callback_arg, ERR_RST);
-        tcp_pcb_remove(&tcp_active_pcbs, pcb);//删除激活pcb列表中的pcb
+        tcp_pcb_remove(&tcp_active_pcbs, pcb);
         memp_free(MEMP_TCP_PCB, pcb);
       } else if (recv_flags & TF_CLOSED) {
         /* The connection has been closed and we will deallocate the
@@ -362,13 +341,13 @@ tcp_input(struct pbuf *p, struct netif *inp)
            called when new send buffer space is available, we call it
            now. */
         if (pcb->acked > 0) {
-          TCP_EVENT_SENT(pcb, pcb->acked, err);//有数据被确认，回调用户的send函数
+          TCP_EVENT_SENT(pcb, pcb->acked, err);
           if (err == ERR_ABRT) {
             goto aborted;
           }
         }
 
-        if (recv_data != NULL) {//有数据接收到
+        if (recv_data != NULL) {
           LWIP_ASSERT("pcb->refused_data == NULL", pcb->refused_data == NULL);
           if (pcb->flags & TF_RXCLOSED) {
             /* received data although already closed -> abort (send RST) to
@@ -378,12 +357,12 @@ tcp_input(struct pbuf *p, struct netif *inp)
             goto aborted;
           }
 
-	//PSH标志 PSH 紧急位。
-	//当PSH=1时，要求发送方马上发送该分段，
-	//而接收方尽快的将报文交给应用层，不做队列处理。
+
+
+
 		  
           if (flags & TCP_PSH) {
-            recv_data->flags |= PBUF_FLAG_PUSH;//这段buffer应该立即存起来
+            recv_data->flags |= PBUF_FLAG_PUSH;
           }
 
           /* Notify application that data has been received. */
@@ -414,9 +393,9 @@ tcp_input(struct pbuf *p, struct netif *inp)
           }
         }
 
-        tcp_input_pcb = NULL;//清空全局变量
+        tcp_input_pcb = NULL;
         /* Try to send something out. */
-        tcp_output(pcb);//尝试输出报文
+        tcp_output(pcb);
 #if TCP_INPUT_DEBUG
 #if TCP_DEBUG
         tcp_debug_print_state(pcb->state);
@@ -433,7 +412,7 @@ aborted:
     /* give up our reference to inseg.p */
     if (inseg.p != NULL)
     {
-      pbuf_free(inseg.p);//释放buffer
+      pbuf_free(inseg.p);
       inseg.p = NULL;
     }
   } else {
@@ -442,11 +421,11 @@ aborted:
        sender. */
     LWIP_DEBUGF(TCP_RST_DEBUG, ("tcp_input: no PCB match found, resetting.\n"));
     if (!(TCPH_FLAGS(tcphdr) & TCP_RST)) {
-      TCP_STATS_INC(tcp.proterr);//协议错误计数
-      TCP_STATS_INC(tcp.drop);//tcp丢弃计数
+      TCP_STATS_INC(tcp.proterr);
+      TCP_STATS_INC(tcp.drop);
       tcp_rst(ackno, seqno + tcplen,
         ip_current_dest_addr(), ip_current_src_addr(),
-        tcphdr->dest, tcphdr->src);//发送TCP复位
+        tcphdr->dest, tcphdr->src);
     }
     pbuf_free(p);
   }
@@ -467,11 +446,6 @@ aborted:
  * @note the segment which arrived is saved in global variables, therefore only the pcb
  *       involved is passed as a parameter to this function
  */
- /*
-*处于LISTEN状态的控制块调用该函数，
-*通常是服务器端主动打开一个端口并侦听客户端SYN连接请求
-*
-*/
 static err_t
 tcp_listen_input(struct tcp_pcb_listen *pcb)
 {
@@ -489,7 +463,7 @@ tcp_listen_input(struct tcp_pcb_listen *pcb)
     tcp_rst(ackno + 1, seqno + tcplen,
       ip_current_dest_addr(), ip_current_src_addr(),
       tcphdr->dest, tcphdr->src);
-  } else if (flags & TCP_SYN) {//收到SYN报文
+  } else if (flags & TCP_SYN) {
     LWIP_DEBUGF(TCP_DEBUG, ("TCP connection request %"U16_F" -> %"U16_F".\n", tcphdr->src, tcphdr->dest));
 #if TCP_LISTEN_BACKLOG
     if (pcb->accepts_pending >= pcb->backlog) {
@@ -504,30 +478,30 @@ tcp_listen_input(struct tcp_pcb_listen *pcb)
     	TCP_STATS_INC(tcp.memerr);
     	return ERR_MEM;
     }
-    npcb = tcp_alloc(pcb->prio);//创建控制块
+    npcb = tcp_alloc(pcb->prio);
     /* If a new PCB could not be created (probably due to lack of memory),
        we don't do anything, but rely on the sender will retransmit the
        SYN at a time when we have more memory available. */
     if (npcb == NULL) {
       LWIP_DEBUGF(TCP_DEBUG, ("tcp_listen_input: could not allocate PCB\n"));
-      TCP_STATS_INC(tcp.memerr);//TCP内存错误计数
+      TCP_STATS_INC(tcp.memerr);
       return ERR_MEM;
     }
 #if TCP_LISTEN_BACKLOG
     pcb->accepts_pending++;
 #endif /* TCP_LISTEN_BACKLOG */
     /* Set up the new PCB. */
-    //控制块与连接相关的4个字段
+
     ip_addr_copy(npcb->local_ip, current_iphdr_dest);
     npcb->local_port = pcb->local_port;
     ip_addr_copy(npcb->remote_ip, current_iphdr_src);
     npcb->remote_port = tcphdr->src;
 
-	//控制块中其余字段
-    npcb->state = SYN_RCVD;//设置连接状态
-    npcb->rcv_nxt = seqno + 1;//设置下一个接收数据序号
+
+    npcb->state = SYN_RCVD;
+    npcb->rcv_nxt = seqno + 1;
     npcb->rcv_ann_right_edge = npcb->rcv_nxt;
-    npcb->snd_wnd = tcphdr->wnd;//设置发送窗口
+    npcb->snd_wnd = tcphdr->wnd;
     npcb->ssthresh = npcb->snd_wnd;
     npcb->snd_wl1 = seqno - 1;/* initialise to seqno-1 to force window update */
     npcb->callback_arg = pcb->callback_arg;
@@ -550,11 +524,11 @@ tcp_listen_input(struct tcp_pcb_listen *pcb)
 
     /* Send a SYN|ACK together with the MSS option. */
     rc = tcp_enqueue_flags(npcb, TCP_SYN | TCP_ACK);
-    if (rc != ERR_OK) {//发生错误，释放新控制块
+    if (rc != ERR_OK) {
       tcp_abandon(npcb, 0);
       return rc;
     }
-    return tcp_output(npcb);//发送报文
+    return tcp_output(npcb);
   }
   return ERR_OK;
 }
@@ -568,21 +542,15 @@ tcp_listen_input(struct tcp_pcb_listen *pcb)
  * @note the segment which arrived is saved in global variables, therefore only the pcb
  *       involved is passed as a parameter to this function
  */
- /*
-*处于TIME_WAIT状态的控制块调用该函数处理收到的报文段，
-*该状态下，关闭连接的握手过程已经结束，正处于等待2MSL超时，
-*该状态下的报文多数是连接中的旧数据，直接删除即可。
-*但需要向发送方返回ACK报文
-*/
 static err_t
 tcp_timewait_input(struct tcp_pcb *pcb)
 {
   
-  if (flags & TCP_RST)  {		//RST置位，直接返回
+  if (flags & TCP_RST)  {
     return ERR_OK;
   }
  
-  if (flags & TCP_SYN) {		//包含SYN握手信息，且握手数据编号在接收窗口内，向发送方发送RST报文
+  if (flags & TCP_SYN) {
  
     if (TCP_SEQ_BETWEEN(seqno, pcb->rcv_nxt, pcb->rcv_nxt+pcb->rcv_wnd)) {
       
@@ -590,13 +558,13 @@ tcp_timewait_input(struct tcp_pcb *pcb)
         tcphdr->dest, tcphdr->src);
       return ERR_OK;
     }
-  } else if (flags & TCP_FIN) {	//报文包含FIN握手信息
+  } else if (flags & TCP_FIN) {
   						    
-    pcb->tmr = tcp_ticks;		  	//复位等待2MSL时间，控制块重新等待2MSL
+    pcb->tmr = tcp_ticks;
   }
 
-  if ((tcplen > 0))  {				//对于有数据的报文或者在接收窗口外的SYN报文
-    pcb->flags |= TF_ACK_NOW;//发送一个ACK报文
+  if ((tcplen > 0))  {
+    pcb->flags |= TF_ACK_NOW;
     return tcp_output(pcb);
   }
   return ERR_OK;
@@ -899,14 +867,10 @@ tcp_receive(struct tcp_pcb *pcb)
   u16_t new_tot_len;
   int found_dupack = 0;
 
-  if (flags & TCP_ACK) {//报文包含ACK
-    right_wnd_edge = pcb->snd_wnd + pcb->snd_wl2;//发送窗口 + 序列应答最后窗口更新
+  if (flags & TCP_ACK) {
+    right_wnd_edge = pcb->snd_wnd + pcb->snd_wl2;
 
     // first /* Update window. */
-    /*seqno > snd_wl1；建立握手过程采用此种更新;
-    *seqno = snd_wl1并且ackno > snd_wl2;此时，对方没有发送数据，只是收到数据的确认;
-    *ackno = snd_wl2且报文首部有比snd_wnd更大的窗口.重新设置相应值
-    */
     if (TCP_SEQ_LT(pcb->snd_wl1, seqno) ||
        (pcb->snd_wl1 == seqno && TCP_SEQ_LT(pcb->snd_wl2, ackno)) ||
        (pcb->snd_wl2 == ackno && tcphdr->wnd > pcb->snd_wnd)) {
@@ -914,7 +878,7 @@ tcp_receive(struct tcp_pcb *pcb)
       pcb->snd_wl1 = seqno;
       pcb->snd_wl2 = ackno;
       if (pcb->snd_wnd > 0 && pcb->persist_backoff > 0) {
-          pcb->persist_backoff = 0;//持续计时器退出
+          pcb->persist_backoff = 0;
       }
       LWIP_DEBUGF(TCP_WND_DEBUG, ("tcp_receive: window update %"U16_F"\n", pcb->snd_wnd));
 #if TCP_WND_DEBUG
@@ -929,27 +893,9 @@ tcp_receive(struct tcp_pcb *pcb)
     }
 
     /* (From Stevens TCP/IP Illustrated Vol II, p970.) Its only a
-     * duplicate ack if:
-     * 1) It doesn't ACK new data 没有确认新数据
-     * 2) length of received packet is zero (i.e. no payload) 报文段巫任何数据
-     * 3) the advertised window hasn't changed 本地窗口没有更新
-     * 4) There is outstanding unacknowledged data (retransmission timer running)正有数据等待确认
-     * 5) The ACK is == biggest ACK sequence number so far seen (snd_una)   ackno = lastack
-     * 
-     * If it passes all five, should process as a dupack: 
-     * a) dupacks < 3: do nothing 
-     * b) dupacks == 3: fast retransmit 
-     * c) dupacks > 3: increase cwnd 
-     * 
-     * If it only passes 1-3, should reset dupack counter (and add to
-     * stats, which we don't do in lwIP)
-     *
-     * If it only passes 1, should reset dupack counter
-     *
-     */
 
     /* Clause 1 */
-    if (TCP_SEQ_LEQ(ackno, pcb->lastack)) {//是重复ACK?
+    if (TCP_SEQ_LEQ(ackno, pcb->lastack)) {
       pcb->acked = 0;
       /* Clause 2 */
       if (tcplen == 0) {
@@ -968,7 +914,7 @@ tcp_receive(struct tcp_pcb *pcb)
                 if ((u16_t)(pcb->cwnd + pcb->mss) > pcb->cwnd) {
                   pcb->cwnd += pcb->mss;
                 }
-              } else if (pcb->dupacks == 3) {//是重复ACK
+              } else if (pcb->dupacks == 3) {
                 /* Do fast retransmit */
                 tcp_rexmit_fast(pcb);
               }
@@ -981,7 +927,7 @@ tcp_receive(struct tcp_pcb *pcb)
       if (!found_dupack) {
         pcb->dupacks = 0;
       }
-    } else if (TCP_SEQ_BETWEEN(ackno, pcb->lastack+1, pcb->snd_nxt)){//ackno在lastack+1和snd_nxt之间，判断发送窗口内数据
+    } else if (TCP_SEQ_BETWEEN(ackno, pcb->lastack+1, pcb->snd_nxt)){
       /* We come here when the ACK acknowledges new data. */
 	  
       if (pcb->flags & TF_INFR) {
@@ -1006,7 +952,7 @@ tcp_receive(struct tcp_pcb *pcb)
 
       /* Update the congestion control variables (cwnd and
          ssthresh). */
-      if (pcb->state >= ESTABLISHED) {//状态为建立连接标志
+      if (pcb->state >= ESTABLISHED) {
         if (pcb->cwnd < pcb->ssthresh) {
           if ((u16_t)(pcb->cwnd + pcb->mss) > pcb->cwnd) {
             pcb->cwnd += pcb->mss;
@@ -1026,11 +972,6 @@ tcp_receive(struct tcp_pcb *pcb)
                                     ntohl(pcb->unacked->tcphdr->seqno): 0,
                                     pcb->unacked != NULL?
                                     ntohl(pcb->unacked->tcphdr->seqno) + TCP_TCPLEN(pcb->unacked): 0));
-
-      /* Remove segment from the unacknowledged list if the incoming
-         ACK acknowlegdes them. 
-         *释放unacked队列上被确认的报文段，
-         *直到unacked队列为空停止*/
       while (pcb->unacked != NULL &&
              TCP_SEQ_LEQ(ntohl(pcb->unacked->tcphdr->seqno) +
                          TCP_TCPLEN(pcb->unacked), ackno)) {
@@ -1039,8 +980,8 @@ tcp_receive(struct tcp_pcb *pcb)
                                       ntohl(pcb->unacked->tcphdr->seqno) +
                                       TCP_TCPLEN(pcb->unacked)));
 
-        next = pcb->unacked;//pcb unacked标志
-        pcb->unacked = pcb->unacked->next;//pcb unacked 下一个标志
+        next = pcb->unacked;
+        pcb->unacked = pcb->unacked->next;
 
         LWIP_DEBUGF(TCP_QLEN_DEBUG, ("tcp_receive: queuelen %"U16_F" ... ", (u16_t)pcb->snd_queuelen));
         LWIP_ASSERT("pcb->snd_queuelen >= pbuf_clen(next->p)", (pcb->snd_queuelen >= pbuf_clen(next->p)));
@@ -1049,8 +990,8 @@ tcp_receive(struct tcp_pcb *pcb)
           pcb->acked--;
         }
 
-        pcb->snd_queuelen -= pbuf_clen(next->p);//计算链表里面的pbufs数量 
-        tcp_seg_free(next);//释放tcp段
+        pcb->snd_queuelen -= pbuf_clen(next->p);
+        tcp_seg_free(next);
 
         LWIP_DEBUGF(TCP_QLEN_DEBUG, ("%"U16_F" (after freeing unacked)\n", (u16_t)pcb->snd_queuelen));
         if (pcb->snd_queuelen != 0) {
@@ -1061,10 +1002,10 @@ tcp_receive(struct tcp_pcb *pcb)
 
       /* If there's nothing left to acknowledge, stop the retransmit
          timer, otherwise reset it to start again */
-      if(pcb->unacked == NULL)	//无数据等待确认
-        pcb->rtime = -1;			//停止重传定时器
+      if(pcb->unacked == NULL)
+        pcb->rtime = -1;
       else
-        pcb->rtime = 0;			//复位重传定时器
+        pcb->rtime = 0;
 
       pcb->polltmr = 0;
     } else {
@@ -1078,7 +1019,6 @@ tcp_receive(struct tcp_pcb *pcb)
        rationale is that lwIP puts all outstanding segments on the
        ->unsent list after a retransmission, so these segments may
        in fact have been sent once. */
-       /** unsent队列上是否能被ackno确认的报文段，有则释放**/
     while (pcb->unsent != NULL &&
            TCP_SEQ_BETWEEN(ackno, ntohl(pcb->unsent->tcphdr->seqno) + 
                            TCP_TCPLEN(pcb->unsent), pcb->snd_nxt)) {
@@ -1086,18 +1026,18 @@ tcp_receive(struct tcp_pcb *pcb)
                                     ntohl(pcb->unsent->tcphdr->seqno), ntohl(pcb->unsent->tcphdr->seqno) +
                                     TCP_TCPLEN(pcb->unsent)));
 
-      next = pcb->unsent;//pcb未发送标志 
-      pcb->unsent = pcb->unsent->next;//未发送的下一个
+      next = pcb->unsent;
+      pcb->unsent = pcb->unsent->next;
       LWIP_DEBUGF(TCP_QLEN_DEBUG, ("tcp_receive: queuelen %"U16_F" ... ", (u16_t)pcb->snd_queuelen));
       LWIP_ASSERT("pcb->snd_queuelen >= pbuf_clen(next->p)", (pcb->snd_queuelen >= pbuf_clen(next->p)));
       /* Prevent ACK for FIN to generate a sent event */
       if ((pcb->acked != 0) && ((TCPH_FLAGS(next->tcphdr) & TCP_FIN) != 0)) {
         pcb->acked--;
       }
-      pcb->snd_queuelen -= pbuf_clen(next->p);//链表中pbuf的个数
-      tcp_seg_free(next);//释放段
+      pcb->snd_queuelen -= pbuf_clen(next->p);
+      tcp_seg_free(next);
       LWIP_DEBUGF(TCP_QLEN_DEBUG, ("%"U16_F" (after freeing unsent)\n", (u16_t)pcb->snd_queuelen));
-      if (pcb->snd_queuelen != 0) {//发送序列长度
+      if (pcb->snd_queuelen != 0) {
         LWIP_ASSERT("tcp_receive: valid queue length",
           pcb->unacked != NULL || pcb->unsent != NULL);
       }
@@ -1110,15 +1050,13 @@ tcp_receive(struct tcp_pcb *pcb)
     /* RTT estimation calculations. This is done by checking if the
        incoming segment acknowledges the segment we use to take a
        round-trip time measurement. */
-    if (pcb->rttest && TCP_SEQ_LT(pcb->rtseq, ackno)) {//RTT正在进行且该报文段被确认
+    if (pcb->rttest && TCP_SEQ_LT(pcb->rtseq, ackno)) {
       /* diff between this shouldn't exceed 32K since this are tcp timer ticks
          and a round-trip shouldn't be that long... */
-      m = (s16_t)(tcp_ticks - pcb->rttest);//计算M值
+      m = (s16_t)(tcp_ticks - pcb->rttest);
 
       LWIP_DEBUGF(TCP_RTO_DEBUG, ("tcp_receive: experienced rtt %"U16_F" ticks (%"U16_F" msec).\n",
                                   m, m * TCP_SLOW_INTERVAL));
-
-      /* This is taken directly from VJs original code in his paper 具体见RTT计算公式*/
       m = m - (pcb->sa >> 3);
       pcb->sa += m;
       if (m < 0) {
@@ -1188,7 +1126,7 @@ tcp_receive(struct tcp_pcb *pcb)
          After we are done with adjusting the pbuf pointers we must
          adjust the ->data pointer in the seg and the segment
          length.*/
-	//去掉报文段中数据编号低于rcv_nxt的数据
+
       off = pcb->rcv_nxt - seqno;
       p = inseg.p;
       LWIP_ASSERT("inseg.p != NULL", inseg.p);
@@ -1222,8 +1160,8 @@ tcp_receive(struct tcp_pcb *pcb)
       if (TCP_SEQ_LT(seqno, pcb->rcv_nxt)){//seqno < rcv_nxt
         /* the whole segment is < rcv_nxt */
         /* must be a duplicate of a packet that has already been correctly handled */
-	//报文段中所有数据编号均小于rcv_nxt，则此报文是重复报文，
-	//直接向源端响应ACK报文处理
+
+
 
         LWIP_DEBUGF(TCP_INPUT_DEBUG, ("tcp_receive: duplicate seqno %"U32_F"\n", seqno));
         tcp_ack_now(pcb);
@@ -1234,14 +1172,14 @@ tcp_receive(struct tcp_pcb *pcb)
        and below rcv_nxt + rcv_wnd) in order to be further
        processed. */
     if (TCP_SEQ_BETWEEN(seqno, pcb->rcv_nxt, 
-                        pcb->rcv_nxt + pcb->rcv_wnd - 1)){//rcv_nxt <  seqno < rcv_nxt + rcv_wnd - 1,即数据在接收范围内
+                        pcb->rcv_nxt + pcb->rcv_wnd - 1)){
       if (pcb->rcv_nxt == seqno) {
         /* The incoming segment is the next in sequence. We check if
            we have to trim the end of the segment and update rcv_nxt
            and pass the data to the application. */
-        tcplen = TCP_TCPLEN(&inseg);//计算报文段长度
+        tcplen = TCP_TCPLEN(&inseg);
 
-        if (tcplen > pcb->rcv_wnd) {//超过接收窗口大小，将报文尾部截断
+        if (tcplen > pcb->rcv_wnd) {
           LWIP_DEBUGF(TCP_INPUT_DEBUG, 
                       ("tcp_receive: other end overran receive window"
                        "seqno %"U32_F" len %"U16_F" right edge %"U32_F"\n",
@@ -1408,17 +1346,17 @@ tcp_receive(struct tcp_pcb *pcb)
              contains less data. */
 
           prev = NULL;
-          for(next = pcb->ooseq; next != NULL; next = next->next) {//从ooseq取下第M个报文段，该报文段非空，M++
-            if (seqno == next->tcphdr->seqno) {//该报文段起始编号== 要插入的报文段编号
+          for(next = pcb->ooseq; next != NULL; next = next->next) {
+            if (seqno == next->tcphdr->seqno) {
               /* The sequence number of the incoming segment is the
                  same as the sequence number of the segment on
                  ->ooseq. We check the lengths to see which one to
                  discard. */
-              if (inseg.len > next->len) {//要插入的报文段编号更长
+              if (inseg.len > next->len) {
                 /* The incoming segment is larger than the old
                    segment. We replace some segments with the new
                    one. */
-                cseg = tcp_seg_copy(&inseg);//要插入的报文段代替第M个报文段
+                cseg = tcp_seg_copy(&inseg);
                 if (cseg != NULL) {
                   if (prev != NULL) {
                     prev->next = cseg;
@@ -1524,7 +1462,7 @@ tcp_receive(struct tcp_pcb *pcb)
     /*if (TCP_SEQ_GT(pcb->rcv_nxt, seqno) ||
       TCP_SEQ_GEQ(seqno, pcb->rcv_nxt + pcb->rcv_wnd)) {*/
     if(!TCP_SEQ_BETWEEN(seqno, pcb->rcv_nxt, pcb->rcv_nxt + pcb->rcv_wnd-1)){
-      tcp_ack_now(pcb);//向源端返回一个立即确认报文
+      tcp_ack_now(pcb);
     }
   }
 }

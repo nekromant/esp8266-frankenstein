@@ -167,14 +167,14 @@ u32_t            tcp_update_rcv_ann_wnd(struct tcp_pcb *pcb);
 #endif
 PACK_STRUCT_BEGIN
 struct tcp_hdr {
-  PACK_STRUCT_FIELD(u16_t src);				//源端口
-  PACK_STRUCT_FIELD(u16_t dest);				//目的端口
-  PACK_STRUCT_FIELD(u32_t seqno);			//序号
-  PACK_STRUCT_FIELD(u32_t ackno);			//应答序号
-  PACK_STRUCT_FIELD(u16_t _hdrlen_rsvd_flags);//首部长度+保留位+标志位
-  PACK_STRUCT_FIELD(u16_t wnd);				//窗口大小
-  PACK_STRUCT_FIELD(u16_t chksum);			//校验和
-  PACK_STRUCT_FIELD(u16_t urgp);				//紧急指针
+  PACK_STRUCT_FIELD(u16_t src);
+  PACK_STRUCT_FIELD(u16_t dest);
+  PACK_STRUCT_FIELD(u32_t seqno);
+  PACK_STRUCT_FIELD(u32_t ackno);
+  PACK_STRUCT_FIELD(u16_t _hdrlen_rsvd_flags);
+  PACK_STRUCT_FIELD(u16_t wnd);
+  PACK_STRUCT_FIELD(u16_t chksum);
+  PACK_STRUCT_FIELD(u16_t urgp);
 } PACK_STRUCT_STRUCT;
 PACK_STRUCT_END
 #ifdef PACK_STRUCT_USE_INCLUDES
