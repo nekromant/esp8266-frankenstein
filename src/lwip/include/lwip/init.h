@@ -64,8 +64,7 @@ extern "C" {
 
 /* Modules initialization */
 ICACHE_FLASH_ATTR
-void lwip_init(void) ;
-//void lwip_init(void);
+void lwip_init(void);
 
 #ifdef __cplusplus
 }

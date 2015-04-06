@@ -378,7 +378,8 @@ void             tcp_setprio (struct tcp_pcb *pcb, u8_t prio);
 #define TCP_PRIO_NORMAL 64
 #define TCP_PRIO_MAX    127
 
-extern err_t            tcp_output(struct tcp_pcb *pcb);
+ICACHE_FLASH_ATTR
+err_t            tcp_output(struct tcp_pcb *pcb);
 
 
 ICACHE_FLASH_ATTR

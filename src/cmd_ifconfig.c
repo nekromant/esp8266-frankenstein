@@ -15,7 +15,7 @@
 #include <stdlib.h>
 #include <generic/macros.h>
 
-
+#include "missing.h"
 
 static void print_ip_info_real(int iface, int rssi, int channel)
 {

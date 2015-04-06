@@ -26,6 +26,8 @@
 
 #include "user_interface.h"
 
+#include "missing.h"
+
 espconn_msg *plink_active = NULL;
 espconn_msg *pserver_list = NULL;
 remot_info premot[5];

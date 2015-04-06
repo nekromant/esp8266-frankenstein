@@ -25,6 +25,8 @@
 
 #include "lwip/app/espconn_udp.h"
 
+#include "missing.h"
+
 extern espconn_msg *plink_active;
 
 //static void  espconn_data_sentcb(struct espconn *pespconn)

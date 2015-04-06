@@ -44,7 +44,6 @@
  */
 #include "lwipopts.h"
 #include "lwip/debug.h"
-#include "user_interface.h" 
 
 /*
    -----------------------------------------------
@@ -66,7 +65,7 @@
  * use lwIP facilities.
  */
 #ifndef NO_SYS
-#define NO_SYS                          1
+#define NO_SYS                          0
 #endif
 
 /**
@@ -74,7 +73,7 @@
  * Mainly for compatibility to old versions.
  */
 #ifndef NO_SYS_NO_TIMERS
-#define NO_SYS_NO_TIMERS                1
+#define NO_SYS_NO_TIMERS                0
 #endif
 
 /**
@@ -520,7 +519,7 @@
  * via IP_FRAG.
  */
 #ifndef IP_REASSEMBLY
-#define IP_REASSEMBLY                   0
+#define IP_REASSEMBLY                   1
 #endif
 
 /**
@@ -1035,13 +1034,13 @@
  *     LWIP_CALLBACK_API==1: The PCB callback function is called directly
  *         for the event.
  */
-//#ifndef LWIP_EVENT_API
-//#define LWIP_EVENT_API                  0
-//#define LWIP_CALLBACK_API               1
-//#else 
+#ifndef LWIP_EVENT_API
+#define LWIP_EVENT_API                  0
+#define LWIP_CALLBACK_API               1
+#else 
 //#define LWIP_EVENT_API                  1
 //#define LWIP_CALLBACK_API               0
-//#endif
+#endif
 
 
 /*
@@ -1119,7 +1118,7 @@
  * address equal to the netif IP address, looping them back up the stack.
  */
 #ifndef LWIP_NETIF_LOOPBACK
-#define LWIP_NETIF_LOOPBACK             1
+#define LWIP_NETIF_LOOPBACK             0
 #endif
 
 /**
@@ -1169,7 +1168,7 @@
  * LWIP_HAVE_LOOPIF==1: Support loop interface (127.0.0.1) and loopif.c
  */
 #ifndef LWIP_HAVE_LOOPIF
-#define LWIP_HAVE_LOOPIF                1
+#define LWIP_HAVE_LOOPIF                0
 #endif
 
 /*
@@ -1359,7 +1358,7 @@
  * LWIP_NETCONN==1: Enable Netconn API (require to use api_lib.c)
  */
 #ifndef LWIP_NETCONN
-#define LWIP_NETCONN                    0
+#define LWIP_NETCONN                    1
 #endif
 
 /** LWIP_TCPIP_TIMEOUT==1: Enable tcpip_timeout/tcpip_untimeout tod create
@@ -1378,7 +1377,7 @@
  * LWIP_SOCKET==1: Enable Socket API (require to use sockets.c)
  */
 #ifndef LWIP_SOCKET
-#define LWIP_SOCKET                     0
+#define LWIP_SOCKET                     1
 #endif
 
 /**

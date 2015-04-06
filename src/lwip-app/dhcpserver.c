@@ -21,7 +21,7 @@ void  dhcps_coarse_tmr(void) {}
 #endif
 #include "user_interface.h"
 
-
+#include "missing.h"
 
 ////////////////////////////////////////////////////////////////////////////////////
 static const uint8_t xid[4] = {0xad, 0xde, 0x12, 0x23};

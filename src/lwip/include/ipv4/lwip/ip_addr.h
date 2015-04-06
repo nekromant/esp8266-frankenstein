@@ -243,18 +243,6 @@ char *ipaddr_ntoa(const ip_addr_t *addr);
 ICACHE_FLASH_ATTR
 char *ipaddr_ntoa_r(const ip_addr_t *addr, char *buf, int buflen);
 
-#define IP2STR(ipaddr) ip4_addr1_16(ipaddr), \
-    ip4_addr2_16(ipaddr), \
-    ip4_addr3_16(ipaddr), \
-    ip4_addr4_16(ipaddr)
-
-#define IPSTR "%d.%d.%d.%d"
-
-struct ip_info {
-    struct ip_addr ip;
-    struct ip_addr netmask;
-    struct ip_addr gw;
-};
 #ifdef __cplusplus
 }
 #endif

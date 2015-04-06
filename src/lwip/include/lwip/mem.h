@@ -33,7 +33,6 @@
 #define __LWIP_MEM_H__
 
 #include "lwip/opt.h"
-#include "mem_manager.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -51,34 +50,14 @@ typedef size_t mem_size_t;
  * allow these defines to be overridden.
  */
 #ifndef mem_free
-#define mem_free vPortFree
+#define mem_free free
 #endif
 #ifndef mem_malloc
-#define mem_malloc pvPortMalloc
+#define mem_malloc malloc
 #endif
 #ifndef mem_calloc
-#define mem_calloc pvPortCalloc
+#define mem_calloc calloc
 #endif
-#ifndef mem_realloc
-#define mem_realloc pvPortRealloc
-#endif
-#ifndef mem_zalloc
-#define mem_zalloc pvPortZalloc
-#endif
-
-#ifndef os_malloc
-#define os_malloc(s) mem_malloc((s))
-#endif
-#ifndef os_realloc
-#define os_realloc(p, s) mem_realloc((p), (s))
-#endif
-#ifndef os_zalloc
-#define os_zalloc(s) mem_zalloc((s))
-#endif
-#ifndef os_free
-#define os_free(p) mem_free((p))
-#endif
-
 /* Since there is no C library allocation function to shrink memory without
    moving it, define this to nothing. */
 #ifndef mem_trim
