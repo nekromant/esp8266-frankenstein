@@ -133,9 +133,6 @@ ip_route(ip_addr_t *dest)
         /* return netif on which to forward IP packet */
         return netif;
       }
-      if (!ip_addr_isbroadcast(dest, netif) && netif != netif_default) {
-        return netif;
-      }
     }
   }
   if ((netif_default == NULL) || (!netif_is_up(netif_default))) {
