@@ -20,6 +20,7 @@
 #include "tcpservice.h"
 #include "microrl.h"
 #include "env.h"
+#include "main.h"
 
 // default log2(buffer size) for a telnet client
 // tried 11/2KB but too small for large help string

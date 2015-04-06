@@ -227,35 +227,6 @@ extern const struct eth_addr ethbroadcast, ethzero;
 
 #endif /* LWIP_ARP || LWIP_ETHERNET */
 
-#if 0
-/** Ethernet header */
-#ifndef ETHARP_HWADDR_LEN
-#define ETHARP_HWADDR_LEN     6
-#endif
-
-
-struct eth_addr {
-  PACK_STRUCT_FIELD(u8_t addr[ETHARP_HWADDR_LEN]);
-} PACK_STRUCT_STRUCT;
-
-
-struct eth_hdr {
-#if ETH_PAD_SIZE
-  PACK_STRUCT_FIELD(u8_t padding[ETH_PAD_SIZE]);
-#endif
-  PACK_STRUCT_FIELD(struct eth_addr dest);
-  PACK_STRUCT_FIELD(struct eth_addr src);
-  PACK_STRUCT_FIELD(u16_t type);
-} PACK_STRUCT_STRUCT;
-
-#ifdef PACK_STRUCT_USE_INCLUDES
-#  include "arch/epstruct.h"
-#endif
-
-#define SIZEOF_ETH_HDR (14 + ETH_PAD_SIZE)
-
-#endif
-
 #ifdef __cplusplus
 }
 #endif

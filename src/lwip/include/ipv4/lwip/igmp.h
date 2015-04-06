@@ -35,8 +35,6 @@
 #ifndef __LWIP_IGMP_H__
 #define __LWIP_IGMP_H__
 
-#include <stdlib.h> //rand
-
 #include "lwip/opt.h"
 #include "lwip/ip_addr.h"
 #include "lwip/netif.h"
@@ -107,7 +105,7 @@ ICACHE_FLASH_ATTR
 err_t  igmp_leavegroup(ip_addr_t *ifaddr, ip_addr_t *groupaddr);
 ICACHE_FLASH_ATTR
 void   igmp_tmr(void);
-#define LWIP_RAND()  rand()
+
 #ifdef __cplusplus
 }
 #endif

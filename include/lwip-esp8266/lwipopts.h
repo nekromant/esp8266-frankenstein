@@ -2047,4 +2047,10 @@
 #define DNS_DEBUG                       LWIP_DBG_OFF
 #endif
 
+#ifndef LWIP_RAND
+#define LWIP_RAND()  rand()
+#endif
+
+#define LWIP_DHCP_BOOTP_FILE 0
+
 #endif /* __LWIP_OPT_H__ */

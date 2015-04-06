@@ -1,6 +1,7 @@
 
 #include "tcpservice.h"
 #include "env.h"
+#include "main.h"
 
 #define ECHO_SEND_BUFFER_SIZE_LOG2_DEFAULT	12 // 12: 4KB
 

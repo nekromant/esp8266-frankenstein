@@ -44,7 +44,6 @@
  */
 #include "lwipopts.h"
 #include "lwip/debug.h"
-#include "main.h" // fr_request_hostname
 #include "user_interface.h" 
 
 /*

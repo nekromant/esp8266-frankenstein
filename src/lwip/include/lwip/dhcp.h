@@ -59,7 +59,6 @@ struct dhcp
   u32_t offered_t2_rebind; /* recommended rebind time (usually 66% of lease period)  */
   /* @todo: LWIP_DHCP_BOOTP_FILE configuration option?
      integrate with possible TFTP-client for booting? */
-#define LWIP_DHCP_BOOTP_FILE 0
 #if LWIP_DHCP_BOOTP_FILE
   ip_addr_t offered_si_addr;
   char boot_file_name[DHCP_FILE_LEN];

@@ -233,12 +233,8 @@ u32_t sys_jiffies(void);
 
 /** Returns the current time in milliseconds,
  * may be the same as sys_jiffies or at least based on it. */
-ICACHE_FLASH_ATTR
-static inline u32_t sys_now(void) ;
-static inline u32_t sys_now(void)
-{
-	return NOW()/(TIMER_CLK_FREQ/1000);
-}
+//u32_t sys_now(void) ;
+#define sys_now() (NOW())
 
 /* Critical Region Protection */
 /* These functions must be implemented in the sys_arch.c file.

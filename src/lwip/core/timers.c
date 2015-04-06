@@ -265,7 +265,7 @@ void sys_timeouts_init(void)
 
 #if NO_SYS
   /* Initialise timestamp for sys_check_timeouts */
-  timeouts_last_time = NOW();
+  timeouts_last_time = sys_now();
 #endif
 }
 
@@ -385,7 +385,7 @@ sys_check_timeouts(void)
   int had_one;
   u32_t now;
 
-  now = NOW();
+  now = sys_now();
   if (next_timeout) {
     /* this cares for wraparounds */
 	if (timer2_ms_flag == 0) {
@@ -429,7 +429,7 @@ sys_check_timeouts(void)
 void
 sys_restart_timeouts(void)
 {
-  timeouts_last_time = NOW();
+  timeouts_last_time = sys_now();
 }
 
 #else /* NO_SYS */

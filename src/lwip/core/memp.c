@@ -126,29 +126,26 @@ static struct memp *memp_tab[MEMP_MAX];
 #if !MEM_USE_POOLS && !MEMP_MEM_MALLOC
 static
 #endif
-const u16_t memp_sizes[MEMP_MAX] = { //LWIP_MEM_ALIGN_SIZE
-#define LWIP_MEMPOOL(name,num,size,desc,attr)  LWIP_MEM_ALIGN_SIZE(size),
+const u16_t memp_sizes[MEMP_MAX] = {
+#define LWIP_MEMPOOL(name,num,size,desc)  LWIP_MEM_ALIGN_SIZE(size),
 #include "lwip/memp_std.h"
 };
-
-u16_t memp_sizes_test[1] = {PBUF_POOL_BUFSIZE,};
 
 #if !MEMP_MEM_MALLOC /* don't build if not configured for use in lwipopts.h */
 
 /** This array holds the number of elements in each pool. */
 static const u16_t memp_num[MEMP_MAX] = {
-#define LWIP_MEMPOOL(name,num,size,desc,attr)  (num),
+#define LWIP_MEMPOOL(name,num,size,desc)  (num),
 #include "lwip/memp_std.h"
 };
 
 /** This array holds a textual description of each pool. */
-//#ifdef LWIP_DEBUG
-//static const char *memp_desc[MEMP_MAX] = {
-const char *memp_desc[MEMP_MAX] = {
-#define LWIP_MEMPOOL(name,num,size,desc,attr)  (desc),
+#ifdef LWIP_DEBUG
+static const char *memp_desc[MEMP_MAX] = {
+#define LWIP_MEMPOOL(name,num,size,desc)  (desc),
 #include "lwip/memp_std.h"
 };
-//#endif /* LWIP_DEBUG */
+#endif /* LWIP_DEBUG */
 
 #if MEMP_SEPARATE_POOLS
 
@@ -157,13 +154,13 @@ const char *memp_desc[MEMP_MAX] = {
  * To relocate a pool, declare it as extern in cc.h. Example for GCC:
  *   extern u8_t __attribute__((section(".onchip_mem"))) memp_memory_UDP_PCB_base[];
  */
-#define LWIP_MEMPOOL(name,num,size,desc,attr) u8_t memp_memory_ ## name ## _base \
-  [((num) * (MEMP_SIZE + MEMP_ALIGN_SIZE(size)))] attr;   
+#define LWIP_MEMPOOL(name,num,size,desc) u8_t memp_memory_ ## name ## _base \
+  [((num) * (MEMP_SIZE + MEMP_ALIGN_SIZE(size)))];   
 #include "lwip/memp_std.h"
 
 /** This array holds the base of each memory pool. */
 static u8_t *const memp_bases[] = { 
-#define LWIP_MEMPOOL(name,num,size,desc,attr) memp_memory_ ## name ## _base,   
+#define LWIP_MEMPOOL(name,num,size,desc) memp_memory_ ## name ## _base,   
 #include "lwip/memp_std.h"
 };
 
@@ -171,7 +168,7 @@ static u8_t *const memp_bases[] = {
 
 /** This is the actual memory used by the pools (all pools in one big block). */
 static u8_t memp_memory[MEM_ALIGNMENT - 1 
-#define LWIP_MEMPOOL(name,num,size,desc, attr) + ( (num) * (MEMP_SIZE + MEMP_ALIGN_SIZE(size) ) )
+#define LWIP_MEMPOOL(name,num,size,desc) + ( (num) * (MEMP_SIZE + MEMP_ALIGN_SIZE(size) ) )
 #include "lwip/memp_std.h"
 ];
 
@@ -203,7 +200,7 @@ memp_sanity(void)
 #if MEMP_OVERFLOW_CHECK
 #if defined(LWIP_DEBUG) && MEMP_STATS
 static const char * memp_overflow_names[] = {
-#define LWIP_MEMPOOL(name,num,size,desc,attr) "/"desc,
+#define LWIP_MEMPOOL(name,num,size,desc) "/"desc,
 #include "lwip/memp_std.h"
   };
 #endif
@@ -360,7 +357,7 @@ memp_init(void)
 #endif /* MEMP_SEPARATE_POOLS */
     /* create a linked list of memp elements */
     for (j = 0; j < memp_num[i]; ++j) {
-      memp->next = (struct memp *)memp_tab[i];
+      memp->next = memp_tab[i];
       memp_tab[i] = memp;
       memp = (struct memp *)(void *)((u8_t *)memp + MEMP_SIZE + memp_sizes[i]
 #if MEMP_OVERFLOW_CHECK

@@ -88,9 +88,10 @@ PACK_STRUCT_END
 #  include "arch/epstruct.h"
 #endif
 
-
 #define ICMPH_TYPE(hdr) ((hdr)->type)
 #define ICMPH_CODE(hdr) ((hdr)->code)
+
+/** Combines type and code to an u16_t */
 #define ICMPH_TYPE_SET(hdr, t) ((hdr)->type = (t))
 #define ICMPH_CODE_SET(hdr, c) ((hdr)->code = (c))
 

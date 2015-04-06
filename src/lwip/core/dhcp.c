@@ -294,9 +294,9 @@ dhcp_select(struct netif *netif)
     dhcp_option_byte(dhcp, DHCP_OPTION_BROADCAST);
     dhcp_option_byte(dhcp, DHCP_OPTION_DNS_SERVER);
 
-//#if LWIP_NETIF_HOSTNAME
-    const char *p = (const char*) fr_request_hostname();
-    
+#if LWIP_NETIF_HOSTNAME
+    if (netif->hostname != NULL) {
+      const char *p = (const char*)netif->hostname;
       u8_t namelen = (u8_t)strlen(p);
       if (namelen > 0) {
         LWIP_ASSERT("DHCP: hostname is too long!", namelen < 255);
@@ -305,8 +305,8 @@ dhcp_select(struct netif *netif)
           dhcp_option_byte(dhcp, *p++);
         }
       }
-      
-//#endif /* LWIP_NETIF_HOSTNAME */
+    }
+#endif /* LWIP_NETIF_HOSTNAME */
 
     dhcp_option_trailer(dhcp);
     /* shrink the pbuf to the actual content length */
