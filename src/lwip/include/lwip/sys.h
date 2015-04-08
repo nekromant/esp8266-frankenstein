@@ -222,12 +222,10 @@ sys_thread_t sys_thread_new(const char *name, lwip_thread_fn thread, void *arg, 
 #endif /* NO_SYS */
 
 /* sys_init() must be called before anthing else. */
-ICACHE_FLASH_ATTR
 void sys_init(void);
 
 #ifndef sys_jiffies
 /** Ticks/jiffies since power up. */
-ICACHE_FLASH_ATTR
 u32_t sys_jiffies(void);
 #endif
 
@@ -274,9 +272,7 @@ u32_t sys_jiffies(void);
  * this macro may be defined in sys_arch.h
  */
 #define SYS_ARCH_UNPROTECT(lev) sys_arch_unprotect(lev)
-ICACHE_FLASH_ATTR
 sys_prot_t sys_arch_protect(void);
-ICACHE_FLASH_ATTR
 void sys_arch_unprotect(sys_prot_t pval);
 
 #else

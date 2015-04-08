@@ -61,27 +61,18 @@ struct netbuf {
 };
 
 /* Network buffer functions: */
-ICACHE_FLASH_ATTR
 struct netbuf *   netbuf_new      (void);
-ICACHE_FLASH_ATTR
 void              netbuf_delete   (struct netbuf *buf);
-ICACHE_FLASH_ATTR
 void *            netbuf_alloc    (struct netbuf *buf, u16_t size);
-ICACHE_FLASH_ATTR
 void              netbuf_free     (struct netbuf *buf);
-ICACHE_FLASH_ATTR
 err_t             netbuf_ref      (struct netbuf *buf,
                                    const void *dataptr, u16_t size);
-ICACHE_FLASH_ATTR
 void              netbuf_chain    (struct netbuf *head,
                                    struct netbuf *tail);
 
-ICACHE_FLASH_ATTR
 err_t             netbuf_data     (struct netbuf *buf,
                                    void **dataptr, u16_t *len);
-ICACHE_FLASH_ATTR
 s8_t              netbuf_next     (struct netbuf *buf);
-ICACHE_FLASH_ATTR
 void              netbuf_first    (struct netbuf *buf);
 
 

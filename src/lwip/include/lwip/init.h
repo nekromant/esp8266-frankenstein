@@ -63,7 +63,6 @@ extern "C" {
                         LWIP_VERSION_REVISION << 8 | LWIP_VERSION_RC)
 
 /* Modules initialization */
-ICACHE_FLASH_ATTR
 void lwip_init(void);
 
 #ifdef __cplusplus

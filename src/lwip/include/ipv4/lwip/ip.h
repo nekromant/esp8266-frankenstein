@@ -169,26 +169,20 @@ extern ip_addr_t current_iphdr_src;
 extern ip_addr_t current_iphdr_dest;
 
 #define ip_init() /* Compatibility define, not init needed. */
-ICACHE_FLASH_ATTR
 struct netif *ip_route(ip_addr_t *dest);
 struct netif *ip_router(ip_addr_t *dest, ip_addr_t *source);
 
-ICACHE_FLASH_ATTR
 err_t ip_input(struct pbuf *p, struct netif *inp);
-ICACHE_FLASH_ATTR
 err_t ip_output(struct pbuf *p, ip_addr_t *src, ip_addr_t *dest,
        u8_t ttl, u8_t tos, u8_t proto);
-ICACHE_FLASH_ATTR
 err_t ip_output_if(struct pbuf *p, ip_addr_t *src, ip_addr_t *dest,
        u8_t ttl, u8_t tos, u8_t proto,
        struct netif *netif);
 #if LWIP_NETIF_HWADDRHINT
-ICACHE_FLASH_ATTR
 err_t ip_output_hinted(struct pbuf *p, ip_addr_t *src, ip_addr_t *dest,
        u8_t ttl, u8_t tos, u8_t proto, u8_t *addr_hint);
 #endif /* LWIP_NETIF_HWADDRHINT */
 #if IP_OPTIONS_SEND
-ICACHE_FLASH_ATTR
 err_t ip_output_if_opt(struct pbuf *p, ip_addr_t *src, ip_addr_t *dest,
        u8_t ttl, u8_t tos, u8_t proto, struct netif *netif, void *ip_options,
        u16_t optlen);
@@ -207,7 +201,6 @@ err_t ip_output_if_opt(struct pbuf *p, ip_addr_t *src, ip_addr_t *dest,
 #define ip_current_dest_addr() (&current_iphdr_dest)
 
 #if IP_DEBUG
-ICACHE_FLASH_ATTR
 void ip_debug_print(struct pbuf *p);
 #else
 #define ip_debug_print(p)

@@ -60,11 +60,8 @@ struct ip_reassdata {
   u8_t timer;
 };
 
-ICACHE_FLASH_ATTR
 void ip_reass_init(void);
-ICACHE_FLASH_ATTR
 void ip_reass_tmr(void);
-ICACHE_FLASH_ATTR
 struct pbuf * ip_reass(struct pbuf *p);
 #endif /* IP_REASSEMBLY */
 
@@ -81,7 +78,6 @@ struct pbuf_custom_ref {
 };
 #endif /* !IP_FRAG_USES_STATIC_BUF && !LWIP_NETIF_TX_SINGLE_PBUF */
 
-ICACHE_FLASH_ATTR
 err_t ip_frag(struct pbuf *p, struct netif *netif, ip_addr_t *dest);
 #endif /* IP_FRAG */
 

@@ -72,24 +72,18 @@ struct sys_timeo {
 #endif /* LWIP_DEBUG_TIMERNAMES */
 };
 
-ICACHE_FLASH_ATTR
 void sys_timeouts_init(void);
 
 #if LWIP_DEBUG_TIMERNAMES
-ICACHE_FLASH_ATTR
 void sys_timeout_debug(u32_t msecs, sys_timeout_handler handler, void *arg, const char* handler_name);
 #define sys_timeout(msecs, handler, arg) sys_timeout_debug(msecs, handler, arg, #handler)
 #else /* LWIP_DEBUG_TIMERNAMES */
-ICACHE_FLASH_ATTR
 void sys_timeout(u32_t msecs, sys_timeout_handler handler, void *arg);
 #endif /* LWIP_DEBUG_TIMERNAMES */
 
-ICACHE_FLASH_ATTR
 void sys_untimeout(sys_timeout_handler handler, void *arg);
 #if NO_SYS
-ICACHE_FLASH_ATTR
 void sys_check_timeouts(void);
-ICACHE_FLASH_ATTR
 void sys_restart_timeouts(void);
 #else /* NO_SYS */
 void sys_timeouts_mbox_fetch(sys_mbox_t *mbox, void **msg);

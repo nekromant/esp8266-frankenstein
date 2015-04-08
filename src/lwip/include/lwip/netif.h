@@ -250,58 +250,43 @@ extern struct netif *netif_list;
 /** The default network interface. */
 extern struct netif *netif_default;
 
-ICACHE_FLASH_ATTR
 void netif_init(void);
 
-ICACHE_FLASH_ATTR
 struct netif *netif_add(struct netif *netif, ip_addr_t *ipaddr, ip_addr_t *netmask,
       ip_addr_t *gw, void *state, netif_init_fn init, netif_input_fn input);
 
-ICACHE_FLASH_ATTR
 void
 netif_set_addr(struct netif *netif, ip_addr_t *ipaddr, ip_addr_t *netmask,
       ip_addr_t *gw);
-ICACHE_FLASH_ATTR
 void netif_remove(struct netif * netif);
 
 /* Returns a network interface given its name. The name is of the form
    "et0", where the first two letters are the "name" field in the
    netif structure, and the digit is in the num field in the same
    structure. */
-ICACHE_FLASH_ATTR
 struct netif *netif_find(char *name);
 
-ICACHE_FLASH_ATTR
 void netif_set_default(struct netif *netif);
 
-ICACHE_FLASH_ATTR
 void netif_set_ipaddr(struct netif *netif, ip_addr_t *ipaddr);
-ICACHE_FLASH_ATTR
 void netif_set_netmask(struct netif *netif, ip_addr_t *netmask);
-ICACHE_FLASH_ATTR
 void netif_set_gw(struct netif *netif, ip_addr_t *gw);
 
-ICACHE_FLASH_ATTR
 void netif_set_up(struct netif *netif);
-ICACHE_FLASH_ATTR
 void netif_set_down(struct netif *netif);
 /** Ask if an interface is up */
 #define netif_is_up(netif) (((netif)->flags & NETIF_FLAG_UP) ? (u8_t)1 : (u8_t)0)
 
 #if LWIP_NETIF_STATUS_CALLBACK
-ICACHE_FLASH_ATTR
 void netif_set_status_callback(struct netif *netif, netif_status_callback_fn status_callback);
 #endif /* LWIP_NETIF_STATUS_CALLBACK */
 
-ICACHE_FLASH_ATTR
 void netif_set_link_up(struct netif *netif);
-ICACHE_FLASH_ATTR
 void netif_set_link_down(struct netif *netif);
 /** Ask if a link is up */ 
 #define netif_is_link_up(netif) (((netif)->flags & NETIF_FLAG_LINK_UP) ? (u8_t)1 : (u8_t)0)
 
 #if LWIP_NETIF_LINK_CALLBACK
-ICACHE_FLASH_ATTR
 void netif_set_link_callback(struct netif *netif, netif_status_callback_fn link_callback);
 #endif /* LWIP_NETIF_LINK_CALLBACK */
 
@@ -316,12 +301,9 @@ void netif_set_link_callback(struct netif *netif, netif_status_callback_fn link_
 #endif /* LWIP_IGMP */
 
 #if ENABLE_LOOPBACK
-ICACHE_FLASH_ATTR
 err_t netif_loop_output(struct netif *netif, struct pbuf *p, ip_addr_t *dest_ip);
-ICACHE_FLASH_ATTR
 void netif_poll(struct netif *netif);
 #if !LWIP_NETIF_LOOPBACK_MULTITHREADING
-ICACHE_FLASH_ATTR
 void netif_poll_all(void);
 #endif /* !LWIP_NETIF_LOOPBACK_MULTITHREADING */
 #endif /* ENABLE_LOOPBACK */

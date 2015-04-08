@@ -311,20 +311,13 @@ err_t lwip_tcp_event(void *arg, struct tcp_pcb *pcb,
 #endif /* LWIP_EVENT_API */
 
 /* Application program's interface: */
-ICACHE_FLASH_ATTR
 struct tcp_pcb * tcp_new     (void);
 
-ICACHE_FLASH_ATTR
 void             tcp_arg     (struct tcp_pcb *pcb, void *arg) ;
-ICACHE_FLASH_ATTR
 void             tcp_accept  (struct tcp_pcb *pcb, tcp_accept_fn accept) ;
-ICACHE_FLASH_ATTR
 void             tcp_recv    (struct tcp_pcb *pcb, tcp_recv_fn recv) ;
-ICACHE_FLASH_ATTR
 void             tcp_sent    (struct tcp_pcb *pcb, tcp_sent_fn sent);
-ICACHE_FLASH_ATTR
 void             tcp_poll    (struct tcp_pcb *pcb, tcp_poll_fn poll, u8_t interval);
-ICACHE_FLASH_ATTR
 void             tcp_err     (struct tcp_pcb *pcb, tcp_err_fn err);
 
 #define          tcp_mss(pcb)             (((pcb)->flags & TF_TIMESTAMP) ? ((pcb)->mss - 12)  : (pcb)->mss)
@@ -343,46 +336,35 @@ void             tcp_err     (struct tcp_pcb *pcb, tcp_err_fn err);
                                                pcb->state == LISTEN)
 #endif /* TCP_LISTEN_BACKLOG */
 
-ICACHE_FLASH_ATTR
 void             tcp_recved  (struct tcp_pcb *pcb, u16_t len);
-ICACHE_FLASH_ATTR
 err_t            tcp_bind    (struct tcp_pcb *pcb, ip_addr_t *ipaddr,
                               u16_t port);
-ICACHE_FLASH_ATTR
 err_t            tcp_connect (struct tcp_pcb *pcb, ip_addr_t *ipaddr,
                               u16_t port, tcp_connected_fn connected);
 
-ICACHE_FLASH_ATTR
 struct tcp_pcb * tcp_listen_with_backlog(struct tcp_pcb *pcb, u8_t backlog);
 #define          tcp_listen(pcb) tcp_listen_with_backlog(pcb, TCP_DEFAULT_LISTEN_BACKLOG)
 
-ICACHE_FLASH_ATTR
 void             tcp_abort (struct tcp_pcb *pcb);
-ICACHE_FLASH_ATTR
 err_t            tcp_close   (struct tcp_pcb *pcb);
-ICACHE_FLASH_ATTR
 err_t            tcp_shutdown(struct tcp_pcb *pcb, int shut_rx, int shut_tx);
 
 /* Flags for "apiflags" parameter in tcp_write */
 #define TCP_WRITE_FLAG_COPY 0x01
 #define TCP_WRITE_FLAG_MORE 0x02
 
-ICACHE_FLASH_ATTR
 err_t            tcp_write   (struct tcp_pcb *pcb, const void *dataptr, u16_t len,
                               u8_t apiflags);
 
-ICACHE_FLASH_ATTR
 void             tcp_setprio (struct tcp_pcb *pcb, u8_t prio);
 
 #define TCP_PRIO_MIN    1
 #define TCP_PRIO_NORMAL 64
 #define TCP_PRIO_MAX    127
 
-ICACHE_FLASH_ATTR
 err_t            tcp_output(struct tcp_pcb *pcb);
 
 
-ICACHE_FLASH_ATTR
 const char* tcp_debug_state_str(enum tcp_state s);
 
 

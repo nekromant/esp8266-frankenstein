@@ -120,42 +120,30 @@ extern struct udp_pcb *udp_pcbs;
 
 /* The following functions is the application layer interface to the
    UDP code. */
-ICACHE_FLASH_ATTR
 struct udp_pcb * udp_new        (void);
-ICACHE_FLASH_ATTR
 void             udp_remove     (struct udp_pcb *pcb);
-ICACHE_FLASH_ATTR
 err_t            udp_bind       (struct udp_pcb *pcb, ip_addr_t *ipaddr,
                                  u16_t port);
-ICACHE_FLASH_ATTR
 err_t            udp_connect    (struct udp_pcb *pcb, ip_addr_t *ipaddr,
                                  u16_t port);
-ICACHE_FLASH_ATTR
 void             udp_disconnect (struct udp_pcb *pcb);
-ICACHE_FLASH_ATTR
 void             udp_recv       (struct udp_pcb *pcb, udp_recv_fn recv,
                                  void *recv_arg);
-ICACHE_FLASH_ATTR
 err_t            udp_sendto_if  (struct udp_pcb *pcb, struct pbuf *p,
                                  ip_addr_t *dst_ip, u16_t dst_port,
                                  struct netif *netif);
-ICACHE_FLASH_ATTR
 err_t            udp_sendto     (struct udp_pcb *pcb, struct pbuf *p,
                                  ip_addr_t *dst_ip, u16_t dst_port);
-ICACHE_FLASH_ATTR
 err_t            udp_send       (struct udp_pcb *pcb, struct pbuf *p);
 
 #if LWIP_CHECKSUM_ON_COPY
-ICACHE_FLASH_ATTR
 err_t            udp_sendto_if_chksum(struct udp_pcb *pcb, struct pbuf *p,
                                  ip_addr_t *dst_ip, u16_t dst_port,
                                  struct netif *netif, u8_t have_chksum,
                                  u16_t chksum);
-ICACHE_FLASH_ATTR
 err_t            udp_sendto_chksum(struct udp_pcb *pcb, struct pbuf *p,
                                  ip_addr_t *dst_ip, u16_t dst_port,
                                  u8_t have_chksum, u16_t chksum);
-ICACHE_FLASH_ATTR
 err_t            udp_send_chksum(struct udp_pcb *pcb, struct pbuf *p,
                                  u8_t have_chksum, u16_t chksum);
 #endif /* LWIP_CHECKSUM_ON_COPY */
@@ -164,13 +152,11 @@ err_t            udp_send_chksum(struct udp_pcb *pcb, struct pbuf *p,
 #define          udp_setflags(pcb, f)  ((pcb)->flags = (f))
 
 /* The following functions are the lower layer interface to UDP. */
-ICACHE_FLASH_ATTR
 void             udp_input      (struct pbuf *p, struct netif *inp);
 
 #define udp_init() /* Compatibility define, not init needed. */
 
 #if UDP_DEBUG
-ICACHE_FLASH_ATTR
 void udp_debug_print(struct udp_hdr *udphdr);
 #else
 #define udp_debug_print(udphdr)

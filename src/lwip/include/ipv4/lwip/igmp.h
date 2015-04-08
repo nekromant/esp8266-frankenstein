@@ -87,23 +87,14 @@ struct igmp_group {
 };
 
 /*  Prototypes */
-ICACHE_FLASH_ATTR
 void   igmp_init(void);
-ICACHE_FLASH_ATTR
 err_t  igmp_start(struct netif *netif);
-ICACHE_FLASH_ATTR
 err_t  igmp_stop(struct netif *netif);
-ICACHE_FLASH_ATTR
 void   igmp_report_groups(struct netif *netif);
-ICACHE_FLASH_ATTR
 struct igmp_group *igmp_lookfor_group(struct netif *ifp, ip_addr_t *addr);
-ICACHE_FLASH_ATTR
 void   igmp_input(struct pbuf *p, struct netif *inp, ip_addr_t *dest);
-ICACHE_FLASH_ATTR
 err_t  igmp_joingroup(ip_addr_t *ifaddr, ip_addr_t *groupaddr);
-ICACHE_FLASH_ATTR
 err_t  igmp_leavegroup(ip_addr_t *ifaddr, ip_addr_t *groupaddr);
-ICACHE_FLASH_ATTR
 void   igmp_tmr(void);
 
 #ifdef __cplusplus
