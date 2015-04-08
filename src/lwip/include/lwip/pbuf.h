@@ -58,10 +58,7 @@ typedef enum {
   PBUF_RAM, /* pbuf data is stored in RAM */
   PBUF_ROM, /* pbuf data is stored in ROM */
   PBUF_REF, /* pbuf comes from the pbuf pool */
-  PBUF_POOL, /* pbuf payload refers to RAM */
-#ifdef EBUF_LWIP
-  PBUF_ESF_RX /* pbuf payload is from WLAN */
-#endif /* ESF_LWIP */
+  PBUF_POOL /* pbuf payload refers to RAM */
 } pbuf_type;
 
 

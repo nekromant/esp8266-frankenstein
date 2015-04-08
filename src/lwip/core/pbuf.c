@@ -327,10 +327,6 @@ pbuf_alloc(pbuf_layer layer, u16_t length, pbuf_type type)
     LWIP_ASSERT("pbuf_alloc: pbuf->payload properly aligned",
            ((mem_ptr_t)p->payload % MEM_ALIGNMENT) == 0);
     break;
-#ifdef EBUF_LWIP
-  case PBUF_ESF_RX:
-  				SERIAL_PRINTF("@");
-#endif /* ESF_LWIP */
   /* pbuf references existing (non-volatile static constant) ROM payload? */
   case PBUF_ROM:
   /* pbuf references existing (externally allocated) RAM payload? */
@@ -651,11 +647,7 @@ pbuf_free(struct pbuf *p)
 
   LWIP_ASSERT("pbuf_free: sane type",
     p->type == PBUF_RAM || p->type == PBUF_ROM ||
-    p->type == PBUF_REF || p->type == PBUF_POOL 
-#ifdef EBUF_LWIP
-    || p->type == PBUF_ESF_RX
-#endif  //EBUF_LWIP
-  );
+    p->type == PBUF_REF || p->type == PBUF_POOL);
 
   count = 0;
   /* de-allocate all consecutive pbufs from the head of the chain that
@@ -691,11 +683,7 @@ pbuf_free(struct pbuf *p)
       if (type == PBUF_POOL) {
         memp_free(MEMP_PBUF_POOL, p);
       /* is this a ROM or RAM referencing pbuf? */
-      } else if (type == PBUF_ROM || type == PBUF_REF
-#ifdef EBUF_LWIP
-              || type == PBUF_ESF_RX
-#endif //EBUF_LWIP
-      ) {
+      } else if (type == PBUF_ROM || type == PBUF_REF) {
 #ifdef EBUF_LWIP
         system_pp_recycle_rx_pkt(p->eb);
 #endif //EBUF_LWIP

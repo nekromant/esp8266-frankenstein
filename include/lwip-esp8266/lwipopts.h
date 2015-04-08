@@ -42,8 +42,6 @@
 
 #include "eagle_soc.h"
 
-#include "console.h" // remove me
-
 /*
    -----------------------------------------------
    ---------- Platform specific locking ----------
