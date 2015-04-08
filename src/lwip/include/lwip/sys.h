@@ -34,8 +34,6 @@
 
 #include "lwip/opt.h"
 
-#include "eagle_soc.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif

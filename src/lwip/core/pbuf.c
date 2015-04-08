@@ -79,12 +79,6 @@
 
 #include <string.h>
 
-#ifdef EBUF_LWIP
-#include "pp/esf_buf.h"
-#else
-#define EP_OFFSET 0
-#endif /* ESF_LWIP */
-
 #define SIZEOF_STRUCT_PBUF        LWIP_MEM_ALIGN_SIZE(sizeof(struct pbuf))
 /* Since the pool is created in memp, PBUF_POOL_BUFSIZE will be automatically
    aligned there. Therefore, PBUF_POOL_BUFSIZE_ALIGNED can be used here. */
@@ -335,6 +329,7 @@ pbuf_alloc(pbuf_layer layer, u16_t length, pbuf_type type)
     break;
 #ifdef EBUF_LWIP
   case PBUF_ESF_RX:
+  				SERIAL_PRINTF("@");
 #endif /* ESF_LWIP */
   /* pbuf references existing (non-volatile static constant) ROM payload? */
   case PBUF_ROM:

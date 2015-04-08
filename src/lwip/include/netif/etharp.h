@@ -129,9 +129,7 @@ PACK_STRUCT_END
 #endif
 
 #define SIZEOF_ETHARP_HDR 28
-#define SIZEOF_ETHARP_MINSIZE 46
 #define SIZEOF_ETHARP_PACKET (SIZEOF_ETH_HDR + SIZEOF_ETHARP_HDR)
-#define SIZEOF_ETHARP_WITHPAD (SIZEOF_ETH_HDR + SIZEOF_ETHARP_MINSIZE)
 
 /** 5 seconds period */
 #define ARP_TMR_INTERVAL 5000
@@ -141,7 +139,6 @@ PACK_STRUCT_END
 #define ETHTYPE_VLAN      0x8100
 #define ETHTYPE_PPPOEDISC 0x8863  /* PPP Over Ethernet Discovery Stage */
 #define ETHTYPE_PPPOE     0x8864  /* PPP Over Ethernet Session Stage */
-#define ETHTYPE_PAE       0x888e
 
 /** MEMCPY-like macro to copy to/from struct eth_addr's that are local variables
  * or known to be 32-bit aligned within the protocol header. */

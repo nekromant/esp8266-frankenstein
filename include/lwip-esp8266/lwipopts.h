@@ -40,6 +40,10 @@
 
 #include <stdlib.h> // rand() / LWIP_RAND
 
+#include "eagle_soc.h"
+
+#include "console.h" // remove me
+
 /*
    -----------------------------------------------
    ---------- Platform specific locking ----------
@@ -1579,6 +1583,9 @@
  */
 #define DNS_DEBUG                       LWIP_DBG_OFF
 
+////////////////////////////////////////////////////
+
+
 #define LWIP_RAND()  rand()
 
 #define mem_free vPortFree
@@ -1595,6 +1602,13 @@
 #endif
 
 #define LWIP_DHCP_BOOTP_FILE 0
+
+#ifdef EBUF_LWIP
+#include "pp/esf_buf.h"
+#define PBUF_LINK_ENCAPSULATION_HLEN	EP_OFFSET
+#else
+#error EBUF_LWIP should be defined?
+#endif
 
 #define IP2STR(ipaddr) ip4_addr1_16(ipaddr), \
     ip4_addr2_16(ipaddr), \
