@@ -141,7 +141,7 @@ espconn_udp_sent(void *arg, uint8 *psent, uint16 length)
 *******************************************************************************/
 static void 
 espconn_udp_recv(void *arg, struct udp_pcb *upcb, struct pbuf *p,
-                 struct ip_addr *addr, u16_t port)
+                 const ip_addr_t *addr, u16_t port)
 {
     espconn_msg *precv = arg;
     struct pbuf *q = NULL;

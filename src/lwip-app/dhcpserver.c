@@ -688,7 +688,7 @@ static sint16_t  parse_msg(struct dhcps_msg *m, u16_t len)
 static void  handle_dhcp(void *arg, 
 									struct udp_pcb *pcb, 
 									struct pbuf *p, 
-									struct ip_addr *addr, 
+									const ip_addr_t *addr, 
 									uint16_t port)
 {
 		

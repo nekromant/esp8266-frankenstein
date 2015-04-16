@@ -1,7 +1,7 @@
 objects-y+=main.o stdio.o helpers.o flash_end_marker.o
 objects-y+=microrl.o
 objects-y+=console.o
-objects-y+=hostname.o
+# useless objects-y+=hostname.o
 objects-y+=env.o
 #objects-y+=strbuf.o
 #objects-y+=tcpbuf.o

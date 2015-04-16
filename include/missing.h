@@ -14,4 +14,7 @@ struct ip_info {
     struct ip_addr gw;
 };
 
+void ets_intr_lock (void);
+void ets_intr_unlock (void);
+
 #endif // _MISSING_H_

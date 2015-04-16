@@ -15,6 +15,7 @@ CFLAGS+=-I$(abspath ./include/lwip-esp8266/)
 ifeq ($(CONFIG_LWIP_ESP),y)
 CFLAGS+=-I$(abspath ./src/lwip-esp/include/)
 CFLAGS+=-I$(abspath ./src/lwip-esp/include/ipv4/)
+CFLAGS+=-DBADMSS=1
 endif
 
 ifeq ($(CONFIG_LWIP_GIT),y)

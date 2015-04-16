@@ -1,8 +1,5 @@
-#include "ets_sys.h"
-#include "os_type.h"
-#include "mem.h"
-#include "osapi.h"
 #include "user_interface.h"
+#include "missing.h"
 
 #include "espconn.h"
 #include "gpio.h"
@@ -11,7 +8,7 @@
 #include "console.h"
 #include "main.h"
 #include "helpers.h"
-#include "hostname.h"
+//#include "hostname.h"
 
 #include <stdlib.h>
 #include <stdlib.h>
@@ -71,6 +68,7 @@ static  int do_deepsleep(int argc, const char* const* argv)
 	return 0;
 }
 
+#if 0
 static  int do_hname(int argc, const char* const* argv)
 {
 	set_dhcp_hostname("aura");
@@ -82,6 +80,7 @@ CONSOLE_CMD(hname, -1, -1,
 	    do_hname, NULL, NULL, 
 	    "Set dhcp hostname"
 );
+#endif
 
 CONSOLE_CMD(vdd, -1, -1, 
 	    do_vdd, NULL, NULL, 

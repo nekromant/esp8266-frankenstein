@@ -208,7 +208,7 @@ static void dns_init_local();
 
 
 /* forward declarations */
-static void dns_recv(void *s, struct udp_pcb *pcb, struct pbuf *p, ip_addr_t *addr, u16_t port);
+static void dns_recv(void *s, struct udp_pcb *pcb, struct pbuf *p, const ip_addr_t *addr, u16_t port);
 static void dns_check_entries(void);
 
 /*-----------------------------------------------------------------------------
@@ -730,7 +730,7 @@ dns_check_entries(void)
  * @params see udp.h
  */
 static void 
-dns_recv(void *arg, struct udp_pcb *pcb, struct pbuf *p, ip_addr_t *addr, u16_t port)
+dns_recv(void *arg, struct udp_pcb *pcb, struct pbuf *p, const ip_addr_t *addr, u16_t port)
 {
   u16_t i;
   char *pHostname;

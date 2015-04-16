@@ -708,9 +708,13 @@
  * TCP_WND: The size of a TCP window.  This must be at least 
  * (2 * TCP_MSS) for things to work well
  */
-//#define TCP_WND                         (3 * TCP_MSS)
-//#define TCP_WND                         (4 * TCP_MSS) // esp orig
-#define TCP_WND                         (2 * TCP_MSS)
+#ifdef BADMSS // lwip-1.4.0rc2
+//#define TCP_WND                       (4 * TCP_MSS) // esp orig
+#define TCP_WND                         (2 * TCP_MSS) // more stable
+#else
+#define TCP_WND                         (2 * TCP_MSS) // smallest ram footprint
+//#define TCP_WND                         (8 * TCP_MSS) // test
+#endif
 
 /**
  * TCP_MAXRTX: Maximum number of retransmissions of data segments.
@@ -745,9 +749,12 @@
  * when opening a connection. For the transmit size, this MSS sets
  * an upper limit on the MSS advertised by the remote host.
  */
-//#define TCP_MSS                         1460 // esp orig
-#define TCP_MSS                         536
-//#define TCP_MSS                         1024
+#ifdef BADMSS // lwip-1.4.0rc2
+//#define TCP_MSS                       1460 // esp orig
+#define TCP_MSS                         1024 // more stable
+#else
+#define TCP_MSS                         536 // smallest ram footprint
+#endif
 
 /**
  * TCP_CALCULATE_EFF_SEND_MSS: "The maximum size of a segment that TCP really
@@ -1638,6 +1645,9 @@ struct ip_info;	// defined in missing.h which should go to antares
 
 //#define TTDBG				64	// "try to debug" def
 
+#ifndef TTDBG
+#define TTDBG 0
+#endif
 #if TTDBG
 extern int ttdbg[TTDBG]; // see cmd_at
 #endif
