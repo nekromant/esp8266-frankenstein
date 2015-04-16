@@ -43,5 +43,11 @@ objects-$(CONFIG_CMD_I2C_MLX90614)+=i2c_mlx90614.o
 
 ifneq ($(CONFIG_ESP8266_BLOB_LWIP),y)
 subdirs-y+=lwip-app/
-subdirs-y+=lwip
+ifeq ($(CONFIG_LWIP_ESP),y)
+subdirs-y+=lwip-esp
+endif
+ifeq ($(CONFIG_LWIP_GIT),y)
+subdirs-y+=lwip-git
+endif
+
 endif

@@ -530,7 +530,8 @@
 /**
  * DHCP_DOES_ARP_CHECK==1: Do an ARP check on the offered address.
  */
-#define DHCP_DOES_ARP_CHECK             ((LWIP_DHCP) && (LWIP_ARP))
+//#define DHCP_DOES_ARP_CHECK             ((LWIP_DHCP) && (LWIP_ARP))
+#define DHCP_DOES_ARP_CHECK             0 // should we be that smart?
 
 /*
    ------------------------------------
@@ -707,7 +708,8 @@
  * TCP_WND: The size of a TCP window.  This must be at least 
  * (2 * TCP_MSS) for things to work well
  */
-//#define TCP_WND                         (4 * TCP_MSS)
+//#define TCP_WND                         (3 * TCP_MSS)
+//#define TCP_WND                         (4 * TCP_MSS) // esp orig
 #define TCP_WND                         (2 * TCP_MSS)
 
 /**
@@ -743,9 +745,9 @@
  * when opening a connection. For the transmit size, this MSS sets
  * an upper limit on the MSS advertised by the remote host.
  */
-//#define TCP_MSS                         1460
-//#define TCP_MSS                         536
-#define TCP_MSS                         1024
+//#define TCP_MSS                         1460 // esp orig
+#define TCP_MSS                         536
+//#define TCP_MSS                         1024
 
 /**
  * TCP_CALCULATE_EFF_SEND_MSS: "The maximum size of a segment that TCP really
@@ -1583,7 +1585,6 @@
 
 ////////////////////////////////////////////////////
 
-
 #define LWIP_RAND()  rand()
 
 #define mem_free vPortFree
@@ -1599,11 +1600,8 @@
 #define os_free(p) mem_free((p))
 #endif
 
-#define LWIP_DHCP_BOOTP_FILE 0
-
 #ifdef EBUF_LWIP
 #include "pp/esf_buf.h"
-#define PBUF_LINK_ENCAPSULATION_HLEN	EP_OFFSET
 #else
 #error EBUF_LWIP should be defined?
 #endif
@@ -1615,17 +1613,34 @@
 
 #define IPSTR "%d.%d.%d.%d"
 
-struct ip_info;
-#if 0
-// this should go to antares user_interface.h
-struct ip_info {
-    struct ip_addr ip;
-    struct ip_addr netmask;
-    struct ip_addr gw;
-};
-#endif
+struct ip_info;	// defined in missing.h which should go to antares
+
+#define LWIP_DHCP_BOOTP_FILE 		0
+
+// for lwip-1.5:
+
+#define V14				1	// structure compatibility with v1.4
+
+#define PBUF_LINK_ENCAPSULATION_HLEN	EP_OFFSET
+#define LWIP_PERF			0
+#define PBUF_POOL_FREE_OOSEQ		TCP_QUEUE_OOSEQ
+
+/////// to keep compatibility with blobs (do not change) :
+#define LWIP_IPV6			0
+#define LWIP_NETIF_REMOVE_CALLBACK	0
+#define LWIP_IPV6_AUTOCONFIG		0
+#define LWIP_IPV6_SEND_ROUTER_SOLICIT	0
+#define LWIP_IPV6_DHCP6			0
+
+///////
 
 #include "user_interface.h"
+
+//#define TTDBG				64	// "try to debug" def
+
+#if TTDBG
+extern int ttdbg[TTDBG]; // see cmd_at
+#endif
 
 #endif /* __LWIP_OPT_H__ */
 

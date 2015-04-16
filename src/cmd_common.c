@@ -91,7 +91,7 @@ CONSOLE_CMD(vdd, -1, -1,
 
 CONSOLE_CMD(meminfo, -1, -1, 
 	    do_meminfo, NULL, NULL, 
-	    "Display memory information"
+	    "Display memory information (serial line only)"
 );
 
 CONSOLE_CMD(chipinfo, -1, -1,

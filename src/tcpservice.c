@@ -50,12 +50,15 @@ static void tcp_service_error (void* svc, err_t err)
 	// verbose
 
 	static const char* lwip_err_msg [] =
+		{ "OK" };
+#if 0
 		{
 			"OK", "MEM", "BUF", "TIMEOUT", "ROUTE", "INPROGRESS", "INVAL",
 		#if TCPVERBERR > 1
 			"WBLOCK", "ABORT", "RESET", "CLOSED", "INARG", "INUSE", "IFERR", "ISCONN"
 		#endif // TCPVERBERR > 1
 		};
+#endif
 	tcpservice_t* peer = (tcpservice_t*)svc;
 
 	LOGSERIAL(ERR_IS_FATAL(err)? LOG_ERR: LOG_WARN, "TCP(%s): %serror %d (%s)",
@@ -77,19 +80,19 @@ static err_t cbuf_tcp_send (tcpservice_t* tcp)
 	size_t sndbuf, sendsize;
 	char* data;
 
-D("1");
+D("1tcps-");
 	if (!tcp->tcp)
 		return ERR_OK;
 
 	while ((sndbuf = tcp_sndbuf(tcp->tcp)) > 0)
 	{
-D("2(%d)", sndbuf);
+D("2(sndb=%d)-", sndbuf);
 		if ((sendsize = cbuf_read_ptr(&tcp->send_buffer, &data, sndbuf)) == 0)
 			break;
-D("3(%d)", sendsize);
+D("3(snds=%d)-", sendsize);
 		if ((err = tcp_write(tcp->tcp, data, sendsize, /*tcpflags=0=PUSH,NOCOPY*/0)) != ERR_OK)
 		{
-D("e(%d)",err);
+D("errwr(%d)",err);
 			tcp_service_error(tcp, err);
 			break;
 		}
@@ -97,7 +100,7 @@ D("e(%d)",err);
 
         if (err == ERR_OK && (err = tcp_output(tcp->tcp)) != ERR_OK)
 		tcp_service_error(tcp, err);
-D("4");
+D("4(tcps:%d)",err);
 	return err;
 }
 
@@ -105,10 +108,10 @@ static void tcp_service_give_back (tcpservice_t* peer, pbuf_t* pbuf)
 {
 	if (pbuf)
 	{
-D("5");
+D("gb5-");
 		// a new pbuf has come
 		if (peer->pbuf)
-			pbuf_cat(peer->pbuf, pbuf);
+			pbuf_chain(peer->pbuf, pbuf);
 		else
 			peer->pbuf = pbuf;
 	}
@@ -116,7 +119,7 @@ D("5");
 	size_t swallowed = 0;	
 	while (peer->pbuf)
 	{
-D("6");
+D("gb6-");
 		// give data to user
 		size_t acked_by_user = peer->cb_recv
 			(
@@ -127,10 +130,11 @@ D("6");
 
 		if (acked_by_user == 0)
 			break;
-D("7(%d)", acked_by_user);
+D("gb7(acked=%d)", acked_by_user);
 		if ((peer->pbuf_taken += acked_by_user) == peer->pbuf->len)
 		{
-			// current pbuf is fully sallowed, skip+delete
+D("gb8-");
+			// current pbuf is fully swallowed, skip+delete
 			pbuf_t* deleteme = peer->pbuf;
 			peer->pbuf = pbuf_dechain(peer->pbuf);
 			peer->pbuf_taken = 0;
@@ -138,12 +142,12 @@ D("7(%d)", acked_by_user);
 		}
 		swallowed += acked_by_user;
 	}
-D("8(%d)",swallowed);
+D("gb9(sw=%d)",swallowed);
 	// report to lwip how much data
 	// have been acknowledged by peer receive callback
 	if (swallowed)
 		tcp_recved(peer->tcp, swallowed);
-D("9");
+D("gbdone-");
 }
 
 static err_t tcp_service_receive (void* svc, struct tcp_pcb* pcb, pbuf_t* pbuf, err_t err)
@@ -152,10 +156,10 @@ static err_t tcp_service_receive (void* svc, struct tcp_pcb* pcb, pbuf_t* pbuf, 
 
 	if (err == ERR_OK)
 	{
-D("\nr");pbuf_t* x=peer->pbuf;while(x){D("(%d)",x->len);x=x->next;}D("N");x=pbuf;while(x){D("(%d)",x->len);x=x->next;}
-		// feed user with new and awaiting pbufs
+D("\nr");pbuf_t*x=peer->pbuf;while(x){D("o(%d)",x->len);x=x->next;}x=pbuf;while(x){D("N(%d)",x->len);x=x->next;}
+		// feed user with new and already awaiting pbufs
 		tcp_service_give_back(peer, pbuf);
-D("b");
+D("gb2snd-");
 		// send our output buffer
 		return cbuf_tcp_send(peer);
 	}
@@ -170,13 +174,13 @@ D("b");
 static err_t tcp_service_ack (void *svc, struct tcp_pcb *pcb, u16_t len)
 {
 	tcpservice_t* peer = (tcpservice_t*)svc;
-D("\nc(%d)", len);
+D("\nack(%d)", len);
 	if (len)
 		cbuf_ack(&peer->send_buffer, len);
 
 	// feed user with awaiting pbufs 
 	tcp_service_give_back(peer, NULL);
-D("d");
+D("gb-");
 	return tcp_service_check_shutdown(peer)?
 		ERR_OK:
 		cbuf_tcp_send(peer);
