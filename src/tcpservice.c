@@ -19,7 +19,7 @@
 
 static bool tcp_service_check_shutdown (tcpservice_t* s)
 {
-	if (s->is_closing && s->tcp && cbuf_is_empty(&s->send_buffer) && s->pbuf == NULL)
+	if (s->is_closing && s->tcp && cbuf_is_empty(&s->send_buffer))
 	{
 		// everything is sent and received pbuf are freed
 		tcp_close(s->tcp);
@@ -104,49 +104,47 @@ D("4(tcps:%d)",err);
 	return err;
 }
 
-static void tcp_service_give_back (tcpservice_t* peer, pbuf_t* pbuf)
+static void tcp_service_give_back (tcpservice_t* peer, pbuf_t* root_pbuf)
 {
-	if (pbuf)
-	{
-D("gb5-");
-		// a new pbuf has come
-		if (peer->pbuf)
-			pbuf_chain(peer->pbuf, pbuf);
-		else
-			peer->pbuf = pbuf;
-	}
-
-	size_t swallowed = 0;	
-	while (peer->pbuf)
+	size_t swallowed = 0;
+	size_t pbuf_taken = 0;
+	pbuf_t* pbuf = root_pbuf;
+	while (pbuf)
 	{
 D("gb6-");
 		// give data to user
 		size_t acked_by_user = peer->cb_recv
 			(
 				peer,
-				((char*)peer->pbuf->payload) + peer->pbuf_taken,
-				peer->pbuf->len - peer->pbuf_taken
+				((char*)pbuf->payload) + pbuf_taken,
+				pbuf->len - pbuf_taken
 			);
-
 		if (acked_by_user == 0)
 			break;
-D("gb7(acked=%d)", acked_by_user);
-		if ((peer->pbuf_taken += acked_by_user) == peer->pbuf->len)
+
+D("gb7(userack=%d)", acked_by_user);
+		if ((pbuf_taken += acked_by_user) == pbuf->len)
 		{
 D("gb8-");
-			// current pbuf is fully swallowed, skip+delete
-			pbuf_t* deleteme = peer->pbuf;
-			peer->pbuf = pbuf_dechain(peer->pbuf);
-			peer->pbuf_taken = 0;
-			pbuf_free(deleteme);
+			// current pbuf is fully swallowed, next one
+			pbuf = pbuf->next;
+			pbuf_taken = 0;
 		}
 		swallowed += acked_by_user;
 	}
+	
 D("gb9(sw=%d)",swallowed);
 	// report to lwip how much data
 	// have been acknowledged by peer receive callback
-	if (swallowed)
+	// this increases receive window.
+	// if user->cb_ack is defined, then it is responsible
+	// to increase window by calling tcp_service_allow_more()
+	if (swallowed && !peer->cb_ack)
 		tcp_recved(peer->tcp, swallowed);
+	if (swallowed != root_pbuf->tot_len)
+		LOG(LOG_ERR, "%s: cb_recv() must comply, data lost", peer->name);
+	pbuf_free(root_pbuf);
+
 D("gbdone-");
 }
 
@@ -156,7 +154,7 @@ static err_t tcp_service_receive (void* svc, struct tcp_pcb* pcb, pbuf_t* pbuf, 
 
 	if (err == ERR_OK)
 	{
-D("\nr");pbuf_t*x=peer->pbuf;while(x){D("o(%d)",x->len);x=x->next;}x=pbuf;while(x){D("N(%d)",x->len);x=x->next;}
+D("\nr(ack=%d)",pcb->acked);pbuf_t*x=pbuf;while(x){D("N(%d)",x->len);x=x->next;}
 		// feed user with new and already awaiting pbufs
 		tcp_service_give_back(peer, pbuf);
 D("gb2snd-");
@@ -176,10 +174,12 @@ static err_t tcp_service_ack (void *svc, struct tcp_pcb *pcb, u16_t len)
 	tcpservice_t* peer = (tcpservice_t*)svc;
 D("\nack(%d)", len);
 	if (len)
+	{
 		cbuf_ack(&peer->send_buffer, len);
+		if (peer->cb_ack)
+			peer->cb_ack(peer, len);
+	}
 
-	// feed user with awaiting pbufs 
-	tcp_service_give_back(peer, NULL);
 D("gb-");
 	return tcp_service_check_shutdown(peer)?
 		ERR_OK:
@@ -207,9 +207,6 @@ static err_t tcp_service_incoming_peer (void* svc, struct tcp_pcb * peer_pcb, er
 	peer->is_closing = 0;
 	if (!peer->name)
 		peer->name = listener->name;
-	
-	peer->pbuf = NULL;
-	peer->pbuf_taken = 0;
 	
 	tcp_setprio(peer->tcp, TCP_PRIO_MIN); //XXX???
 	tcp_recv(peer->tcp, tcp_service_receive);
@@ -272,7 +269,7 @@ int tcp_service_install (const char* name, tcpservice_t* s, int port)
 	return 0;
 }
 
-tcpservice_t* tcp_service_init_new_peer_sendbuf_sizelog2 (char* sendbuf, char sendbufsizelog2)
+tcpservice_t* tcp_service_init_new_peer_sendbuf_size (char* sendbuf, size_t sendbufsize)
 {
 	tcpservice_t* peer = (tcpservice_t*)os_malloc(sizeof(tcpservice_t));
 	if (!peer)
@@ -281,24 +278,25 @@ tcpservice_t* tcp_service_init_new_peer_sendbuf_sizelog2 (char* sendbuf, char se
 		return NULL;
 	}
 
-	cbuf_init(&peer->send_buffer, peer->sendbuf = sendbuf, sendbufsizelog2);
+	cbuf_init(&peer->send_buffer, peer->sendbuf = sendbuf, sendbufsize);
 	
 	peer->name = NULL;
 	peer->cb_get_new_peer = NULL;
 	peer->cb_established = NULL;
 	peer->cb_closing = NULL;
 	peer->cb_recv = NULL;
+	peer->cb_ack = NULL;
 	peer->cb_poll = NULL;
 	peer->cb_cleanup = NULL;
 	return peer;
 }
 
-tcpservice_t* tcp_service_init_new_peer_sizelog2 (char sendbufsizelog2)
+tcpservice_t* tcp_service_init_new_peer_size (size_t sendbufsize)
 {
 	char* sendbuf;
-	if (!sendbufsizelog2)
+	if (!sendbufsize)
 		sendbuf = NULL;
-	else if ((sendbuf = (char*)os_malloc(1 << sendbufsizelog2)) == NULL)
+	else if ((sendbuf = (char*)os_malloc(sendbufsize)) == NULL)
 		return NULL;
-	return tcp_service_init_new_peer_sendbuf_sizelog2(sendbuf, sendbufsizelog2);
+	return tcp_service_init_new_peer_sendbuf_size(sendbuf, sendbufsize);
 }

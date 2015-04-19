@@ -17,9 +17,9 @@ size_t cbuf_write_available (cbuf_t* cb)
 		return cb->read - cb->write;
 }
 
-void cbuf_init (cbuf_t* cb, char* userbuf, char sizelog2)
+void cbuf_init (cbuf_t* cb, char* userbuf, size_t size)
 {
-	cb->size = userbuf? ((cbsize_t)1) << sizelog2: 0;
+	cb->size = userbuf? size: 0;
 	cb->buf = userbuf;
 	cb->write = cb->read = cb->unread = 0;
 	cb->empty = cb->allread = 1;
@@ -43,7 +43,8 @@ cbsize_t cbuf_write (cbuf_t* cb, const void* data, cbsize_t desired_len)
 		memcpy(cb->buf + cb->write, ((const char*)data) + ret, chunk);
 		ret += chunk;
 		want -= chunk;
-		cb->write = (cb->write + chunk) & (cb->size - 1);
+		if ((cb->write += chunk) == cb->size)
+			cb->write = 0;
 		cb->empty = cb->allread = 0;
 	}
 	return ret;
@@ -57,7 +58,8 @@ cbsize_t cbuf_write_ptr (cbuf_t* cb, char** buf, cbsize_t desired_len)
 		desired_len = writable_len;
 	if (desired_len)
 	{
-		cb->write = (cb->write + desired_len) & (cb->size - 1);
+		if ((cb->write += desired_len) == cb->size)
+			cb->write = 0;
 		cb->empty = cb->allread = 0;
 	}
 	return desired_len;
@@ -81,7 +83,8 @@ cbsize_t cbuf_read (cbuf_t* cb, char* data, cbsize_t desired_len)
 		memcpy(data + ret, cb->buf + cb->read, chunk);
 		ret += chunk;
 		want -= chunk;
-		cb->read = (cb->read + chunk) & (cb->size - 1);
+		if ((cb->read += chunk) == cb->size)
+			cb->read = 0;
 		if ((cb->empty = cb->allread = (cb->read == cb->write)))
 			do_flush(cb); // bigger_chunk, less loop
 	}
@@ -98,7 +101,8 @@ cbsize_t cbuf_read_ptr (cbuf_t* cb, char** buf, cbsize_t desired_len)
 			cb->write - cb->unread;
 	if (desired_len > readable_len)
 		desired_len = readable_len;
-	cb->unread = (cb->unread + desired_len) & (cb->size - 1);
+	if ((cb->unread += desired_len) == cb->size)
+		cb->unread = 0;
 	cb->allread = (cb->unread == cb->write);
 	return desired_len;
 }
@@ -107,9 +111,9 @@ void cbuf_ack (cbuf_t* cb, cbsize_t len)
 {
 	if (len)
 	{
-		// this must not be called with 0
-		// (cb->empty could mistakingly flip)
-		cb->read = (cb->read + len) & (cb->size - 1);
+		// len must not be 0 or cb->empty could mistakingly flip
+		if ((cb->read += len) >= cb->size)
+			cb->read -= cb->size;
 		if ((cb->empty = (cb->read == cb->write)))
 			do_flush(cb); // bigger chunk, less loop
 	}

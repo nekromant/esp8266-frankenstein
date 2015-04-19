@@ -713,7 +713,7 @@
 #define TCP_WND                         (2 * TCP_MSS) // more stable
 #else
 #define TCP_WND                         (2 * TCP_MSS) // smallest ram footprint
-//#define TCP_WND                         (8 * TCP_MSS) // test
+//#define TCP_WND                         (8 * TCP_MSS) // test working
 #endif
 
 /**

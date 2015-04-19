@@ -33,7 +33,14 @@ static int do_at (int argc, const char* const* argv)
 		LWIP_VERSION);
 
 #if TTDBG
-	int x, y;
+	int x, y = 1;
+	while (argc >= y + 2)
+	{
+		x = atoi(argv[y]);
+		if (x >= 0 && x < TTDBG)
+			ttdbg[x] = atoi(argv[y + 1]);
+		y += 2;
+	}
 	for (x = 0; x < TTDBG; x+=8)
 	{
 		for (y = x; y < x + 8; y++)

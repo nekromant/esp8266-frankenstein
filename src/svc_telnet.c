@@ -23,8 +23,8 @@
 #include "main.h"
 
 // default log2(buffer size) for a telnet client
-// tried 11/2KB but too small for large help string
-#define TELNET_SEND_BUFFER_SIZE_LOG2_DEFAULT	12 // 12: 4KB
+// tried 2KB but too small for large help string
+#define TELNET_SEND_BUFFER_SIZE			3072
 
 ///////////////////////////////////////////////////////////
 
@@ -81,11 +81,11 @@ static int telnet_printf (const char *fmt, ...)
 static tcpservice_t* telnet_new_peer (tcpservice_t* listener)
 {
 	// allocate send_buffer + telnet state structure
-	char* sendbuf = (char*)os_malloc((1 << (TELNET_SEND_BUFFER_SIZE_LOG2_DEFAULT)) + sizeof(telnet_state_t));
+	char* sendbuf = (char*)os_malloc(TELNET_SEND_BUFFER_SIZE + sizeof(telnet_state_t));
 	if (sendbuf == NULL)
 		return NULL;
 	// generic initialization with provided buffer
-	tcpservice_t* peer = tcp_service_init_new_peer_sendbuf_sizelog2(sendbuf, TELNET_SEND_BUFFER_SIZE_LOG2_DEFAULT);
+	tcpservice_t* peer = tcp_service_init_new_peer_sendbuf_size(sendbuf, TELNET_SEND_BUFFER_SIZE);
 	if (!peer)
 		return NULL;
 
