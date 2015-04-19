@@ -8,18 +8,24 @@
 
 #define TCPVERBERR 1
 
+static void tcp_service_aborted (void* svc, err_t err)
+{
+	tcpservice_t* s = (tcpservice_t*)svc;
+	s->tcp = NULL; // unallocated by caller
+	if (s->cb_cleanup)
+		s->cb_cleanup(s);
+	else if (s->sendbuf)
+		os_free(s->sendbuf);
+	os_free(s);
+}
+
 static bool tcp_service_check_shutdown (tcpservice_t* s)
 {
 	if (s->is_closing && s->tcp && cbuf_is_empty(&s->send_buffer))
 	{
-		// everything is sent and received pbuf are freed
+		// everything is received by peer
 		tcp_close(s->tcp);
-		s->tcp = NULL;
-		if (s->cb_cleanup)
-			s->cb_cleanup(s);
-		if (s->sendbuf)
-			os_free(s->sendbuf);
-		os_free(s);
+		tcp_service_aborted(s, ERR_OK);
 		return true;
 	}
 	return false;
@@ -78,7 +84,6 @@ static void tcp_service_error (void* svc, err_t err)
 		tcp_service_close(peer);
 }
 
-// tcp_send() is static: tcp_write() cannot be called by user's callbacks (it hangs lwip)
 // trigger write-from-circular-buffer
 static err_t cbuf_tcp_send (tcpservice_t* tcp)
 {
@@ -132,7 +137,7 @@ static void tcp_service_give_back (tcpservice_t* peer, pbuf_t* root_pbuf)
 	}
 	
 	// report to lwip how much data
-	// have been acknowledged by peer receive callback
+	// have been acknowledged by peer receive callback,
 	// this increases receive window.
 	// if user->cb_ack is defined, then it is responsible
 	// to increase window by calling tcp_service_allow_more()
@@ -146,13 +151,16 @@ static void tcp_service_give_back (tcpservice_t* peer, pbuf_t* root_pbuf)
 static err_t tcp_service_receive (void* svc, struct tcp_pcb* pcb, pbuf_t* pbuf, err_t err)
 {
 	tcpservice_t* peer = (tcpservice_t*)svc;
-
 	if (err == ERR_OK)
 	{
-		// feed user with new and already awaiting pbufs
-		tcp_service_give_back(peer, pbuf);
+		if (pbuf)
+			// feed user
+			tcp_service_give_back(peer, pbuf);
+
 		// send our output buffer
-		return cbuf_tcp_send(peer);
+		return tcp_service_check_shutdown(peer)?
+			ERR_CLSD:
+			cbuf_tcp_send(peer);
 	}
 
 	// bad state
@@ -165,23 +173,27 @@ static err_t tcp_service_receive (void* svc, struct tcp_pcb* pcb, pbuf_t* pbuf, 
 static err_t tcp_service_ack (void *svc, struct tcp_pcb *pcb, u16_t len)
 {
 	tcpservice_t* peer = (tcpservice_t*)svc;
-	if (len)
-	{
-		cbuf_ack(&peer->send_buffer, len);
-		if (peer->cb_ack)
-			peer->cb_ack(peer, len);
-	}
 
-	return tcp_service_check_shutdown(peer)?
-		ERR_OK:
-		cbuf_tcp_send(peer);
+	// release hold data in send buffer
+	cbuf_ack(&peer->send_buffer, len);
+	// close now if requested and if all data are remotely received
+	if (tcp_service_check_shutdown(peer))
+		return ERR_CLSD;
+	// user callback
+	if (peer->cb_ack && len)
+		peer->cb_ack(peer, len);
+	// continue to send our data
+	return cbuf_tcp_send(peer);
 }
 
 static err_t tcp_service_poll (void* svc, struct tcp_pcb* pcb)
 { 
 	LWIP_UNUSED_ARG(pcb);
 	tcpservice_t* peer = (tcpservice_t*)svc;
-	return tcp_service_check_shutdown(peer)? ERR_OK: peer->cb_poll? peer->cb_poll(peer): ERR_OK;
+	if (peer->cb_poll)
+		peer->cb_poll(peer);
+	// trigger sending data
+	return tcp_service_receive(peer, peer->tcp, NULL, ERR_OK);
 }
 
 static err_t tcp_service_incoming_peer (void* svc, struct tcp_pcb * peer_pcb, err_t err)
@@ -201,7 +213,7 @@ static err_t tcp_service_incoming_peer (void* svc, struct tcp_pcb * peer_pcb, er
 	
 	tcp_setprio(peer->tcp, TCP_PRIO_MIN); //XXX???
 	tcp_recv(peer->tcp, tcp_service_receive);
-	tcp_err(peer->tcp, tcp_service_error);
+	tcp_err(peer->tcp, tcp_service_aborted);
 	tcp_poll(peer->tcp, tcp_service_poll, 4); //every two seconds of inactivity of the TCP connection
 	tcp_sent(peer->tcp, tcp_service_ack);
 	
@@ -264,10 +276,7 @@ tcpservice_t* tcp_service_init_new_peer_sendbuf_size (char* sendbuf, size_t send
 {
 	tcpservice_t* peer = (tcpservice_t*)os_malloc(sizeof(tcpservice_t));
 	if (!peer)
-	{
-		os_free(sendbuf);
 		return NULL;
-	}
 
 	cbuf_init(&peer->send_buffer, peer->sendbuf = sendbuf, sendbufsize);
 	
@@ -289,5 +298,8 @@ tcpservice_t* tcp_service_init_new_peer_size (size_t sendbufsize)
 		sendbuf = NULL;
 	else if ((sendbuf = (char*)os_malloc(sendbufsize)) == NULL)
 		return NULL;
-	return tcp_service_init_new_peer_sendbuf_size(sendbuf, sendbufsize);
+	tcpservice_t* svc = tcp_service_init_new_peer_sendbuf_size(sendbuf, sendbufsize);
+	if (!svc && sendbuf)
+		os_free(sendbuf);
+	return svc;
 }

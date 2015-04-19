@@ -45,7 +45,7 @@ static tcpservice_t* telnet_new_peer (tcpservice_t* s);
 static err_t telnet_established (tcpservice_t* s);
 static void telnet_closing (tcpservice_t* s);
 static size_t telnet_recv (tcpservice_t* s, const char* data, size_t len);
-static err_t telnet_poll (tcpservice_t* s);
+static void telnet_poll (tcpservice_t* s);
 
 ///////////////////////////////////////////////////////////
 // static data (small ram footprint)
@@ -54,7 +54,7 @@ static err_t telnet_poll (tcpservice_t* s);
 // (the "socketserver" awaiting for incoming request only)
 static tcpservice_t telnet_listener = TCP_SERVICE_LISTENER("telnet listener", telnet_new_peer);
 
-// the current talking telnet peer, which is a hack
+// the current talking telnet peer
 static tcpservice_t*	current_telnet = NULL;
 #define CURRENT(s)	do microrl_set_echo(!(current_telnet = (s))); while (0)
 
@@ -63,7 +63,6 @@ static tcpservice_t*	current_telnet = NULL;
 static int telnet_printf (const char *fmt, ...)
 {
 	int ret;
-
 	va_list ap;
 	va_start(ap, fmt);
 	if (current_telnet && current_telnet->tcp)
@@ -87,7 +86,10 @@ static tcpservice_t* telnet_new_peer (tcpservice_t* listener)
 	// generic initialization with provided buffer
 	tcpservice_t* peer = tcp_service_init_new_peer_sendbuf_size(sendbuf, TELNET_SEND_BUFFER_SIZE);
 	if (!peer)
+	{
+		os_free(sendbuf);
 		return NULL;
+	}
 
 	peer->cb_established = telnet_established;
 	peer->cb_closing = telnet_closing;
@@ -120,7 +122,7 @@ static void telnet_closing (tcpservice_t* peer)
 	CURRENT(NULL);
 }
 
-static err_t telnet_poll (tcpservice_t* peer)
+static void telnet_poll (tcpservice_t* peer)
 { 
 	if (state(peer)->max_idle > 0 && ++state(peer)->idle >= state(peer)->max_idle)
 	{
@@ -128,7 +130,6 @@ static err_t telnet_poll (tcpservice_t* peer)
 		telnet_printf("\nYou have been idle for %d seconds, goodbye\n", state(peer)->max_idle);
 		tcp_service_close(peer);
 	}
-	return ERR_OK;
 }
 
 int sendopt (tcpservice_t* s, u8_t option, u8_t value)
@@ -248,7 +249,6 @@ static int  do_telnet(int argc, const char* const* argv)
 		{
 			console_printf("telnet: See you!\n");
 			tcp_service_close(current_telnet);
-			current_telnet = NULL;
 		}
 	}
 	else

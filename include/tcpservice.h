@@ -8,6 +8,38 @@
 typedef struct pbuf pbuf_t;
 typedef struct tcpservice_s tcpservice_t;
 
+// ---------
+// cb_recv() feeds user with received pbuf data.
+// 
+// pbufs are always released by this cb's caller (otherwise
+// link level get stuffed and at some time, all new packets are
+// discarded, leading to tcp freeze because received acks are
+// not updated).
+// so user must be hungry enough, meaning: if data are stored,
+// receive buffer must be big enough (something like TCP_WND).
+// user must always return how much data is swallowed.  any
+// value but 0 is allowed.
+// tcp receive window is raised just after this cb (meaning:
+// data are swallowed, send more) unless user->cb_ack is
+// defined, then user is responsible to increase the tcp
+// receive window by calling tcp_service_allow_more() in this
+// cb_ack callback.
+// examples:
+// - svc_telnet does not defined cb_ack, all data are processed
+//   inside cb_recv and we expect data are not coming too fast.
+// - svc_echo does define cb_ack, thus allowing to receive more
+//   data when already sent data are received by peer
+//   (otherwise we are flooded, too many packets are lost, acks
+//   are not updated and tcp algo stops working).
+// ---------
+// cb_cleanup: called when connection is actually closed
+// 	user must release sendbuf
+//	if NULL, buffer is automatically released
+//	so it must be defined for static buffers
+// ---------
+// cb_closing: called when connection is about to close
+
+
 struct tcpservice_s
 {
 	const char* name;
@@ -15,8 +47,8 @@ struct tcpservice_s
 	bool is_closing;
 
 	// circular buffers
-	char* sendbuf;		// user data (pointed to by send_buffer)
-	cbuf_t send_buffer;	// user circular buffer
+	char* sendbuf;		// user data (used by send_buffer)
+	cbuf_t send_buffer;	// user circular send buffer
 
 	// listener callbacks
 	tcpservice_t* (*cb_get_new_peer) (tcpservice_t* s);
@@ -26,7 +58,7 @@ struct tcpservice_s
 	void (*cb_closing) (tcpservice_t* s);
 	size_t (*cb_recv) (tcpservice_t* s, const char* data, size_t len);
 	void (*cb_ack) (tcpservice_t* s, size_t len);
-	err_t (*cb_poll) (tcpservice_t* s);
+	void (*cb_poll) (tcpservice_t* s);
 	void (*cb_cleanup) (tcpservice_t* s);
 };
 
@@ -63,7 +95,7 @@ tcpservice_t* tcp_service_init_new_peer_size (size_t sendbufsize);
 // initialize/allocate new peer common fields
 tcpservice_t* tcp_service_init_new_peer_sendbuf_size (char* sendbuf, size_t sendbufsize);
 
-// gracefully close connection
+// graceful request for close
 void tcp_service_close (tcpservice_t* s);
 
 #endif // _TCPSERVICE_H_
