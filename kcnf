@@ -2,9 +2,9 @@ menu LWIP
 	choice
 	prompt "version"
 		config LWIP_ESP
-			bool "LWIP espressif sources (v1.4.0RC2)"
+			bool "LWIP espressif sources (close to v1.4.0RC2)"
 		config LWIP_GIT
-			bool "LWIP patched (pre-1.5)"
+			bool "LWIP (git-pre-1.5, experimental)"
 	endchoice
 endmenu
 

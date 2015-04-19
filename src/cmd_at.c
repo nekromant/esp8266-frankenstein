@@ -24,13 +24,13 @@ static int do_at (int argc, const char* const* argv)
 	unsigned char apmacaddr[6];
 	wifi_get_macaddr(STATION_IF, stamacaddr);
 	wifi_get_macaddr(SOFTAP_IF, apmacaddr);
-	console_printf("OK sdk=%s heap=%d stamac=" MACSTR " apmac=" MACSTR " chipid=0x%0x lwip=%x\n",
+	console_printf("OK sdk=%s heap=%d stamac=" MACSTR " apmac=" MACSTR " chipid=0x%0x lwip=%x mss=%d tcpwnd=%d\n",
 		system_get_sdk_version(),
 		system_get_free_heap_size(),
 		MAC2STR(stamacaddr),
 		MAC2STR(apmacaddr),
 		system_get_chip_id(),
-		LWIP_VERSION);
+		LWIP_VERSION, TCP_MSS, TCP_WND);
 
 #if TTDBG
 	int x, y = 1;
