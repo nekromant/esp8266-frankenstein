@@ -124,6 +124,10 @@ struct udp_pcb {
 #if LWIP_IGMP
   /** outgoing network interface for multicast packets */
   ip_addr_t multicast_ip;
+#if !V14 // espressif - keep structure
+  /** TTL for outgoing multicast packets */
+  u8_t mcast_ttl;
+#endif // !V14
 #endif /* LWIP_IGMP */
 
 #if LWIP_UDPLITE
@@ -139,10 +143,12 @@ struct udp_pcb {
   /** user-supplied argument for the recv callback */
   void *recv_arg;  
 
+#if V14 // espressif
 #if LWIP_IGMP
   /** TTL for outgoing multicast packets */
   u8_t mcast_ttl;
 #endif /* LWIP_IGMP */
+#endif // V14
 };
 /* udp_pcbs export for external reference (e.g. SNMP agent) */
 extern struct udp_pcb *udp_pcbs;

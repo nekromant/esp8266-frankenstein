@@ -49,7 +49,7 @@ void tcp_service_close (tcpservice_t* s)
 static void tcp_service_error (void* svc, err_t err, const char* who)
 {
 	tcpservice_t* peer = (tcpservice_t*)svc;
-	if (peer->bools.verbose_error)
+	if (err != ERR_OK && peer->bools.verbose_error)
 	{
 #if TCPVERBERR
 		const char* msg;

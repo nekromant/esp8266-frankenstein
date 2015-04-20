@@ -662,7 +662,7 @@ dhcp_start(struct netif *netif)
   err_t result;
 
   LWIP_ERROR("netif != NULL", (netif != NULL), return ERR_ARG;);
-#if V14
+#if V14 // espressif
   // called directly from libmain.a(eagle_lwip_if.o)
   // with netif up flag not set
   if (!netif_is_up(netif))
@@ -671,7 +671,7 @@ dhcp_start(struct netif *netif)
 #endif
   LWIP_ERROR("netif is not up, old style port?", netif_is_up(netif), return ERR_ARG;);
   dhcp = netif->dhcp;
-#if V14
+#if V14 // espressif
   /* Remove the flag that says this netif is handled by DHCP,
      it is set when we succeeded starting. */
   netif->flags &= ~NETIF_FLAG_DHCP;
@@ -728,7 +728,7 @@ dhcp_start(struct netif *netif)
   udp_recv(dhcp->pcb, dhcp_recv, netif);
   LWIP_DEBUGF(DHCP_DEBUG | LWIP_DBG_TRACE, ("dhcp_start(): starting DHCP configuration\n"));
 
-#if V14
+#if V14 // espressif
   /* Set the flag that says this netif is handled by DHCP. */
   netif->flags |= NETIF_FLAG_DHCP;
 #endif
@@ -1289,7 +1289,7 @@ dhcp_stop(struct netif *netif)
   struct dhcp *dhcp;
   LWIP_ERROR("dhcp_stop: netif != NULL", (netif != NULL), return;);
   dhcp = netif->dhcp;
-#if V14
+#if V14 // espressif
   /* Remove the flag that says this netif is handled by DHCP. */
   netif->flags &= ~NETIF_FLAG_DHCP;
 #endif

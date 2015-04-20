@@ -49,7 +49,7 @@ struct dhcp
   u16_t request_timeout; /* #ticks with period DHCP_FINE_TIMER_SECS for request timeout */
   u16_t t1_timeout;  /* #ticks with period DHCP_COARSE_TIMER_SECS for renewal time */
   u16_t t2_timeout;  /* #ticks with period DHCP_COARSE_TIMER_SECS for rebind time */
-#if !V14 // keep struct compatibility just in case
+#if !V14 // espressif: keep struct compatibility just in case
   u16_t t1_renew_time;  /* #ticks with period DHCP_COARSE_TIMER_SECS until next renew try */
   u16_t t2_rebind_time; /* #ticks with period DHCP_COARSE_TIMER_SECS until next rebind try */
   u16_t lease_used; /* #ticks with period DHCP_COARSE_TIMER_SECS since last received DHCP ack */
@@ -68,7 +68,7 @@ struct dhcp
   char boot_file_name[DHCP_FILE_LEN];
 #endif /* LWIP_DHCP_BOOTPFILE */
 
-#if V14 // keep struct compatibility just in case
+#if V14 // espressif: keep struct compatibility just in case
   u16_t t1_renew_time;  /* #ticks with period DHCP_COARSE_TIMER_SECS until next renew try */
   u16_t t2_rebind_time; /* #ticks with period DHCP_COARSE_TIMER_SECS until next rebind try */
   u16_t lease_used; /* #ticks with period DHCP_COARSE_TIMER_SECS since last received DHCP ack */

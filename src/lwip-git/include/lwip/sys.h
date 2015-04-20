@@ -235,8 +235,8 @@ u32_t sys_jiffies(void);
 
 /** Returns the current time in milliseconds,
  * may be the same as sys_jiffies or at least based on it. */
-//u32_t sys_now(void) ;
-#define sys_now() (NOW())
+//u32_t sys_now(void);
+#define sys_now() (NOW()) // espressif
 
 /* Critical Region Protection */
 /* These functions must be implemented in the sys_arch.c file.
@@ -282,8 +282,8 @@ void sys_arch_unprotect(sys_prot_t pval);
 #else
 
 #define SYS_ARCH_DECL_PROTECT(lev)
-#define SYS_ARCH_PROTECT(lev) lev = os_intr_lock()	//fix by ives at 2014.3.24
-#define SYS_ARCH_UNPROTECT(lev) lev = os_intr_unlock()
+#define SYS_ARCH_PROTECT(lev) lev = os_intr_lock()	// espressif / fix by ives at 2014.3.24
+#define SYS_ARCH_UNPROTECT(lev) lev = os_intr_unlock()	// espressif
 
 #endif /* SYS_LIGHTWEIGHT_PROT */
 

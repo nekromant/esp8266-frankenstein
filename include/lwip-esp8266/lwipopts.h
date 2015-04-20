@@ -1619,7 +1619,7 @@ struct ip_info;	// defined in missing.h which should go to antares
 
 #define V14				1	// structure compatibility with v1.4
 
-#define PBUF_LINK_ENCAPSULATION_HLEN	EP_OFFSET
+#define PBUF_LINK_ENCAPSULATION_HLEN	EP_OFFSET	// only used in lwip-git
 #define LWIP_PERF			0
 #define PBUF_POOL_FREE_OOSEQ		TCP_QUEUE_OOSEQ
 

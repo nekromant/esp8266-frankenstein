@@ -178,8 +178,8 @@ struct mem {
   mem_size_t prev;
   /** 1: this area is used; 0: this area is unused */
   u8_t used;
-  u8_t pad[3];  /* XXX: pad here instead use global ALIGN */
-} __ATTRIB_PACK;
+  u8_t pad[3];  // espressif: pad here instead use global ALIGN
+} __ATTRIB_PACK; // espressif
 
 /** All allocated blocks will be MIN_SIZE bytes big, at least!
  * MIN_SIZE can be overridden to suit your needs. Smaller values save space,

@@ -111,7 +111,7 @@ tcp_timer_needed(void)
 }
 
 /**
- * Timer callback function that calls tcp_tmr() and reschedules itself.
+ * Timer callback function that calls tcp_tmr() and reschedules itself. ESPRESSIF
  *
  * @param arg unused argument
  */
@@ -165,14 +165,14 @@ arp_timer(void *arg)
  *
  * @param arg unused argument
  */
-extern void dhcps_coarse_tmr(void);
+extern void dhcps_coarse_tmr(void); // espressif
 static void
 dhcp_timer_coarse(void *arg)
 {
   LWIP_UNUSED_ARG(arg);
   LWIP_DEBUGF(TIMERS_DEBUG, ("tcpip: dhcp_coarse_tmr()\n"));
   dhcp_coarse_tmr();
-  dhcps_coarse_tmr();
+  dhcps_coarse_tmr(); // espressif
   sys_timeout(DHCP_COARSE_TIMER_MSECS, dhcp_timer_coarse, NULL);
 }
 
@@ -319,7 +319,7 @@ void sys_timeouts_init(void)
 #endif /* LWIP_IPV6_MLD */
 #endif /* LWIP_IPV6 */
 
-#if LWIP_TCP
+#if LWIP_TCP // espressif
   //sys_timeout(TCP_TMR_INTERVAL, tcpip_tcp_timer, NULL);
   sys_timeout(TCP_TMR_INTERVAL, tcp_timer_coarse, NULL);
 #endif
@@ -446,7 +446,7 @@ sys_untimeout(sys_timeout_handler handler, void *arg)
 
 #if NO_SYS
 
-extern uint8 timer2_ms_flag;
+extern uint8 timer2_ms_flag; // espressif
 /** Handle timeouts for NO_SYS==1 (i.e. without using
  * tcpip_thread/sys_timeouts_mbox_fetch(). Uses sys_now() to call timeout
  * handler functions when timeouts expire.
@@ -466,8 +466,9 @@ sys_check_timeouts(void)
 
     now = sys_now();
     /* this cares for wraparounds */
-    //diff = now - timeouts_last_time;
+    //orig: diff = now - timeouts_last_time;
     //XXX make a proper espressif NOW() giving milliseconds
+    // and restore orig code above
     if (timer2_ms_flag == 0)
         diff = (now - timeouts_last_time)/((CPU_CLK_FREQ>>4)/1000);
     else

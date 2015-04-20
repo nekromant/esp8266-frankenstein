@@ -228,7 +228,7 @@ pbuf_alloc(pbuf_layer layer, u16_t length, pbuf_type type)
     /* add room for encapsulating link layer headers (e.g. 802.11) */
     offset = PBUF_LINK_ENCAPSULATION_HLEN;
     break;
-#if !V14 // v1.4: PBUF_RAW is PBUF_RAW_TX
+#if !V14 // espressif: PBUF_RAW is PBUF_RAW_TX (XXX improve?)
   case PBUF_RAW:
     /* no offset (e.g. RX buffers or chain successors) */
     offset = 0;
@@ -543,7 +543,9 @@ pbuf_header_impl(struct pbuf *p, s16_t header_size_increment, u8_t force)
     /* set new payload pointer */
     p->payload = (u8_t *)p->payload - header_size_increment;
     /* boundary check fails? */
-    if ((u8_t *)p->payload < (u8_t *)p + SIZEOF_STRUCT_PBUF + EP_OFFSET) {
+//  if ((u8_t *)p->payload < (u8_t *)p + SIZEOF_STRUCT_PBUF + EP_OFFSET) { // espressif in v1.4.0rc2 but now EP_OFFSET is in official PBUF_LINK_ENCAPSULATION_HLEN
+// so is it needed anymore ?
+    if ((u8_t *)p->payload < (u8_t *)p + SIZEOF_STRUCT_PBUF) {
       LWIP_DEBUGF( PBUF_DEBUG | LWIP_DBG_LEVEL_SERIOUS,
         ("pbuf_header: failed as %p < %p (not enough space for new header size)\n",
         (void *)p->payload, (void *)(p + 1)));
@@ -706,7 +708,7 @@ pbuf_free(struct pbuf *p)
           memp_free(MEMP_PBUF_POOL, p);
         /* is this a ROM or RAM referencing pbuf? */
         } else if (type == PBUF_ROM || type == PBUF_REF) {
-#ifdef EBUF_LWIP
+#ifdef EBUF_LWIP // espressif
         system_pp_recycle_rx_pkt(p->eb);
 #endif //EBUF_LWIP
           memp_free(MEMP_PBUF, p);

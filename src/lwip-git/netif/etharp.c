@@ -836,20 +836,18 @@ etharp_arp_input(struct netif *netif, struct eth_addr *ethaddr, struct pbuf *p)
 
       /* hwtype, hwaddr_len, proto, protolen and the type in the ethernet header
          are already correct, we tested that before */
-#ifdef EBUF_LWIP
+#ifdef EBUF_LWIP // espressif
       /*
        *   don't do flip-flop here... do a copy here.
        *    otherwise, we need to handle existing pbuf->eb in ieee80211_output.c
        */
-
       struct pbuf* q = pbuf_alloc(PBUF_RAW, p->tot_len, PBUF_RAM);
-      if (q != NULL) {
+      if (q != NULL)
           pbuf_copy(q, p);
-          //pbuf_free(p);
-      } else {
+      else
+      {
           LWIP_ASSERT("q != NULL", q != NULL);
       }
-
       netif->linkoutput(netif, q);
       pbuf_free(q);
 #else
@@ -1406,10 +1404,10 @@ etharp_request(struct netif *netif, const ip_addr_t *ipaddr)
 err_t
 ethernet_input(struct pbuf *p, struct netif *netif)
 {
-#if V14
+#if V14 // espressif
   // called directly from libmain.a(eagle_lwip_if.o)
-  if (!netif_is_up(netif))
-    // because lwip>1.4 has a new style
+  // and because lwip>1.4 has a new style
+  if (!netif_is_link_up(netif))
     netif_set_link_up(netif);
 #endif
   struct eth_hdr* ethhdr;

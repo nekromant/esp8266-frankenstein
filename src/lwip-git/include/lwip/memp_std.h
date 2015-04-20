@@ -135,12 +135,13 @@ LWIP_MEMPOOL(MLD6_GROUP,     MEMP_NUM_MLD6_GROUP,      sizeof(struct mld_group),
  *     (Example: pbuf_payload_size=0 allocates only size for the struct)
  */
 LWIP_PBUF_MEMPOOL(PBUF,      MEMP_NUM_PBUF,            0,                             "PBUF_REF/ROM")
-
+#if 0 // espressif
+LWIP_PBUF_MEMPOOL(PBUF_POOL, PBUF_POOL_SIZE,           PBUF_POOL_BUFSIZE,             "PBUF_POOL")
+#else
 /* XXX:  need to align to 4 byte as memp strcut is 4-byte long.  otherwise will crash */
 #define LWIP_MEM_ALIGN4_SIZE(size) (((size) + 4 - 1) & ~(4-1))
-
 LWIP_PBUF_MEMPOOL(PBUF_POOL, PBUF_POOL_SIZE, LWIP_MEM_ALIGN4_SIZE(PBUF_POOL_BUFSIZE), "PBUF_POOL")
-
+#endif
 
 /*
  * Allow for user-defined pools; this must be explicitly set in lwipopts.h

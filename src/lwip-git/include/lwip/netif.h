@@ -74,7 +74,7 @@ extern "C" {
  * (also for dhcp/autoip).
  */
 
-#if V14 // keep compatibility with blobs
+#if V14 // espressif: keep compatibility with blobs
 
 #define NETIF_FLAG_UP           0x01U
 /** If set, the netif has broadcast capability.
@@ -104,7 +104,7 @@ extern "C" {
  * Set by the netif driver in its init function. */
 #define NETIF_FLAG_IGMP         0x80U
 
-#else // !V14
+#else // orig !V14
 
 #define NETIF_FLAG_UP           0x01U
 /** If set, the netif has broadcast capability.
@@ -134,7 +134,7 @@ extern "C" {
  * IPv6 packets must be fragmented or reassembled. */
 #define NETIF_FLAG_LOWPAN6      0x80U
 
-#endif // !V14
+#endif // orig !V14
 
 /** Function prototype for netif init functions. Set up flags and output/linkoutput
  * callback functions in this function.
