@@ -25,6 +25,17 @@ static microrl_t rl;
 static int console_locked = 0;
 static int passthrough = ENABLE_PASSTHROUGH_AT_BOOT;
 
+const char* loglevnam (int lev)
+{
+	switch (lev)
+	{
+	case LOG_ERR: return "ERR";
+	case LOG_WARN: return "WARN";
+	case LOG_NOTICE: return "notice";
+	default: return "dbg";
+	}
+}
+
 #if 0
 struct console {
 	char name[16];

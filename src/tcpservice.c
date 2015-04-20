@@ -8,10 +8,15 @@
 
 #define TCPVERBERR 1
 
+#define D(x...) SERIAL_PRINTF(x)
+
+static void tcp_service_error (void* svc, err_t err, const char* who);
+
 static void tcp_service_aborted (void* svc, err_t err)
 {
 	tcpservice_t* s = (tcpservice_t*)svc;
 	s->tcp = NULL; // unallocated by caller
+	tcp_service_error(s, err, "aborted");
 	if (s->cb_cleanup)
 		s->cb_cleanup(s);
 	else if (s->sendbuf)
@@ -21,7 +26,7 @@ static void tcp_service_aborted (void* svc, err_t err)
 
 static bool tcp_service_check_shutdown (tcpservice_t* s)
 {
-	if (s->is_closing && s->tcp && cbuf_is_empty(&s->send_buffer))
+	if (s->bools.is_closing && s->tcp && cbuf_is_empty(&s->send_buffer))
 	{
 		// everything is received by peer
 		tcp_close(s->tcp);
@@ -33,52 +38,55 @@ static bool tcp_service_check_shutdown (tcpservice_t* s)
 
 void tcp_service_close (tcpservice_t* s)
 {
-	if (s->tcp && !s->is_closing)
+	if (s->tcp && !s->bools.is_closing)
 	{
-		s->is_closing = true;
+		s->bools.is_closing = true;
 		if (s->cb_closing)
 			s->cb_closing(s);
 	}
 }
 
-static void tcp_service_error (void* svc, err_t err)
+static void tcp_service_error (void* svc, err_t err, const char* who)
 {
-#if TCPVERBERR
-	const char* msg;
-	switch (err)
+	tcpservice_t* peer = (tcpservice_t*)svc;
+	if (peer->bools.verbose_error)
 	{
-	case ERR_OK:		msg="ok"; break;
-	case ERR_MEM:		msg="mem"; break;
-	case ERR_BUF:		msg="buf"; break;
-	case ERR_TIMEOUT:	msg="timeout"; break;
-	case ERR_RTE:		msg="route"; break;
-	case ERR_INPROGRESS:	msg="in progress"; break;
-	case ERR_VAL:		msg="illegal value"; break;
-	case ERR_WOULDBLOCK:	msg="would block"; break;
-	case ERR_ABRT:		msg="aborted"; break;
-	case ERR_RST:		msg="reset"; break;
-	case ERR_CLSD:		msg="closed"; break;
-	case ERR_CONN:		msg="not connected"; break;
-	case ERR_ARG:		msg="illegal arg"; break;
-	case ERR_USE:		msg="address in use"; break;
-	case ERR_IF:		msg="intf error"; break;
-	case ERR_ISCONN:	msg="already connected"; break;
-#ifdef ERR_ALREADY
-	case ERR_ALREADY:	msg="already connecting"; break;
+#if TCPVERBERR
+		const char* msg;
+		switch (err)
+		{
+		case ERR_OK:		msg="ok"; break;
+		case ERR_MEM:		msg="mem"; break;
+		case ERR_BUF:		msg="buf"; break;
+		case ERR_TIMEOUT:	msg="timeout"; break;
+		case ERR_RTE:		msg="route"; break;
+		case ERR_INPROGRESS:	msg="in progress"; break;
+		case ERR_VAL:		msg="illegal value"; break;
+		case ERR_WOULDBLOCK:	msg="would block"; break;
+		case ERR_ABRT:		msg="aborted"; break;
+		case ERR_RST:		msg="reset"; break;
+		case ERR_CLSD:		msg="closed"; break;
+		case ERR_CONN:		msg="not connected"; break;
+		case ERR_ARG:		msg="illegal arg"; break;
+		case ERR_USE:		msg="address in use"; break;
+		case ERR_IF:		msg="intf error"; break;
+		case ERR_ISCONN:	msg="already connected"; break;
+#ifdef ERR_ALREADY // lwip-git
+		case ERR_ALREADY:	msg="already connecting"; break;
 #endif
-	default:		msg="?";
-	}
+		default:		msg="?";
+		}
 #else
-	const char* msg = "?";
+		const char* msg = "?";
 #endif	
 
-	tcpservice_t* peer = (tcpservice_t*)svc;
-
-	LOGSERIAL(ERR_IS_FATAL(err)? LOG_ERR: LOG_WARN, "TCP(%s): %serror %d (%s)",
-		peer->name,
-		ERR_IS_FATAL(err)? "fatal ": "",
-		(int)err,
-		msg);
+		LOGSERIALN(ERR_IS_FATAL(err)? LOG_ERR: LOG_WARN, "TCP/%s(%s): %serror %d (%s)",
+			peer->name?:"",
+			who?:"",
+			ERR_IS_FATAL(err)? "fatal ": "",
+			(int)err,
+			msg);
+	}
 
 	if (ERR_IS_FATAL(err))
 		tcp_service_close(peer);
@@ -100,13 +108,13 @@ static err_t cbuf_tcp_send (tcpservice_t* tcp)
 			break;
 		if ((err = tcp_write(tcp->tcp, data, sendsize, /*tcpflags=0=PUSH,NOCOPY*/0)) != ERR_OK)
 		{
-			tcp_service_error(tcp, err);
+			tcp_service_error(tcp, err, "tcp_write()");
 			break;
 		}
 	}
 
         if (err == ERR_OK && (err = tcp_output(tcp->tcp)) != ERR_OK)
-		tcp_service_error(tcp, err);
+		tcp_service_error(tcp, err, "tcp_output()");
 	return err;
 }
 
@@ -164,7 +172,7 @@ static err_t tcp_service_receive (void* svc, struct tcp_pcb* pcb, pbuf_t* pbuf, 
 	}
 
 	// bad state
-	tcp_service_error(peer, err);
+	tcp_service_error(peer, err, "cb() recv");
 	pbuf_free(pbuf);
 	tcp_service_close(peer);
 	return err;
@@ -207,7 +215,7 @@ static err_t tcp_service_incoming_peer (void* svc, struct tcp_pcb * peer_pcb, er
 		return ERR_MEM; //XXX handle this better
 
 	peer->tcp = peer_pcb;
-	peer->is_closing = 0;
+	peer->bools.is_closing = 0;
 	if (!peer->name)
 		peer->name = listener->name;
 	
@@ -288,6 +296,9 @@ tcpservice_t* tcp_service_init_new_peer_sendbuf_size (char* sendbuf, size_t send
 	peer->cb_ack = NULL;
 	peer->cb_poll = NULL;
 	peer->cb_cleanup = NULL;
+
+	peer->bools.verbose_error = 1;
+
 	return peer;
 }
 

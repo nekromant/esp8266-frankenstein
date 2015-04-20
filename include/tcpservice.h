@@ -8,43 +8,56 @@
 typedef struct pbuf pbuf_t;
 typedef struct tcpservice_s tcpservice_t;
 
+// some callbacks info:
 // ---------
-// cb_recv() feeds user with received pbuf data.
+// cb_recv() feeds user with received wlan data.
 // 
-// pbufs are always released by this cb's caller (otherwise
+// pbufs are always released after calling this cb (otherwise
 // link level get stuffed and at some time, all new packets are
 // discarded, leading to tcp freeze because received acks are
 // not updated).
 // so user must be hungry enough, meaning: if data are stored,
 // receive buffer must be big enough (something like TCP_WND).
-// user must always return how much data is swallowed.  any
-// value but 0 is allowed.
+// user must *always* return how much data is swallowed.  any
+// value but 0 is allowed. user cb keeps beeing called until
+// all received data is swallowed. if the user cb is stuffed,
+// it is of his responsibility to yell or increase receive
+// buffer. 0 must not be returned or data is lost.
 // tcp receive window is raised just after this cb (meaning:
-// data are swallowed, send more) unless user->cb_ack is
+// data are swallowed, send more) *unless* user->cb_ack is
 // defined, then user is responsible to increase the tcp
 // receive window by calling tcp_service_allow_more() in this
 // cb_ack callback.
 // examples:
 // - svc_telnet does not defined cb_ack, all data are processed
-//   inside cb_recv and we expect data are not coming too fast.
-// - svc_echo does define cb_ack, thus allowing to receive more
-//   data when already sent data are received by peer
-//   (otherwise we are flooded, too many packets are lost, acks
-//   are not updated and tcp algo stops working).
+//   inside cb_recv.
+// - svc_echo does define cb_ack, thus requesting to receive more
+//   data only when already sent data are received by peer
+//   (which is later, otherwise we are flooded: data would come
+//   too fast, filling buffer before allowed to be sent back,
+//   leading to lost data - because pbufs are always discarded
+//   after cb_ack is called).
+//   (the solution of retaining/chaining received pbuf is not good
+//    because link layer discards all new packets when full, leading
+//    to not updating received acks and freezing tcp)
 // ---------
 // cb_cleanup: called when connection is actually closed
 // 	user must release sendbuf
-//	if NULL, buffer is automatically released
+//	if cb is NULL, buffer is automatically released
 //	so it must be defined for static buffers
 // ---------
 // cb_closing: called when connection is about to close
-
+// ---------
 
 struct tcpservice_s
 {
 	const char* name;
 	struct tcp_pcb* tcp;
-	bool is_closing;
+	struct
+	{
+		char is_closing: 1;
+		char verbose_error: 1;
+	} bools;
 
 	// circular buffers
 	char* sendbuf;		// user data (used by send_buffer)
@@ -66,7 +79,8 @@ struct tcpservice_s
 {						\
 	.name = (nameptr),			\
 	.tcp = NULL,				\
-	.is_closing = false,			\
+	.bools.is_closing = 0,			\
+	.bools.verbose_error = 0,		\
 	.sendbuf = NULL,			\
 	.send_buffer = CBUF_INIT(NULL, 0),	\
 	.cb_get_new_peer = (cb_new_peer),	\
@@ -80,6 +94,7 @@ struct tcpservice_s
 
 #define tcp_service_allow_more(svc,len) do { tcp_recved((svc)->tcp, (len)); } while (0)
 #define tcp_service_write(svc,data,len) (cbuf_write(&(svc)->send_buffer, (data), (len)))
+#define tcp_service_verbose_error(svc,value) do { svc->bools.verbose_error = value; } while (0)
 
 void tcp_log_err (err_t err);
 

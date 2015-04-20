@@ -3,7 +3,11 @@
 #include "env.h"
 #include "main.h"
 
-#define ECHO_SEND_BUFFER_SIZE	TCP_WND
+// for that service, lower value than TCP_WND leads to loss of data
+// see discussion in tcpservice.h, and have a try :)
+//#define 	ECHO_SEND_BUFFER_SIZE	((TCP_WND) - 1)	// too short
+//#define 	ECHO_SEND_BUFFER_SIZE	((TCP_WND) / 2)	// too short
+#define 	ECHO_SEND_BUFFER_SIZE	(TCP_WND)
 
 ///////////////////////////////////////////////////////////
 // callbacks for tcp service
