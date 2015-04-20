@@ -71,12 +71,12 @@ LOCAL uint8 i2c_master_getDC(void)
  * Parameters   : NONE
  * Returns	  : uint8 - SCL bit value
 *******************************************************************************/
-/*LOCAL uint8 i2c_master_getCL(void)
+LOCAL uint8 i2c_master_getCL(void)
 {
 	uint8 scl_out;
 	scl_out = GPIO_INPUT_GET(GPIO_ID_PIN(pinSCL));
 	return scl_out;
-}*/
+}
 
 /******************************************************************************
  * FunctionName : i2c_master_init
@@ -282,11 +282,7 @@ uint8 i2c_master_readByte(void)
 {
 	uint8 retVal = 0;
 	uint8 k, i;
-/*
-	i2c_master_wait(I2C_SLEEP_TIME);
-	i2c_master_setDC(m_nLastSDA, 0);
-	i2c_master_wait(I2C_SLEEP_TIME);// sda 1, scl 0
-*/
+
 	i2c_master_setDC(1, m_nLastSCL);
 
 	for (i = 0; i < 8; i++) {
@@ -294,6 +290,8 @@ uint8 i2c_master_readByte(void)
 		i2c_master_setDC(1, 0);
 		i2c_master_wait(I2C_SLEEP_TIME);// sda 1, scl 0
 		i2c_master_setDC(1, 1);
+		while(i2c_master_getCL()==0)
+			;		// clock stretch
 		i2c_master_wait(I2C_SLEEP_TIME);// sda 1, scl 1
 
 		k = i2c_master_getDC();
@@ -431,8 +429,9 @@ bool i2c_master_readBytes(uint8 address, uint8 *values, uint8 length)
 	uint8 readed = 0;
 	while((readed < length) && (--timeout>0)){
 		uint8 byte = i2c_master_readByte();
-		i2c_master_setAck(1);
 		values[readed++] = byte;
+		i2c_master_setAck((readed == length));	// send the ACK or NAK as applicable
+		i2c_master_setDC(1, 0); // release SDA
 #ifdef CONFIG_I2C_MASTER_DEBUG
 		console_printf("%d ", byte);
 #endif
@@ -440,7 +439,6 @@ bool i2c_master_readBytes(uint8 address, uint8 *values, uint8 length)
 #ifdef CONFIG_I2C_MASTER_DEBUG
 	console_printf("\n");
 #endif
-	i2c_master_setAck(0);
 	i2c_master_stop();
 	return true;
 }
