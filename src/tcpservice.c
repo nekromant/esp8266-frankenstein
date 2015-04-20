@@ -15,7 +15,7 @@ static void tcp_service_error (void* svc, err_t err, const char* who);
 static void tcp_service_aborted (void* svc, err_t err)
 {
 	tcpservice_t* s = (tcpservice_t*)svc;
-	s->tcp = NULL; // unallocated by caller
+	s->tcp = NULL; // already unallocated by caller
 	if (!s->bools.is_closing && s->cb_closing)
 		// call closing cb is not called yet
 		// and connection is aborted
@@ -28,15 +28,24 @@ static void tcp_service_aborted (void* svc, err_t err)
 	os_free(s);
 }
 
-static bool tcp_service_check_shutdown (tcpservice_t* s)
+static bool tcp_service_has_shutdown (tcpservice_t* s)
 {
-	if (s->bools.is_closing && s->tcp && cbuf_is_empty(&s->send_buffer))
+	if (s->bools.is_closing && cbuf_is_empty(&s->send_buffer))
 	{
 		// everything is received by peer
+
+		// clear arg: abort in case we are called again
+		tcp_arg(s->tcp, NULL);
+
+		// gracefully close
 		tcp_close(s->tcp);
+		
+		// free buffers
 		tcp_service_aborted(s, ERR_OK);
+		
 		return true;
 	}
+
 	return false;
 }
 
@@ -160,7 +169,14 @@ static void tcp_service_give_back (tcpservice_t* peer, pbuf_t* root_pbuf)
 
 static err_t tcp_service_receive (void* svc, struct tcp_pcb* pcb, pbuf_t* pbuf, err_t err)
 {
+	if (!svc)
+	{
+		tcp_abort(pcb);
+		return ERR_ABRT;
+	}
+
 	tcpservice_t* peer = (tcpservice_t*)svc;
+
 	if (err == ERR_OK)
 	{
 		if (pbuf)
@@ -170,10 +186,11 @@ static err_t tcp_service_receive (void* svc, struct tcp_pcb* pcb, pbuf_t* pbuf, 
 			// user closed
 			tcp_service_request_close(peer);
 
+		if (tcp_service_has_shutdown(peer))
+			return ERR_OK;
+
 		// send our output buffer
-		return tcp_service_check_shutdown(peer)?
-			ERR_CLSD:
-			cbuf_tcp_send(peer);
+		return cbuf_tcp_send(peer);
 	}
 
 	// bad state
@@ -185,28 +202,42 @@ static err_t tcp_service_receive (void* svc, struct tcp_pcb* pcb, pbuf_t* pbuf, 
 
 static err_t tcp_service_ack (void *svc, struct tcp_pcb *pcb, u16_t len)
 {
+	if (!svc)
+	{
+		tcp_abort(pcb);
+		return ERR_ABRT;
+	}
+
 	tcpservice_t* peer = (tcpservice_t*)svc;
 
 	// release hold data in send buffer
 	cbuf_ack(&peer->send_buffer, len);
+
 	// close now if requested and if all data are remotely received
-	if (tcp_service_check_shutdown(peer))
-		return ERR_CLSD;
+	if (tcp_service_has_shutdown(peer))
+		return ERR_OK;
+
 	// user callback
 	if (peer->cb_ack && len)
 		peer->cb_ack(peer, len);
+
 	// continue to send our data
 	return cbuf_tcp_send(peer);
 }
 
 static err_t tcp_service_poll (void* svc, struct tcp_pcb* pcb)
 { 
+	if (!svc)
+	{
+		tcp_abort(pcb);
+		return ERR_ABRT;
+	}
+	
 	LWIP_UNUSED_ARG(pcb);
 	tcpservice_t* peer = (tcpservice_t*)svc;
 	if (peer->cb_poll)
 		peer->cb_poll(peer);
-	// trigger sending data
-	return tcp_service_receive(peer, peer->tcp, NULL, ERR_OK);
+	return ERR_OK;
 }
 
 static err_t tcp_service_incoming_peer (void* svc, struct tcp_pcb * peer_pcb, err_t err)

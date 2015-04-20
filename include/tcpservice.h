@@ -55,8 +55,8 @@ struct tcpservice_s
 	struct tcp_pcb* tcp;
 	struct
 	{
-		char is_closing: 1;
-		char verbose_error: 1;
+		char is_closing:	1;
+		char verbose_error:	1;
 	} bools;
 
 	// circular buffers

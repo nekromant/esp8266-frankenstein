@@ -65,7 +65,9 @@ static int telnet_printf (const char *fmt, ...)
 	int ret;
 	va_list ap;
 	va_start(ap, fmt);
-	if (current_telnet && current_telnet->tcp)
+	if (current_telnet && !current_telnet->tcp)
+		current_telnet = NULL;
+	if (current_telnet)
 		ret = cbuf_vprintf(&current_telnet->send_buffer, fmt, ap);
 	else
 	{
