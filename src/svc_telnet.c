@@ -128,23 +128,19 @@ static void telnet_poll (tcpservice_t* peer)
 	{
 		CURRENT(peer);
 		telnet_printf("\nYou have been idle for %d seconds, goodbye\n", state(peer)->max_idle);
-		tcp_service_close(peer);
+		tcp_service_request_close(peer);
 	}
 }
 
 int sendopt (tcpservice_t* s, u8_t option, u8_t value)
 {
-	char* tmp;
-	if (cbuf_write_ptr(&s->send_buffer, &tmp, 4) == 4)
+	char tmp[] = { TELNET_IAC, option, value, 0 };
+	if (tcp_service_write(s, tmp, sizeof tmp) != sizeof tmp)
 	{
-		tmp[0] = TELNET_IAC;
-		tmp[1] = option;
-		tmp[2] = value;
-		tmp[3] = 0;
-		return 0;
+		LOGSERIAL(LOG_ERR, "telnet out of buf");
+		return -1;
 	}
-	//XXX error should be managed
-	return -1;
+	return 0;
 }
 
 static size_t telnet_recv (tcpservice_t* ts, const char* q, size_t len)
@@ -233,7 +229,7 @@ int telnet_start (int port)
 int telnet_stop (void)
 {
 	if (telnet_listener.tcp)
-		tcp_service_close(&telnet_listener);
+		tcp_service_request_close(&telnet_listener);
 	return 0;
 }
 
@@ -248,7 +244,7 @@ static int  do_telnet(int argc, const char* const* argv)
 		if (current_telnet)
 		{
 			console_printf("telnet: See you!\n");
-			tcp_service_close(current_telnet);
+			tcp_service_request_close(current_telnet);
 		}
 	}
 	else

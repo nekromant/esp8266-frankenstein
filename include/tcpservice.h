@@ -111,6 +111,6 @@ tcpservice_t* tcp_service_init_new_peer_size (size_t sendbufsize);
 tcpservice_t* tcp_service_init_new_peer_sendbuf_size (char* sendbuf, size_t sendbufsize);
 
 // graceful request for close
-void tcp_service_close (tcpservice_t* s);
+void tcp_service_request_close (tcpservice_t* s);
 
 #endif // _TCPSERVICE_H_

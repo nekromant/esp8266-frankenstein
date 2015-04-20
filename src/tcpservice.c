@@ -16,6 +16,10 @@ static void tcp_service_aborted (void* svc, err_t err)
 {
 	tcpservice_t* s = (tcpservice_t*)svc;
 	s->tcp = NULL; // unallocated by caller
+	if (!s->bools.is_closing && s->cb_closing)
+		// call closing cb is not called yet
+		// and connection is aborted
+		s->cb_closing(s);
 	tcp_service_error(s, err, "aborted");
 	if (s->cb_cleanup)
 		s->cb_cleanup(s);
@@ -36,7 +40,7 @@ static bool tcp_service_check_shutdown (tcpservice_t* s)
 	return false;
 }
 
-void tcp_service_close (tcpservice_t* s)
+void tcp_service_request_close (tcpservice_t* s)
 {
 	if (s->tcp && !s->bools.is_closing)
 	{
@@ -49,10 +53,11 @@ void tcp_service_close (tcpservice_t* s)
 static void tcp_service_error (void* svc, err_t err, const char* who)
 {
 	tcpservice_t* peer = (tcpservice_t*)svc;
+
 	if (err != ERR_OK && peer->bools.verbose_error)
 	{
+		const char* msg = "?";
 #if TCPVERBERR
-		const char* msg;
 		switch (err)
 		{
 		case ERR_OK:		msg="ok"; break;
@@ -74,12 +79,9 @@ static void tcp_service_error (void* svc, err_t err, const char* who)
 #ifdef ERR_ALREADY // lwip-git
 		case ERR_ALREADY:	msg="already connecting"; break;
 #endif
-		default:		msg="?";
+		default:		break;
 		}
-#else
-		const char* msg = "?";
 #endif	
-
 		LOGSERIALN(ERR_IS_FATAL(err)? LOG_ERR: LOG_WARN, "TCP/%s(%s): %serror %d (%s)",
 			peer->name?:"",
 			who?:"",
@@ -89,7 +91,7 @@ static void tcp_service_error (void* svc, err_t err, const char* who)
 	}
 
 	if (ERR_IS_FATAL(err))
-		tcp_service_close(peer);
+		tcp_service_request_close(peer);
 }
 
 // trigger write-from-circular-buffer
@@ -164,6 +166,9 @@ static err_t tcp_service_receive (void* svc, struct tcp_pcb* pcb, pbuf_t* pbuf, 
 		if (pbuf)
 			// feed user
 			tcp_service_give_back(peer, pbuf);
+		else
+			// user closed
+			tcp_service_request_close(peer);
 
 		// send our output buffer
 		return tcp_service_check_shutdown(peer)?
@@ -174,7 +179,7 @@ static err_t tcp_service_receive (void* svc, struct tcp_pcb* pcb, pbuf_t* pbuf, 
 	// bad state
 	tcp_service_error(peer, err, "cb() recv");
 	pbuf_free(pbuf);
-	tcp_service_close(peer);
+	tcp_service_request_close(peer);
 	return err;
 }
 
