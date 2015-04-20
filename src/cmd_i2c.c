@@ -79,6 +79,7 @@ static void i2cdevice_enum(uint8 addr)
 		case 0x80: 
 			console_printf( "SHT21? " );
 			console_printf( "HTU21? " );
+			console_printf ("SI7020? " );
 			break;
 
 		case 0xEE: 
@@ -87,7 +88,7 @@ static void i2cdevice_enum(uint8 addr)
 			break;
 		
 		default:
-			console_printf( "Unknown device." );
+			console_printf( "Unknown device (%x).", addr );
 
 	}
 }
