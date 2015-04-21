@@ -57,7 +57,9 @@ struct tcpservice_s
 	{
 		char is_closing:	1;
 		char verbose_error:	1;
+		char nagle:		1;
 	} bools;
+	int poll_ms;
 
 	// circular buffers
 	char* sendbuf;		// user data (used by send_buffer)
@@ -81,6 +83,8 @@ struct tcpservice_s
 	.tcp = NULL,				\
 	.bools.is_closing = 0,			\
 	.bools.verbose_error = 0,		\
+	.bools.nagle = 1,			\
+	.poll_ms = -1,				\
 	.sendbuf = NULL,			\
 	.send_buffer = CBUF_INIT(NULL, 0),	\
 	.cb_get_new_peer = (cb_new_peer),	\
@@ -109,6 +113,10 @@ tcpservice_t* tcp_service_init_new_peer_size (size_t sendbufsize);
 
 // initialize/allocate new peer common fields
 tcpservice_t* tcp_service_init_new_peer_sendbuf_size (char* sendbuf, size_t sendbufsize);
+
+// option helpers in cb_get_new_peer()
+#define tcp_service_set_poll_ms(s,pollms)	do { (s)->poll_ms = (pollms); } while (0)
+#define tcp_service_disable_nagle(s)		do { (s)->bools.nagle = 0; } while (0)
 
 // graceful request for close
 void tcp_service_request_close (tcpservice_t* s);

@@ -1585,6 +1585,8 @@
 
 #define LWIP_RAND()  rand()
 
+#define mem_init()
+
 #define mem_free vPortFree
 #define mem_malloc pvPortMalloc
 #define mem_calloc pvPortCalloc
@@ -1616,6 +1618,12 @@ struct ip_info;	// defined in missing.h which should go to antares
 #define LWIP_DHCP_BOOTP_FILE 		0
 
 // for lwip-1.5:
+
+extern unsigned char timer2_ms_flag;
+extern int _sys_now;
+#define TCP_KEEPIDLE_DEFAULT		30000UL	// orig: 7200000UL
+#define TCP_KEEPINTVL_DEFAULT		10000UL	// orig: 75000UL
+#define TCP_KEEPCNT_DEFAULT		3U	// orig: 9U
 
 #define V14				1	// structure compatibility with v1.4
 

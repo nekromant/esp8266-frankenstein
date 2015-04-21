@@ -20,7 +20,7 @@ static void tcp_service_aborted (void* svc, err_t err)
 		// call closing cb is not called yet
 		// and connection is aborted
 		s->cb_closing(s);
-	tcp_service_error(s, err, "aborted");
+	tcp_service_error(s, err, "cb(aborted)");
 	if (s->cb_cleanup)
 		s->cb_cleanup(s);
 	else if (s->sendbuf)
@@ -28,7 +28,7 @@ static void tcp_service_aborted (void* svc, err_t err)
 	os_free(s);
 }
 
-static bool tcp_service_has_shutdown (tcpservice_t* s)
+static bool tcp_service_check_shutdown (tcpservice_t* s)
 {
 	if (s->bools.is_closing && cbuf_is_empty(&s->send_buffer))
 	{
@@ -42,7 +42,7 @@ static bool tcp_service_has_shutdown (tcpservice_t* s)
 		
 		// free buffers
 		tcp_service_aborted(s, ERR_OK);
-		
+
 		return true;
 	}
 
@@ -91,7 +91,7 @@ static void tcp_service_error (void* svc, err_t err, const char* who)
 		default:		break;
 		}
 #endif	
-		LOGSERIALN(ERR_IS_FATAL(err)? LOG_ERR: LOG_WARN, "TCP/%s(%s): %serror %d (%s)",
+		LOGSERIALN(ERR_IS_FATAL(err)? LOG_ERR: LOG_WARN, "TCP/%s %s: %serror %d (%s)",
 			peer->name?:"",
 			who?:"",
 			ERR_IS_FATAL(err)? "fatal ": "",
@@ -186,7 +186,7 @@ static err_t tcp_service_receive (void* svc, struct tcp_pcb* pcb, pbuf_t* pbuf, 
 			// user closed
 			tcp_service_request_close(peer);
 
-		if (tcp_service_has_shutdown(peer))
+		if (tcp_service_check_shutdown(peer))
 			return ERR_OK;
 
 		// send our output buffer
@@ -194,7 +194,7 @@ static err_t tcp_service_receive (void* svc, struct tcp_pcb* pcb, pbuf_t* pbuf, 
 	}
 
 	// bad state
-	tcp_service_error(peer, err, "cb() recv");
+	tcp_service_error(peer, err, "cb(recv)");
 	pbuf_free(pbuf);
 	tcp_service_request_close(peer);
 	return err;
@@ -214,7 +214,7 @@ static err_t tcp_service_ack (void *svc, struct tcp_pcb *pcb, u16_t len)
 	cbuf_ack(&peer->send_buffer, len);
 
 	// close now if requested and if all data are remotely received
-	if (tcp_service_has_shutdown(peer))
+	if (tcp_service_check_shutdown(peer))
 		return ERR_OK;
 
 	// user callback
@@ -236,7 +236,15 @@ static err_t tcp_service_poll (void* svc, struct tcp_pcb* pcb)
 	LWIP_UNUSED_ARG(pcb);
 	tcpservice_t* peer = (tcpservice_t*)svc;
 	if (peer->cb_poll)
+	{
 		peer->cb_poll(peer);
+
+		// user may have sent data or closed connection
+		if (!tcp_service_check_shutdown(peer))
+			// continue to send our data
+			return cbuf_tcp_send(peer);
+	}
+	
 	return ERR_OK;
 }
 
@@ -254,22 +262,32 @@ static err_t tcp_service_incoming_peer (void* svc, struct tcp_pcb * peer_pcb, er
 	peer->bools.is_closing = 0;
 	if (!peer->name)
 		peer->name = listener->name;
+	if (peer->poll_ms <= 0)
+		peer->poll_ms = listener->poll_ms;
 	
 	tcp_setprio(peer->tcp, TCP_PRIO_MIN); //XXX???
 	tcp_recv(peer->tcp, tcp_service_receive);
 	tcp_err(peer->tcp, tcp_service_aborted);
-	tcp_poll(peer->tcp, tcp_service_poll, 4); //every two seconds of inactivity of the TCP connection
 	tcp_sent(peer->tcp, tcp_service_ack);
-	
-	// peer/tcp_pcb association
 	tcp_arg(peer->tcp, peer);
+	if (peer->cb_poll)
+	{
+		if (peer->poll_ms <= 0)
+		{
+			LOG(LOG_WARN, "TCP(%s): polling callback forced to 1s", peer->name);
+			peer->poll_ms = 1000;
+		}
+		int ticks = (peer->poll_ms + 250) / 500;
+		tcp_poll(peer->tcp, tcp_service_poll, ticks?: 1);
+	}
 	
-#if 0
-	// disable nagle
-	SERIAL_PRINTF("%s: nagle=%d\n", peer->name, !tcp_nagle_disabled(peer->tcp));
-	tcp_nagle_disable(peer->tcp);
-	SERIAL_PRINTF("%s: nagle=%d\n", peer->name, !tcp_nagle_disabled(peer->tcp));
-#endif
+	if (!peer->bools.nagle)
+	{
+		// disable nagle
+		SERIAL_PRINTF("%s: nagle=%d\n", peer->name, !tcp_nagle_disabled(peer->tcp));
+		tcp_nagle_disable(peer->tcp);
+		SERIAL_PRINTF("%s: nagle=%d\n", peer->name, !tcp_nagle_disabled(peer->tcp));
+	}
 
 	// start fighting
 	return peer->cb_established? peer->cb_established(peer): ERR_OK;
@@ -312,6 +330,7 @@ int tcp_service_install (const char* name, tcpservice_t* s, int port)
 
 	tcp_accept(s->tcp, tcp_service_incoming_peer);
 	tcp_arg(s->tcp, s);
+
 	console_printf("%s: server accepting connections on port %d\n", name, port);
 	return 0;
 }
@@ -334,6 +353,8 @@ tcpservice_t* tcp_service_init_new_peer_sendbuf_size (char* sendbuf, size_t send
 	peer->cb_cleanup = NULL;
 
 	peer->bools.verbose_error = 1;
+	peer->bools.nagle = 1;
+	peer->poll_ms = -1;
 
 	return peer;
 }

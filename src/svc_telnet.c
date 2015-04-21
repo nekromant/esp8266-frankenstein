@@ -97,11 +97,13 @@ static tcpservice_t* telnet_new_peer (tcpservice_t* listener)
 	peer->cb_closing = telnet_closing;
 	peer->cb_recv = telnet_recv;
 	peer->cb_poll = telnet_poll;
+	tcp_service_set_poll_ms(peer, 1000);
 	
 	const char* tmp = env_get("telnet-drop");
 	state(peer)->state = STATE_NORMAL;
 	state(peer)->idle = 0;
 	state(peer)->max_idle = tmp? atoi(tmp): 60;
+	
 
 	return peer;
 }

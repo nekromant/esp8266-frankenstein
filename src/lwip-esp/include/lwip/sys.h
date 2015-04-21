@@ -229,8 +229,8 @@ u32_t sys_jiffies(void);
 
 /** Returns the current time in milliseconds,
  * may be the same as sys_jiffies or at least based on it. */
-//u32_t sys_now(void) ;
-#define sys_now() (NOW())
+//u32_t sys_now(void);
+#define sys_now() (_sys_now) // updated every short time in sys_check_timeouts() called by espressif's blobs
 
 /* Critical Region Protection */
 /* These functions must be implemented in the sys_arch.c file.

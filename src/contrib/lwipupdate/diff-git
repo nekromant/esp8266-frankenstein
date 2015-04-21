@@ -27,7 +27,7 @@ else
 	git clone git://git.savannah.nongnu.org/lwip.git $lwip
 fi
 
-(cd $lwip && git checkout -f $v && diff -ruw src/ $dn/../../lwip-$s/) | grep -v '^Only in' > patch-$s.diff
+(cd $lwip && git checkout -f $v && diff -ruw src/ $dn/../../lwip-$s/) | grep -v '^Only in' > patch-lwip-$s.diff
 
 echo ""
 echo "just created 'patch-$s.diff' for lwip commit $v"

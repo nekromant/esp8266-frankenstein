@@ -109,22 +109,6 @@ tcp_timer_needed(void)
     sys_timeout(TCP_TMR_INTERVAL, tcpip_tcp_timer, NULL);
   }
 }
-
-/**
- * Timer callback function that calls tcp_tmr() and reschedules itself. ESPRESSIF
- *
- * @param arg unused argument
- */
-
-static void 
-tcp_timer_coarse(void *arg)
-{
-  LWIP_UNUSED_ARG(arg);
-  LWIP_DEBUGF(TIMERS_DEBUG, ("tcpip: tcp_tmr()\n"));
-  tcp_tmr();
-  sys_timeout(TCP_TMR_INTERVAL, tcp_timer_coarse, NULL);
-}
-
 #endif /* LWIP_TCP */
 
 #if IP_REASSEMBLY
@@ -319,11 +303,6 @@ void sys_timeouts_init(void)
 #endif /* LWIP_IPV6_MLD */
 #endif /* LWIP_IPV6 */
 
-#if LWIP_TCP // espressif
-  //sys_timeout(TCP_TMR_INTERVAL, tcpip_tcp_timer, NULL);
-  sys_timeout(TCP_TMR_INTERVAL, tcp_timer_coarse, NULL);
-#endif
-
 #if NO_SYS
   /* Initialise timestamp for sys_check_timeouts */
   timeouts_last_time = sys_now();
@@ -446,16 +425,17 @@ sys_untimeout(sys_timeout_handler handler, void *arg)
 
 #if NO_SYS
 
-extern uint8 timer2_ms_flag; // espressif
 /** Handle timeouts for NO_SYS==1 (i.e. without using
  * tcpip_thread/sys_timeouts_mbox_fetch(). Uses sys_now() to call timeout
  * handler functions when timeouts expire.
  *
  * Must be called periodically from your main loop.
  */
+typeof(_sys_now) _sys_now; // espressif
 void
 sys_check_timeouts(void)
 {
+  _sys_now = NOW() / ((CPU_CLK_FREQ / 1000) >> (timer2_ms_flag? 8: 4)); // espressif
   if (next_timeout) {
     struct sys_timeo *tmptimeout;
     u32_t diff;
@@ -466,13 +446,7 @@ sys_check_timeouts(void)
 
     now = sys_now();
     /* this cares for wraparounds */
-    //orig: diff = now - timeouts_last_time;
-    //XXX make a proper espressif NOW() giving milliseconds
-    // and restore orig code above
-    if (timer2_ms_flag == 0)
-        diff = (now - timeouts_last_time)/((CPU_CLK_FREQ>>4)/1000);
-    else
-        diff = (now - timeouts_last_time)/((CPU_CLK_FREQ>>8)/1000);
+    diff = now - timeouts_last_time;
     do
     {
 #if PBUF_POOL_FREE_OOSEQ

@@ -170,7 +170,6 @@ extern ip_addr_t current_iphdr_dest;
 
 #define ip_init() /* Compatibility define, not init needed. */
 struct netif *ip_route(ip_addr_t *dest);
-
 err_t ip_input(struct pbuf *p, struct netif *inp);
 err_t ip_output(struct pbuf *p, ip_addr_t *src, ip_addr_t *dest,
        u8_t ttl, u8_t tos, u8_t proto);
