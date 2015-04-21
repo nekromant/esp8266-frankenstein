@@ -22,9 +22,9 @@
 #include "env.h"
 #include "main.h"
 
-// default log2(buffer size) for a telnet client
-// tried 2KB but too small for large help string
-#define TELNET_SEND_BUFFER_SIZE			3072
+//XXX something has to be done with cmd-help-like cases
+// which want to send a big buffer at once
+#define TELNET_SEND_BUFFER_SIZE			3500
 
 ///////////////////////////////////////////////////////////
 
