@@ -159,14 +159,8 @@ struct link_callbacks {
   void (*send_config)(ppp_pcb *pcb, void *ctx, u32_t accm, int pcomp, int accomp);
   /* confire the receive-side characteristics of the PPP interface */
   void (*recv_config)(ppp_pcb *pcb, void *ctx, u32_t accm, int pcomp, int accomp);
-#if VJ_SUPPORT
-  /* configure TCP header compression */
-  void (*vj_config)(ppp_pcb *pcb, void *ctx, int vjcomp, int cidcomp, int maxcid);
-#endif /* VJ_SUPPORT */
   /* Get and set parameters for the given connection. */
   err_t (*ioctl)(ppp_pcb *pcb, void *ctx, int cmd, void *arg);
-  /* Pass the processed input packet to the appropriate handler. */
-  err_t (*netif_input)(ppp_pcb *pcb, void *ctx, struct pbuf *p, u16_t protocol);
 };
 
 /*
@@ -277,10 +271,10 @@ extern int       maxoctets_timeout;  /* Timeout for check of octets limit */
 #define PPP_OCTETS_DIRECTION_MAXSESSION 4
 #endif
 
-/* Data input is only used by CCP and ECP, which are not supported at this time,
- * remove this entry from struct protent to save some flash
+/* Data input may be used by CCP and ECP, remove this entry
+ * from struct protent to save some flash
  */
-#define PPP_DATAINPUT (CCP_SUPPORT || ECP_SUPPORT)
+#define PPP_DATAINPUT 0
 
 /*
  * The following struct gives the addresses of procedures to call
@@ -432,7 +426,7 @@ struct pbuf *ppp_singlebuf(struct pbuf *p);
  */
 
 /* function called by all PPP subsystems to send packets */
-int ppp_write(ppp_pcb *pcb, struct pbuf *p);
+err_t ppp_write(ppp_pcb *pcb, struct pbuf *p);
 
 /* functions called by auth.c link_terminated() */
 void ppp_link_terminated(ppp_pcb *pcb);
@@ -458,6 +452,7 @@ int sifvjcomp(ppp_pcb *pcb, int vjcomp, int cidcomp, int maxcid);
 #endif /* VJ_SUPPORT */
 int sifup(ppp_pcb *pcb);
 int sifdown (ppp_pcb *pcb);
+u32_t get_mask(u32_t addr);
 #endif /* PPP_IPV4_SUPPORT */
 
 #if PPP_IPV6_SUPPORT
@@ -473,9 +468,15 @@ void netif_set_mtu(ppp_pcb *pcb, int mtu);
 int netif_get_mtu(ppp_pcb *pcb);
 
 #if CCP_SUPPORT
+#if 0 /* unused */
 int ccp_test(ppp_pcb *pcb, u_char *opt_ptr, int opt_len, int for_transmit);
-void ccp_flags_set(ppp_pcb *pcb, int isopen, int isup);
+#endif /* unused */
+void ccp_set(ppp_pcb *pcb, u8_t isopen, u8_t isup, u8_t receive_method, u8_t transmit_method);
+void ccp_reset_comp(ppp_pcb *pcb);
+void ccp_reset_decomp(ppp_pcb *pcb);
+#if 0 /* unused */
 int ccp_fatal_error(ppp_pcb *pcb);
+#endif /* unused */
 #endif /* CCP_SUPPORT */
 
 #if PPP_IDLETIMELIMIT
@@ -485,8 +486,6 @@ int get_idle_time(ppp_pcb *pcb, struct ppp_idle *ip);
 #if DEMAND_SUPPORT
 int get_loop_output(void);
 #endif /* DEMAND_SUPPORT */
-
-u32_t get_mask(u32_t addr);
 
 /* Optional protocol names list, to make our messages a little more informative. */
 #if PPP_PROTOCOLNAME

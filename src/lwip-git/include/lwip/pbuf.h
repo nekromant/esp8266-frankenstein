@@ -62,7 +62,7 @@ typedef enum {
   PBUF_LINK,
   PBUF_RAW_TX,
   PBUF_RAW
-#if V14 // espressif
+#ifdef EBUF_LWIP // espressif
   = PBUF_RAW_TX	// EP_OFFSET is set into PBUF_LINK_ENCAPSULATION_HLEN handled by PBUF_RAW_TX called PBUF_RAW in v1.4
 #endif
 } pbuf_layer;
@@ -121,7 +121,9 @@ struct pbuf {
    */
   u16_t ref;
   
+#if EBLOB // espressif
   void * eb; // espressif: add a pointer for esf_buf
+#endif
 };
 
 #if LWIP_SUPPORT_CUSTOM_PBUF

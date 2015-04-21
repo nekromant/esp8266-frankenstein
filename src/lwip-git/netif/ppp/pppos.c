@@ -45,7 +45,7 @@
 #include "lwip/tcpip.h"
 #include "lwip/api.h"
 #include "lwip/sio.h"
-#include "lwip/ip.h" /* for ip_input() */
+#include "lwip/ip4.h" /* for ip4_input() */
 
 #include "netif/ppp/ppp_impl.h"
 #include "netif/ppp/pppos.h"
@@ -64,10 +64,6 @@ static err_t pppos_destroy(ppp_pcb *ppp, void *ctx);
 static void pppos_send_config(ppp_pcb *ppp, void *ctx, u32_t accm, int pcomp, int accomp);
 static void pppos_recv_config(ppp_pcb *ppp, void *ctx, u32_t accm, int pcomp, int accomp);
 static err_t pppos_ioctl(ppp_pcb *pcb, void *ctx, int cmd, void *arg);
-#if VJ_SUPPORT
-static void pppos_vjc_config(ppp_pcb *ppp, void *ctx, int vjcomp, int cidcomp, int maxcid);
-static err_t pppos_netif_input(ppp_pcb *ppp, void *ctx, struct pbuf *p, u16_t protocol);
-#endif /* VJ_SUPPORT */
 
 /* Prototypes for procedures local to this file. */
 #if PPP_INPROC_IRQ_SAFE
@@ -90,15 +86,7 @@ static const struct link_callbacks pppos_callbacks = {
   pppos_netif_output,
   pppos_send_config,
   pppos_recv_config,
-#if VJ_SUPPORT
-  pppos_vjc_config,
-#endif /* VJ_SUPPORT */
-  pppos_ioctl,
-#if VJ_SUPPORT
-  pppos_netif_input
-#else /* VJ_SUPPORT */
-  NULL
-#endif /* VJ_SUPPORT */
+  pppos_ioctl
 };
 
 /* PPP's Asynchronous-Control-Character-Map.  The mask array is used
@@ -216,6 +204,7 @@ pppos_write(ppp_pcb *ppp, void *ctx, struct pbuf *p)
   u16_t n;
   u16_t fcs_out;
   err_t err;
+  LWIP_UNUSED_ARG(ppp);
 
   /* Grab an output buffer. */
   nb = pbuf_alloc(PBUF_RAW, 0, PBUF_POOL);
@@ -261,33 +250,7 @@ pppos_netif_output(ppp_pcb *ppp, void *ctx, struct pbuf *pb, u16_t protocol)
   struct pbuf *nb, *p;
   u16_t fcs_out;
   err_t err;
-
-#if VJ_SUPPORT
-  /*
-   * Attempt Van Jacobson header compression if VJ is configured and
-   * this is an IP packet.
-   */
-  if (protocol == PPP_IP && pppos->vj_enabled) {
-    switch (vj_compress_tcp(&pppos->vj_comp, pb)) {
-      case TYPE_IP:
-        /* No change...
-           protocol = PPP_IP_PROTOCOL; */
-        break;
-      case TYPE_COMPRESSED_TCP:
-        protocol = PPP_VJC_COMP;
-        break;
-      case TYPE_UNCOMPRESSED_TCP:
-        protocol = PPP_VJC_UNCOMP;
-        break;
-      default:
-        PPPDEBUG(LOG_WARNING, ("pppos_netif_output[%d]: bad IP packet\n", ppp->netif->num));
-        LINK_STATS_INC(link.proterr);
-        LINK_STATS_INC(link.drop);
-        snmp_inc_ifoutdiscards(ppp->netif);
-        return ERR_VAL;
-    }
-  }
-#endif /* VJ_SUPPORT */
+  LWIP_UNUSED_ARG(ppp);
 
   /* Grab an output buffer. */
   nb = pbuf_alloc(PBUF_RAW, 0, PBUF_POOL);
@@ -350,10 +313,6 @@ pppos_connect(ppp_pcb *ppp, void *ctx)
   /* reset PPPoS control block to its initial state */
   memset(&pppos->last_xmit, 0, sizeof(pppos_pcb) - ( (char*)&((pppos_pcb*)0)->last_xmit - (char*)0 ) );
 
-#if PPP_IPV4_SUPPORT && VJ_SUPPORT
-  vj_compress_init(&pppos->vj_comp);
-#endif /* PPP_IPV4_SUPPORT && VJ_SUPPORT */
-
   /*
    * Default the in and out accm so that escape and flag characters
    * are always escaped.
@@ -410,11 +369,6 @@ pppos_listen(ppp_pcb *ppp, void *ctx, struct ppp_addrs *addrs)
   ipcp_wo->dnsaddr[0] = ip4_addr_get_u32(&addrs->dns1);
   ipcp_wo->dnsaddr[1] = ip4_addr_get_u32(&addrs->dns2);
 #endif /* LWIP_DNS */
-
-#if VJ_SUPPORT
-  vj_compress_init(&pppos->vj_comp);
-#endif /* VJ_SUPPORT */
-
 #else /* PPP_IPV4_SUPPORT */
   LWIP_UNUSED_ARG(addrs);
 #endif /* PPP_IPV4_SUPPORT */
@@ -615,7 +569,7 @@ pppos_input(ppp_pcb *ppp, u8_t *s, int l)
           pppos->in_tail = NULL;
 #if IP_FORWARD || LWIP_IPV6_FORWARD
           /* hide the room for Ethernet forwarding header */
-          pbuf_header(inp, -(s16_t)PBUF_LINK_HLEN);
+          pbuf_header(inp, -(s16_t)(PBUF_LINK_ENCAPSULATION_HLEN + PBUF_LINK_HLEN));
 #endif /* IP_FORWARD || LWIP_IPV6_FORWARD */
 #if PPP_INPROC_IRQ_SAFE
           if(tcpip_callback_with_block(pppos_input_callback, inp, 0) != ERR_OK) {
@@ -718,12 +672,12 @@ pppos_input(ppp_pcb *ppp, u8_t *s, int l)
             /* If we haven't started a packet, we need a packet header. */
             pbuf_alloc_len = 0;
 #if IP_FORWARD || LWIP_IPV6_FORWARD
-            /* If IP forwarding is enabled we are reserving PBUF_LINK_HLEN bytes so
-             * the packet is being allocated with enough header space to be
-             * forwarded (to Ethernet for example).
+            /* If IP forwarding is enabled we are reserving PBUF_LINK_ENCAPSULATION_HLEN
+             * + PBUF_LINK_HLEN bytes so the packet is being allocated with enough header
+             * space to be forwarded (to Ethernet for example).
              */
             if (pppos->in_head == NULL) {
-              pbuf_alloc_len = PBUF_LINK_HLEN;
+              pbuf_alloc_len = PBUF_LINK_ENCAPSULATION_HLEN + PBUF_LINK_HLEN;
             }
 #endif /* IP_FORWARD || LWIP_IPV6_FORWARD */
             next_pbuf = pbuf_alloc(PBUF_RAW, pbuf_alloc_len, PBUF_POOL);
@@ -853,76 +807,6 @@ fail:
   return ERR_VAL;
 }
 
-#if VJ_SUPPORT
-static void
-pppos_vjc_config(ppp_pcb *ppp, void *ctx, int vjcomp, int cidcomp, int maxcid)
-{
-  pppos_pcb *pppos = (pppos_pcb *)ctx;
-#if !PPP_DEBUG
-  LWIP_UNUSED_ARG(ppp);
-#endif /* !PPP_DEBUG */
-
-  pppos->vj_enabled = vjcomp;
-  pppos->vj_comp.compressSlot = cidcomp;
-  pppos->vj_comp.maxSlotIndex = maxcid;
-  PPPDEBUG(LOG_INFO, ("pppos_vjc_config[%d]: VJ compress enable=%d slot=%d max slot=%d\n",
-            ppp->netif->num, vjcomp, cidcomp, maxcid));
-}
-
-static err_t
-pppos_netif_input(ppp_pcb *ppp, void *ctx, struct pbuf *p, u16_t protocol)
-{
-  int ret;
-  pppos_pcb *pppos = (pppos_pcb *)ctx;
-#if !PPP_DEBUG
-  LWIP_UNUSED_ARG(ppp);
-#endif /* !PPP_DEBUG */
-
-  switch(protocol) {
-    case PPP_VJC_COMP:      /* VJ compressed TCP */
-      if (!pppos->vj_enabled) {
-        break;
-      }
-      /*
-       * Clip off the VJ header and prepend the rebuilt TCP/IP header and
-       * pass the result to IP.
-       */
-      PPPDEBUG(LOG_INFO, ("pppos_vjc_comp[%d]: vj_comp in pbuf len=%d\n", ppp->netif->num, p->len));
-      ret = vj_uncompress_tcp(&p, &pppos->vj_comp);
-      if (ret >= 0) {
-        ip_input(p, pppos->ppp->netif);
-        return ERR_OK;
-      }
-      /* Something's wrong so drop it. */
-      PPPDEBUG(LOG_WARNING, ("pppos_vjc_comp[%d]: Dropping VJ compressed\n", ppp->netif->num));
-      break;
-
-    case PPP_VJC_UNCOMP:    /* VJ uncompressed TCP */
-      if (!pppos->vj_enabled) {
-        break;
-      }
-      /*
-       * Process the TCP/IP header for VJ header compression and then pass
-       * the packet to IP.
-       */
-      PPPDEBUG(LOG_INFO, ("pppos_vjc_uncomp[%d]: vj_un in pbuf len=%d\n", ppp->netif->num, p->len));
-      ret = vj_uncompress_uncomp(p, &pppos->vj_comp);
-      if (ret >= 0) {
-        ip_input(p, pppos->ppp->netif);
-        return ERR_OK;
-      }
-      /* Something's wrong so drop it. */
-      PPPDEBUG(LOG_WARNING, ("pppos_vjc_uncomp[%d]: Dropping VJ uncompressed\n", ppp->netif->num));
-      break;
-
-    /* Pass the packet to other handlers */
-    default: ;
-  }
-
-  return ERR_VAL;
-}
-#endif /* VJ_SUPPORT */
-
 /*
  * Drop the input packet.
  */
@@ -953,7 +837,7 @@ pppos_input_drop(pppos_pcb *pppos)
   }
   pppos_input_free_current_packet(pppos);
 #if VJ_SUPPORT
-  vj_uncompress_err(&pppos->vj_comp);
+  vj_uncompress_err(&pppos->ppp->vj_comp);
 #endif /* VJ_SUPPORT */
 
   LINK_STATS_INC(link.drop);

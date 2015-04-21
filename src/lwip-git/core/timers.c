@@ -111,6 +111,7 @@ tcp_timer_needed(void)
 }
 #endif /* LWIP_TCP */
 
+#if LWIP_IPV4
 #if IP_REASSEMBLY
 /**
  * Timer callback function that calls ip_reass_tmr() and reschedules itself.
@@ -206,6 +207,7 @@ igmp_timer(void *arg)
   sys_timeout(IGMP_TMR_INTERVAL, igmp_timer, NULL);
 }
 #endif /* LWIP_IGMP */
+#endif /* LWIP_IPV4 */
 
 #if LWIP_DNS
 /**
@@ -274,6 +276,7 @@ mld6_timer(void *arg)
 /** Initialize this module */
 void sys_timeouts_init(void)
 {
+#if LWIP_IPV4
 #if IP_REASSEMBLY
   sys_timeout(IP_TMR_INTERVAL, ip_reass_timer, NULL);
 #endif /* IP_REASSEMBLY */
@@ -290,6 +293,7 @@ void sys_timeouts_init(void)
 #if LWIP_IGMP
   sys_timeout(IGMP_TMR_INTERVAL, igmp_timer, NULL);
 #endif /* LWIP_IGMP */
+#endif /* LWIP_IPV4 */
 #if LWIP_DNS
   sys_timeout(DNS_TMR_INTERVAL, dns_timer, NULL);
 #endif /* LWIP_DNS */

@@ -18,7 +18,7 @@ CFLAGS+=-I$(abspath ./src/lwip-esp/include/ipv4/)
 endif
 
 ifeq ($(CONFIG_LWIP_GIT),y)
-CFLAGS+=-I$(abspath ./src/lwip-git/include/)
+CFLAGS+=-DLWIP_GIT=1 -I$(abspath ./src/lwip-git/include/)
 endif
 
 CFLAGS+=-D__ets__ \

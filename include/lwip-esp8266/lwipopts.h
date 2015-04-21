@@ -1618,15 +1618,31 @@ struct ip_info;	// defined in missing.h which should go to antares
 #define LWIP_DHCP_BOOTP_FILE 		0
 
 // for lwip-1.5:
+#ifdef LWIP_GIT // defined in Makefile
+// about that lwip commit that changes all ip_addr to ipX_addr:
+// all ip_addr names have been changed into ip4_addr or ip6_addr
+// AFAIK espressif blob CAN'T do ipv6, we need sources
+// (maybe github/kadamski/esp-lwip would help?)
+// so these defines below are for lwip-app/
+// XXX change these source to work with ip4_addr instead of ip_addr
+#define ip_addr				ip4_addr
+#define ip_addr_t			ip4_addr_t
+#else // !LWIP_GIT
+// for source compatibility after the change above is made,
+// these defines would work for old lwip-esp/ and changed lwip-app/
+#define ip4_addr			ip_addr
+#define ip4_addr_t			ip_addr_t
+#endif // !LWIP_GIT
 
 extern unsigned char timer2_ms_flag;
 extern int _sys_now;
+
+#define EBLOB				1	// structure compatibility with v1.4
+
+#define LWIP_IPV4			1
 #define TCP_KEEPIDLE_DEFAULT		30000UL	// orig: 7200000UL
 #define TCP_KEEPINTVL_DEFAULT		10000UL	// orig: 75000UL
 #define TCP_KEEPCNT_DEFAULT		3U	// orig: 9U
-
-#define V14				1	// structure compatibility with v1.4
-
 #define PBUF_LINK_ENCAPSULATION_HLEN	EP_OFFSET	// only used in lwip-git
 #define LWIP_PERF			0
 #define PBUF_POOL_FREE_OOSEQ		TCP_QUEUE_OOSEQ

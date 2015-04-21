@@ -136,7 +136,7 @@ pbuf_free_ooseq(void)
 
 #if !NO_SYS
 /**
- * Just a callback function for tcpip_timeout() that calls pbuf_free_ooseq().
+ * Just a callback function for tcpip_callback() that calls pbuf_free_ooseq().
  */
 static void
 pbuf_free_ooseq_callback(void *arg)
@@ -228,12 +228,12 @@ pbuf_alloc(pbuf_layer layer, u16_t length, pbuf_type type)
     /* add room for encapsulating link layer headers (e.g. 802.11) */
     offset = PBUF_LINK_ENCAPSULATION_HLEN;
     break;
-#if !V14 // espressif: PBUF_RAW is PBUF_RAW_TX (XXX improve?)
+#ifndef EBUF_LWIP // espressif: PBUF_RAW is PBUF_RAW_TX (XXX improve?)
   case PBUF_RAW:
     /* no offset (e.g. RX buffers or chain successors) */
     offset = 0;
     break;
-#endif // !V14
+#endif // !EBUF_LWIP
   default:
     LWIP_ASSERT("pbuf_alloc: bad pbuf layer", 0);
     return NULL;
@@ -380,15 +380,19 @@ pbuf_alloced_custom(pbuf_layer l, u16_t length, pbuf_type type, struct pbuf_cust
   switch (l) {
   case PBUF_TRANSPORT:
     /* add room for transport (often TCP) layer header */
-    offset = PBUF_LINK_HLEN + PBUF_IP_HLEN + PBUF_TRANSPORT_HLEN;
+    offset = PBUF_LINK_ENCAPSULATION_HLEN + PBUF_LINK_HLEN + PBUF_IP_HLEN + PBUF_TRANSPORT_HLEN;
     break;
   case PBUF_IP:
     /* add room for IP layer header */
-    offset = PBUF_LINK_HLEN + PBUF_IP_HLEN;
+    offset = PBUF_LINK_ENCAPSULATION_HLEN + PBUF_LINK_HLEN + PBUF_IP_HLEN;
     break;
   case PBUF_LINK:
     /* add room for link layer header */
-    offset = PBUF_LINK_HLEN;
+    offset = PBUF_LINK_ENCAPSULATION_HLEN + PBUF_LINK_HLEN;
+    break;
+  case PBUF_RAW_TX:
+    /* add room for encapsulating link layer headers (e.g. 802.11) */
+    offset = PBUF_LINK_ENCAPSULATION_HLEN;
     break;
   case PBUF_RAW:
     offset = 0;

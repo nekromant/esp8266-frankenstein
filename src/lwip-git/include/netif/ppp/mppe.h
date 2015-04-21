@@ -39,6 +39,12 @@
 #ifndef MPPE_H
 #define MPPE_H
 
+#if LWIP_INCLUDED_POLARSSL_ARC4
+#include "netif/ppp/polarssl/arc4.h"
+#else
+#include "polarssl/arc4.h"
+#endif
+
 #define MPPE_PAD		4	/* MPPE growth per frame */
 #define MPPE_MAX_KEY_LEN	16	/* largest key length (128-bit) */
 
@@ -126,19 +132,47 @@
 	    opts |= MPPE_OPT_UNKNOWN;		\
     } while (/* CONSTCOND */ 0)
 
-void *mppe_alloc(unsigned char *options, int optlen);
-void mppe_free(void *arg);
-int mppe_comp_init(void *arg, unsigned char *options, int optlen, int unit,
-	       int hdrlen, int debug);
-void mppe_comp_reset(void *arg);
-int mppe_compress(void *arg, unsigned char *ibuf, unsigned char *obuf,
-	      int isize, int osize);
-int mppe_decomp_init(void *arg, unsigned char *options, int optlen, int unit,
-		 int hdrlen, int mru, int debug);
-void mppe_decomp_reset(void *arg);
-int mppe_decompress(void *arg, unsigned char *ibuf, int isize, unsigned char *obuf,
-		int osize);
-void mppe_incomp(void *arg, unsigned char *ibuf, int icnt);
+/* Shared MPPE padding between MSCHAP and MPPE */
+#define SHA1_PAD_SIZE 40
+
+static const u8_t mppe_sha1_pad1[SHA1_PAD_SIZE] = {
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+};
+static const u8_t mppe_sha1_pad2[SHA1_PAD_SIZE] = {
+  0xf2, 0xf2, 0xf2, 0xf2, 0xf2, 0xf2, 0xf2, 0xf2, 0xf2, 0xf2,
+  0xf2, 0xf2, 0xf2, 0xf2, 0xf2, 0xf2, 0xf2, 0xf2, 0xf2, 0xf2,
+  0xf2, 0xf2, 0xf2, 0xf2, 0xf2, 0xf2, 0xf2, 0xf2, 0xf2, 0xf2,
+  0xf2, 0xf2, 0xf2, 0xf2, 0xf2, 0xf2, 0xf2, 0xf2, 0xf2, 0xf2
+};
+
+/*
+ * State for an MPPE (de)compressor.
+ */
+typedef struct ppp_mppe_state {
+	arc4_context arc4;
+	u8_t master_key[MPPE_MAX_KEY_LEN];
+	u8_t session_key[MPPE_MAX_KEY_LEN];
+	u8_t keylen;                /* key length in bytes */
+	/* NB: 128-bit == 16, 40-bit == 8!
+	 * If we want to support 56-bit, the unit has to change to bits
+	 */
+	u8_t bits;                  /* MPPE control bits */
+	u16_t ccount;               /* 12-bit coherency count (seqno)  */
+	u16_t sanity_errors;        /* take down LCP if too many */
+	unsigned int stateful  :1;  /* stateful mode flag */
+	unsigned int discard   :1;  /* stateful mode packet loss flag */
+	unsigned int           :6;  /* 6 bit of padding to round out to 8 bits */
+} ppp_mppe_state;
+
+void mppe_set_key(ppp_pcb *pcb, ppp_mppe_state *state, u8_t *key);
+void mppe_init(ppp_pcb *pcb, ppp_mppe_state *state, u8_t options);
+void mppe_comp_reset(ppp_pcb *pcb, ppp_mppe_state *state);
+err_t mppe_compress(ppp_pcb *pcb, ppp_mppe_state *state, struct pbuf **pb, u16_t protocol);
+void mppe_decomp_reset(ppp_pcb *pcb, ppp_mppe_state *state);
+err_t mppe_decompress(ppp_pcb *pcb, ppp_mppe_state *state, struct pbuf **pb);
 
 #endif /* MPPE_H */
 #endif /* PPP_SUPPORT && MPPE_SUPPORT */

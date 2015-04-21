@@ -85,6 +85,17 @@
 #define PPP_STATS_SUPPORT   0
 #endif
 
+#ifndef DEFLATE_SUPPORT
+#define DEFLATE_SUPPORT     0
+#endif
+
+#ifndef BSDCOMPRESS_SUPPORT
+#define BSDCOMPRESS_SUPPORT 0
+#endif
+
+#ifndef PREDICTOR_SUPPORT
+#define PREDICTOR_SUPPORT   0
+#endif
 
 /*************************
 *** PUBLIC DEFINITIONS ***
@@ -156,6 +167,9 @@ typedef unsigned char  u_char;
 #if CCP_SUPPORT
 #include "ccp.h"
 #endif /* CCP_SUPPORT */
+#if MPPE_SUPPORT
+#include "mppe.h"
+#endif /* MPPE_SUPPORT */
 #if PPP_IPV4_SUPPORT
 #include "ipcp.h"
 #endif /* PPP_IPV4_SUPPORT */
@@ -233,12 +247,16 @@ typedef struct ppp_settings_s {
   unsigned int lcp_echo_adaptive    :1;      /* request echo only if the link was idle */
 #else
   unsigned int                      :1;      /* 1 bit of padding */
-#endif
+#endif /* PPP_LCP_ADAPTIVE */
 #if MPPE_SUPPORT
+  unsigned int require_mppe         :1;      /* Require MPPE (Microsoft Point to Point Encryption) */
+  unsigned int refuse_mppe_40       :1;      /* Allow MPPE 40-bit mode? */
+  unsigned int refuse_mppe_128      :1;      /* Allow MPPE 128-bit mode? */
   unsigned int refuse_mppe_stateful :1;      /* Allow MPPE stateful mode? */
 #else /* MPPE_SUPPORT */
-  unsigned int                      :1;      /* 1 bit of padding */
+  unsigned int                      :4;      /* 2 bit of padding */
 #endif /* MPPE_SUPPORT */
+  unsigned int                      :5;      /* 7 bit of padding to round out to 24 bits */
 
   u16_t  listen_time;                 /* time to listen first (ms), waiting for peer to send LCP packet */
 
@@ -299,9 +317,9 @@ typedef struct ppp_settings_s {
 #if PPP_SERVER
 struct ppp_addrs {
 #if PPP_IPV4_SUPPORT
-  ip_addr_t our_ipaddr, his_ipaddr, netmask;
+  ip4_addr_t our_ipaddr, his_ipaddr, netmask;
 #if LWIP_DNS
-  ip_addr_t dns1, dns2;
+  ip4_addr_t dns1, dns2;
 #endif /* LWIP_DNS */
 #endif /* PPP_IPV4_SUPPORT */
 #if PPP_IPV6_SUPPORT
@@ -352,7 +370,24 @@ struct ppp_pcb_s {
   unsigned int                         :2; /* 2 bit of padding */
 #endif /* PPP_IPV6_SUPPORT */
   unsigned int lcp_echo_timer_running  :1; /* set if a timer is running */
-  unsigned int                         :2; /* 2 bits of padding to round out to 8 bits */
+#if VJ_SUPPORT
+  unsigned int vj_enabled              :1; /* Flag indicating VJ compression enabled. */
+#else /* VJ_SUPPORT */
+  unsigned int                         :1; /* 1 bit of padding */
+#endif /* VJ_SUPPORT */
+#if CCP_SUPPORT
+  unsigned int ccp_all_rejected        :1; /* we rejected all peer's options */
+  unsigned int ccp_is_open             :1; /* true when CCP is open (currently negotiating) */
+  unsigned int ccp_is_up               :1; /* true when CCP is up (ready to handle data packets) */
+#else /* CCP_SUPPORT */
+  unsigned int                         :3; /* 3 bits of padding */
+#endif /* CCP_SUPPORT */
+#if MPPE_SUPPORT
+  unsigned int mppe_keys_set           :1; /* Have the MPPE keys been set? */
+#else /* MPPE_SUPPORT */
+  unsigned int                         :1; /* 1 bit of padding */
+#endif /* MPPE_SUPPORT */
+  unsigned int                         :5; /* 5 bits of padding to round out to 16 bits */
 
 #if PPP_AUTH_SUPPORT
   /* auth data */
@@ -390,14 +425,23 @@ struct ppp_pcb_s {
   u8_t num_np_open;              /* Number of network protocols which we have opened. */
   u8_t num_np_up;                /* Number of network protocols which have come up. */
 
+#if VJ_SUPPORT
+  struct vjcompress vj_comp;     /* Van Jacobson compression header. */
+#endif /* VJ_SUPPORT */
+
 #if CCP_SUPPORT
   fsm ccp_fsm;                   /* CCP fsm structure */
   ccp_options ccp_wantoptions;   /* what to request the peer to use */
   ccp_options ccp_gotoptions;    /* what the peer agreed to do */
   ccp_options ccp_allowoptions;  /* what we'll agree to do */
   ccp_options ccp_hisoptions;    /* what we agreed to do */
-  int ccp_localstate;            /* Local state (mainly for handling reset-reqs and reset-acks). */
-  int all_rejected;              /* we rejected all peer's options */
+  u8_t ccp_localstate;           /* Local state (mainly for handling reset-reqs and reset-acks). */
+  u8_t ccp_receive_method;       /* Method chosen on receive path */
+  u8_t ccp_transmit_method;      /* Method chosen on transmit path */
+#if MPPE_SUPPORT
+  ppp_mppe_state mppe_comp;      /* MPPE "compressor" structure */
+  ppp_mppe_state mppe_decomp;    /* MPPE "decompressor" structure */
+#endif /* MPPE_SUPPORT */
 #endif /* CCP_SUPPORT */
 
 #if PPP_IPV4_SUPPORT

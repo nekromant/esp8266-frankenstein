@@ -191,6 +191,12 @@
 #if PPP_SUPPORT && !PPP_IPV4_SUPPORT && !PPP_IPV6_SUPPORT
   #error "PPP_SUPPORT needs PPP_IPV4_SUPPORT and/or PPP_IPV6_SUPPORT turned on"
 #endif
+#if PPP_SUPPORT && PPP_IPV4_SUPPORT && !LWIP_IPV4
+  #error "PPP_IPV4_SUPPORT needs LWIP_IPV4 turned on"
+#endif
+#if PPP_SUPPORT && PPP_IPV6_SUPPORT && !LWIP_IPV6
+  #error "PPP_IPV6_SUPPORT needs LWIP_IPV6 turned on"
+#endif
 #if !LWIP_ETHERNET && (LWIP_ARP || PPPOE_SUPPORT)
   #error "LWIP_ETHERNET needs to be turned on for LWIP_ARP or PPPOE_SUPPORT"
 #endif
@@ -286,10 +292,10 @@
 #if TCP_SNDQUEUELOWAT >= TCP_SND_QUEUELEN
   #error "lwip_sanity_check: WARNING: TCP_SNDQUEUELOWAT must be less than TCP_SND_QUEUELEN. If you know what you are doing, define LWIP_DISABLE_TCP_SANITY_CHECKS to 1 to disable this error."
 #endif
-#if !MEMP_MEM_MALLOC && (PBUF_POOL_BUFSIZE <= (PBUF_LINK_HLEN + PBUF_IP_HLEN + PBUF_TRANSPORT_HLEN))
+#if !MEMP_MEM_MALLOC && (PBUF_POOL_BUFSIZE <= (PBUF_LINK_ENCAPSULATION_HLEN + PBUF_LINK_HLEN + PBUF_IP_HLEN + PBUF_TRANSPORT_HLEN))
   #error "lwip_sanity_check: WARNING: PBUF_POOL_BUFSIZE does not provide enough space for protocol headers. If you know what you are doing, define LWIP_DISABLE_TCP_SANITY_CHECKS to 1 to disable this error."
 #endif
-#if !MEMP_MEM_MALLOC && (TCP_WND > (PBUF_POOL_SIZE * (PBUF_POOL_BUFSIZE - (PBUF_LINK_HLEN + PBUF_IP_HLEN + PBUF_TRANSPORT_HLEN))))
+#if !MEMP_MEM_MALLOC && (TCP_WND > (PBUF_POOL_SIZE * (PBUF_POOL_BUFSIZE - (PBUF_LINK_ENCAPSULATION_HLEN + PBUF_LINK_HLEN + PBUF_IP_HLEN + PBUF_TRANSPORT_HLEN))))
   #error "lwip_sanity_check: WARNING: TCP_WND is larger than space provided by PBUF_POOL_SIZE * (PBUF_POOL_BUFSIZE - protocol headers). If you know what you are doing, define LWIP_DISABLE_TCP_SANITY_CHECKS to 1 to disable this error."
 #endif
 #if TCP_WND < TCP_MSS
@@ -313,10 +319,12 @@ lwip_init(void)
   memp_init();
   pbuf_init();
   netif_init();
+#if LWIP_IPV4
   ip_init();
 #if LWIP_ARP
   etharp_init();
 #endif /* LWIP_ARP */
+#endif /* LWIP_IPV4 */
 #if LWIP_RAW
   raw_init();
 #endif /* LWIP_RAW */
