@@ -82,8 +82,10 @@ typedef struct {
 #endif
 	char * prompt_str;                 // pointer to prompt string
 	char cmdline [_COMMAND_LINE_LEN];  // cmdline buffer
+	char *pcmdline;
 	int cmdlen;                        // last position in command line
 	int cursor;                        // input cursor
+	char *next;                        // If set, start parsing here ...
 	int (*execute) (int argc, const char * const * argv );            // ptr to 'execute' callback
 	const char ** (*get_completion) (int argc, const char * const * argv ); // ptr to 'completion' callback
 	void (*print) (const char *);                                     // ptr to 'print' callback
