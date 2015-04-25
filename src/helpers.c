@@ -40,6 +40,7 @@ static const char *ifacedsc[] = {
 static const char *sta_states[] = {
 	[STATION_IDLE]              = "Idle",
 	[STATION_CONNECTING]        = "Connecting",
+	[STATION_WRONG_PASSWORD]    = "Wrong Password",
 	[STATION_NO_AP_FOUND]       = "No AP Found",
 	[STATION_CONNECT_FAIL]      = "Connection Failed",
 	[STATION_GOT_IP]            = "Connected",

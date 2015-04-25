@@ -77,6 +77,29 @@ static  int do_hname(int argc, const char* const* argv)
 	return 0;
 }
 
+static int do_rtcdump(int argc, const char* const* argv)
+{
+  /* To minimise stack we just query 16 bytes at a type */
+  const int bytes = 768;
+  const int words_per_row = 4;
+  const int bytes_per_row = words_per_row * sizeof(uint32_t);
+  uint32_t rtc_values[words_per_row];
+  for (int row=0; row < bytes/bytes_per_row; row++) {
+    system_rtc_mem_read(row * words_per_row, rtc_values, bytes_per_row);
+    /* print address on start of line */
+    console_printf("%04x ", row*bytes_per_row);
+    for (int w=0; w < words_per_row; w++) {
+      console_printf("%08x ", rtc_values[w]);
+    }
+    const char *chars = (const char*)&rtc_values[0];
+    for (int c=0; c < bytes_per_row; c++) {
+      char ch = chars[c];
+      console_printf("%c", ch < 32 || ch > 95 ? '.' : ch);
+    }
+    console_printf("\n");
+  }
+	return 0;
+}
 
 CONSOLE_CMD(hname, -1, -1, 
 	    do_hname, NULL, NULL, 
@@ -114,3 +137,9 @@ CONSOLE_CMD(argtest, -1, -1,
 	    do_argtest, NULL, NULL, 
 	    "Print out argc/argv"
 );
+
+CONSOLE_CMD(rtcdump, -1, -1,
+	    do_rtcdump, NULL, NULL,
+	    "Dump content of RTC memory"
+);
+
