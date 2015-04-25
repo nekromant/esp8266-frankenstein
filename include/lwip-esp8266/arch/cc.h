@@ -102,7 +102,7 @@ extern u8_t memp_memory_UDP_PCB_base[];
 #if LWIP_TCP
 extern u8_t memp_memory_TCP_PCB_base[];
 extern u8_t memp_memory_TCP_PCB_LISTEN_base[];
-extern u8_t memp_memory_TCP_SEG_base[] SHMEM_ATTR;
+extern u8_t memp_memory_TCP_SEG_base[];
 #endif /* LWIP_TCP */
 
 #if (!NO_SYS || (NO_SYS && !NO_SYS_NO_TIMERS)) /* LWIP_TIMERS */

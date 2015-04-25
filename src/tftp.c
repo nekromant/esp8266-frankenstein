@@ -81,7 +81,7 @@ static void tftp_ack(struct tftp_server *ts, uint16_t pck, uint16_t port)
 
 static void udp_tftp_recv(void * arg, struct udp_pcb * upcb,
                                          struct pbuf * p,
-                                         struct ip_addr * addr,
+                                         const ip_addr_t * addr,
                                          u16_t port)
 {
 	struct tftp_server *ts = arg;

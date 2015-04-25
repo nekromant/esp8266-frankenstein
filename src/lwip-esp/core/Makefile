@@ -1,0 +1,17 @@
+subdirs-y+=ipv4
+objects-y+=def.o
+objects-y+=dhcp.o
+objects-y+=dns.o
+objects-y+=init.o
+objects-y+=mem.o
+objects-y+=memp.o
+objects-y+=netif.o
+objects-y+=pbuf.o
+objects-y+=raw.o
+objects-y+=stats.o
+objects-y+=sys.o
+objects-y+=tcp.o
+objects-y+=tcp_in.o
+objects-y+=tcp_out.o
+objects-y+=timers.o
+objects-y+=udp.o

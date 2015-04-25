@@ -1,3 +1,13 @@
+menu LWIP
+	choice
+	prompt "version"
+		config LWIP_ESP
+			bool "LWIP espressif sources (close to v1.4.0RC2)"
+		config LWIP_GIT
+			bool "LWIP (git-pre-1.5, experimental)"
+	endchoice
+endmenu
+
 menu Hacks
 
 config ESP8266_NEED_ESPCONN_INIT

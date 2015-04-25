@@ -198,7 +198,7 @@ void echotester (int sock)
 {
 	setcntl(sock, F_SETFL, O_NONBLOCK, "O_NONBLOCK");
 	
-	long long sent = 0, recvd = 0, recvdi = 0;
+	long long sent = 0, recvd = 0, recvdnow = 0;
 	int ptrsend = 0;
 	int ptrrecv = 0;
 	struct pollfd pollfd = { .fd = sock, .events = POLLIN | POLLOUT, };
@@ -239,14 +239,19 @@ void echotester (int sock)
 					for (i = 0; i < size; i++)
 						if (bufin[i + pr] != bufout[i + ptrrecv])
 						{
-							printf("%i\n", i);
+							printf("offset-diff @%Li @0x%Lx\n", i + recvd, i + recvd);
 							break;
 						}
+					int j = i > 16? i - 16: 0;
+					int k = i + 16 < size? i + 16: size - 1;
+					while (j++ < k)
+						printf("@%Lx:R%02x/S%02x ", j + recvd, bufin[j + pr], bufout[j + ptrrecv]);
+					printf("\n");
 					
 					exit(1);
 				}
 				recvd += size;
-				recvdi += size;
+				recvdnow += size;
 				ptrrecv = (ptrrecv + size) & (BUFLEN - 1);
 				ret -= size;
 				pr += size;
@@ -270,11 +275,11 @@ void echotester (int sock)
 		if (te.tv_sec - ti.tv_sec > 1)
 		{
 			printbw(te.tv_sec - tb.tv_sec, te.tv_usec - tb.tv_usec, recvd, "avg:");
-			printbw(te.tv_sec - ti.tv_sec, te.tv_usec - ti.tv_usec, recvdi, "now:");
+			printbw(te.tv_sec - ti.tv_sec, te.tv_usec - ti.tv_usec, recvdnow, "now:");
 			printsz(recvd, "size:");
 			printf("-----\r"); fflush(stdout);
 			ti = te;
-			recvdi = 0;
+			recvdnow = 0;
 		}
 	}
 
@@ -375,7 +380,15 @@ int main (int argc, char* argv[])
 	}
 	
 	for (i = 0; i < BUFLEN; i++)
+	{
+	#if 1
 		bufout[i] = random() >> 23;
+	#else
+		char c = i & 0x0f;
+		c += c > 9? 'a' - 10: '0';
+		bufout[i] = c;
+	#endif
+	}
 
 	int sock = my_socket();
 	if (server)

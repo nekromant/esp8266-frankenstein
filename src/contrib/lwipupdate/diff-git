@@ -1,0 +1,34 @@
+#!/bin/sh
+
+lwip=/tmp/lwip.git
+
+set -e
+#set -x
+
+dn="`cd \`dirname $0\`; pwd`"
+bn="`basename $0`"
+
+cd "$dn"
+vesp=`cat gitid-lwip-esp.txt`
+vgit=`cat gitid-lwip-git.txt`
+
+v=""
+test $bn = diff-esp && { v=$vesp; s=esp; }
+test $bn = diff-git -o $bn = diff-git-repatch && { v=$vgit; s=git; }
+
+if test -z "$v"; then
+	echo "must be instantiated as 'diff-esp' or 'diff-git'"
+	exit 1
+fi
+
+if test -d $lwip; then
+	(cd $lwip && git stash && git checkout master)
+else
+	git clone git://git.savannah.nongnu.org/lwip.git $lwip
+fi
+
+(cd $lwip && git checkout -f $v && diff -ruw src/ $dn/../../lwip-$s/) | grep -v '^Only in' > patch-lwip-$s.diff
+
+echo ""
+echo "just created 'patch-$s.diff' for lwip commit $v"
+echo ""

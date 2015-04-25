@@ -25,6 +25,17 @@ static microrl_t rl;
 static int console_locked = 0;
 static int passthrough = ENABLE_PASSTHROUGH_AT_BOOT;
 
+const char* loglevnam (int lev)
+{
+	switch (lev)
+	{
+	case LOG_ERR: return "ERR";
+	case LOG_WARN: return "WARN";
+	case LOG_NOTICE: return "notice";
+	default: return "dbg";
+	}
+}
+
 #if 0
 struct console {
 	char name[16];
@@ -166,8 +177,8 @@ err_too_many_args:
 
 const char ** completion(int argc, const char* const* argv)
 {
-	#define COMPL_MAX_RESULTS	3
-	#define COMPL_BUF		128
+	#define COMPL_MAX_RESULTS	15
+	#define COMPL_BUF		200
 	static const char* noroom = "(completion: not enough memory)";
 	static char complbuf [COMPL_BUF];
 	static const char* compl [COMPL_MAX_RESULTS + 1];
@@ -188,15 +199,20 @@ const char ** completion(int argc, const char* const* argv)
 		FOR_EACH_CMD(cmd)
 			if (strncasecmp(cmd->name, part, partlen) == 0)
 			{
-				if (i == COMPL_MAX_RESULTS - 2)
+				if (i == COMPL_MAX_RESULTS)
 					compl[i++] = noroom;
-				else if (i < COMPL_MAX_RESULTS - 2)
+				else if (i < COMPL_MAX_RESULTS)
 				{
 					const char* src = cmd->name + (i == 0 && ncompl > 1? partlen: 0);
 					size_t srcsize = strlen(src) + 1;
-					compl[i++] = complbuf + pos;
-					memcpy(complbuf + pos, src, srcsize);
-					pos += srcsize;
+					if (pos + srcsize <= COMPL_BUF)
+					{
+						compl[i++] = complbuf + pos;
+						memcpy(complbuf + pos, src, srcsize);
+						pos += srcsize;
+					}
+					else
+						compl[i++] = noroom;
 				}
 			}
 		compl[i] = NULL;

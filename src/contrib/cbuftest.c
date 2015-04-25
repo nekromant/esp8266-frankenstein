@@ -1,6 +1,6 @@
 
-// gcc -g -Os -Wall -Wextra -I../../include ../cbuf.c cbuftest.c -o cbuftest && ./cbuftest
-// gcc -g -O3 -Wall -Wextra -I../../include ../cbuf.c cbuftest.c -o cbuftest && ./cbuftest
+// gcc -g -Os -Wall -Wextra -DCBUFTEST -I../../include ../cbuf.c cbuftest.c -o cbuftest && ./cbuftest
+// gcc -g -O3 -Wall -Wextra -DCBUFTEST -I../../include ../cbuf.c cbuftest.c -o cbuftest && ./cbuftest
 
 #include <stdio.h>
 #include <assert.h>
@@ -11,12 +11,12 @@
 
 #define RFRSH	5	// refresh display
 
-#define SZlog2 15
+#define BSZ (1<<15)
 
 #define R(x)	((rand() % ((x) - 1)) + 1)
 
-char buf [1<<SZlog2];
-cbuf_t cb = CBUF_INIT(buf, SZlog2);
+char buf [BSZ];
+cbuf_t cb = CBUF_INIT(buf, BSZ);
 
 void info (cbuf_t* cb)
 {

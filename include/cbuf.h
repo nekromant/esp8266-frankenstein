@@ -2,7 +2,11 @@
 #define _CBUF_H_
 
 #include <stdlib.h>
+#ifndef CBUFTEST
 #include <c_types.h>
+#else // CBUFTEST
+#include <stdint.h>
+#endif // CBUFTEST
 
 typedef uint16_t cbsize_t;
 
@@ -19,7 +23,7 @@ typedef struct cbuf_s
 } cbuf_t;
 
 // GIVE log2() of desired size
-#define CBUF_INIT(userbuf,sizelog2)	{ .size = 1 << (sizelog2), .buf = (userbuf), .write = 0, .read = 0, .unread = 0, .empty = 1, .allread = 1, }
+#define CBUF_INIT(userbuf,usersize)	{ .size = usersize, .buf = (userbuf), .write = 0, .read = 0, .unread = 0, .empty = 1, .allread = 1, }
 
 //        read              unread                      write
 //  ________|_________________|___________________________|_________________
@@ -48,7 +52,7 @@ typedef struct cbuf_s
 // return available space for write
 size_t cbuf_write_available (cbuf_t* cb);
 
-void cbuf_init (cbuf_t* cb, char* userbuf, char sizelog2);
+void cbuf_init (cbuf_t* cb, char* userbuf, size_t size);
 
 ///////////////////////////////////////////////////////////
 // functions with copy

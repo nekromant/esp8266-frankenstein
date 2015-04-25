@@ -6,6 +6,7 @@
 #include "espconn.h"
 #include "helpers.h"
 #include "iwconnect.h"
+#include "main.h"
 
 static int conntimes = 0;
 static /*volatile*/ os_timer_t conn_checker;

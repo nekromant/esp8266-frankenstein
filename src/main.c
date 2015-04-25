@@ -18,6 +18,9 @@
 #include <lwip/netif.h>
 #include <lwip/app/dhcpserver.h>
 
+#include "main.h"
+#include "missing.h"
+
 #include "env.h"
 #if defined(CONFIG_SERVICE_TELNET)
 #include "svc_telnet.h"

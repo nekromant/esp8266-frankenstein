@@ -45,8 +45,11 @@ struct console_cmd {
 
 extern int log_level;
 #define set_log_level(lvl)	do { log_level = (lvl); } while (0)
-#define LOG(level,b...)		do { if ((level) <= LOG_LEVEL_MAX && (level) <= log_level) { console_printf("L%d: ", level); console_printf(b); console_printf(" (%s:%d)\n", __FILE__, __LINE__); } } while (0)
-#define LOGSERIAL(level,b...)	do { if ((level) <= LOG_LEVEL_MAX && (level) <= log_level) { SERIAL_PRINTF("L%d: ", level); SERIAL_PRINTF(b); SERIAL_PRINTF(" (%s:%d)\n", __FILE__, __LINE__); } } while (0)
+#define __BASEFILE__		(strrchr(__FILE__, '/')?:__FILE__)
+#define LOGN(level,b...)	do { if ((level) <= LOG_LEVEL_MAX && (level) <= log_level) { console_printf("%s: ", loglevnam(level)); console_printf(b); console_printf("\n"); } } while (0)
+#define LOGSERIALN(level,b...)	do { if ((level) <= LOG_LEVEL_MAX && (level) <= log_level) {  SERIAL_PRINTF("%s: ", loglevnam(level));  SERIAL_PRINTF(b);  SERIAL_PRINTF("\n"); } } while (0)
+#define LOG(level,b...)		do { if ((level) <= LOG_LEVEL_MAX && (level) <= log_level) { console_printf("%s: ", loglevnam(level)); console_printf(b); console_printf(" (%s:%d)\n", __BASEFILE__, __LINE__); } } while (0)
+#define LOGSERIAL(level,b...)	do { if ((level) <= LOG_LEVEL_MAX && (level) <= log_level) {  SERIAL_PRINTF("%s: ", loglevnam(level));  SERIAL_PRINTF(b);  SERIAL_PRINTF(" (%s:%d)\n", __BASEFILE__, __LINE__); } } while (0)
 
 typedef int (*printf_f)(const char *fmt, ...) __attribute__ ((format (printf, 1, 2)));
 
@@ -67,6 +70,7 @@ void console_exec(char *str);
 
 void enable_passthrough(int v);
 
+const char* loglevnam (int lev);
 
 
 #endif

@@ -1,0 +1,13 @@
+#!/bin/sh
+
+. "`dirname $0`/diff-git"
+
+cd $lwip/src
+git checkout master
+git branch -d repatch-esp || true
+git branch repatch-esp
+git checkout repatch-esp
+patch -p1 < "$dn/patch-lwip-git.diff" || true
+echo ""
+echo "please review the above patch in '$lwip/' branch repatch-esp"
+echo ""

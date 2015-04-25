@@ -20,10 +20,11 @@
 #include "tcpservice.h"
 #include "microrl.h"
 #include "env.h"
+#include "main.h"
 
-// default log2(buffer size) for a telnet client
-// tried 11/2KB but too small for large help string
-#define TELNET_SEND_BUFFER_SIZE_LOG2_DEFAULT	12 // 12: 4KB
+//XXX something has to be done with cmd-help-like cases
+// which want to send a big buffer at once
+#define TELNET_SEND_BUFFER_SIZE			3500
 
 ///////////////////////////////////////////////////////////
 
@@ -44,7 +45,7 @@ static tcpservice_t* telnet_new_peer (tcpservice_t* s);
 static err_t telnet_established (tcpservice_t* s);
 static void telnet_closing (tcpservice_t* s);
 static size_t telnet_recv (tcpservice_t* s, const char* data, size_t len);
-static err_t telnet_poll (tcpservice_t* s);
+static void telnet_poll (tcpservice_t* s);
 
 ///////////////////////////////////////////////////////////
 // static data (small ram footprint)
@@ -53,7 +54,7 @@ static err_t telnet_poll (tcpservice_t* s);
 // (the "socketserver" awaiting for incoming request only)
 static tcpservice_t telnet_listener = TCP_SERVICE_LISTENER("telnet listener", telnet_new_peer);
 
-// the current talking telnet peer, which is a hack
+// the current talking telnet peer
 static tcpservice_t*	current_telnet = NULL;
 #define CURRENT(s)	do microrl_set_echo(!(current_telnet = (s))); while (0)
 
@@ -62,10 +63,11 @@ static tcpservice_t*	current_telnet = NULL;
 static int telnet_printf (const char *fmt, ...)
 {
 	int ret;
-
 	va_list ap;
 	va_start(ap, fmt);
-	if (current_telnet && current_telnet->tcp)
+	if (current_telnet && !current_telnet->tcp)
+		current_telnet = NULL;
+	if (current_telnet)
 		ret = cbuf_vprintf(&current_telnet->send_buffer, fmt, ap);
 	else
 	{
@@ -80,23 +82,28 @@ static int telnet_printf (const char *fmt, ...)
 static tcpservice_t* telnet_new_peer (tcpservice_t* listener)
 {
 	// allocate send_buffer + telnet state structure
-	char* sendbuf = (char*)os_malloc((1 << (TELNET_SEND_BUFFER_SIZE_LOG2_DEFAULT)) + sizeof(telnet_state_t));
+	char* sendbuf = (char*)os_malloc(TELNET_SEND_BUFFER_SIZE + sizeof(telnet_state_t));
 	if (sendbuf == NULL)
 		return NULL;
 	// generic initialization with provided buffer
-	tcpservice_t* peer = tcp_service_init_new_peer_sendbuf_sizelog2(sendbuf, TELNET_SEND_BUFFER_SIZE_LOG2_DEFAULT);
+	tcpservice_t* peer = tcp_service_init_new_peer_sendbuf_size(sendbuf, TELNET_SEND_BUFFER_SIZE);
 	if (!peer)
+	{
+		os_free(sendbuf);
 		return NULL;
+	}
 
 	peer->cb_established = telnet_established;
 	peer->cb_closing = telnet_closing;
 	peer->cb_recv = telnet_recv;
 	peer->cb_poll = telnet_poll;
+	tcp_service_set_poll_ms(peer, 1000);
 	
 	const char* tmp = env_get("telnet-drop");
 	state(peer)->state = STATE_NORMAL;
 	state(peer)->idle = 0;
 	state(peer)->max_idle = tmp? atoi(tmp): 60;
+	
 
 	return peer;
 }
@@ -119,30 +126,25 @@ static void telnet_closing (tcpservice_t* peer)
 	CURRENT(NULL);
 }
 
-static err_t telnet_poll (tcpservice_t* peer)
+static void telnet_poll (tcpservice_t* peer)
 { 
 	if (state(peer)->max_idle > 0 && ++state(peer)->idle >= state(peer)->max_idle)
 	{
 		CURRENT(peer);
 		telnet_printf("\nYou have been idle for %d seconds, goodbye\n", state(peer)->max_idle);
-		tcp_service_close(peer);
+		tcp_service_request_close(peer);
 	}
-	return ERR_OK;
 }
 
 int sendopt (tcpservice_t* s, u8_t option, u8_t value)
 {
-	char* tmp;
-	if (cbuf_write_ptr(&s->send_buffer, &tmp, 4) == 4)
+	char tmp[] = { TELNET_IAC, option, value, 0 };
+	if (tcp_service_write(s, tmp, sizeof tmp) != sizeof tmp)
 	{
-		tmp[0] = TELNET_IAC;
-		tmp[1] = option;
-		tmp[2] = value;
-		tmp[3] = 0;
-		return 0;
+		LOGSERIAL(LOG_ERR, "telnet out of buf");
+		return -1;
 	}
-	//XXX error should be managed
-	return -1;
+	return 0;
 }
 
 static size_t telnet_recv (tcpservice_t* ts, const char* q, size_t len)
@@ -231,7 +233,7 @@ int telnet_start (int port)
 int telnet_stop (void)
 {
 	if (telnet_listener.tcp)
-		tcp_service_close(&telnet_listener);
+		tcp_service_request_close(&telnet_listener);
 	return 0;
 }
 
@@ -246,8 +248,7 @@ static int  do_telnet(int argc, const char* const* argv)
 		if (current_telnet)
 		{
 			console_printf("telnet: See you!\n");
-			tcp_service_close(current_telnet);
-			current_telnet = NULL;
+			tcp_service_request_close(current_telnet);
 		}
 	}
 	else
