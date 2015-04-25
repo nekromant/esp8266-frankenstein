@@ -435,11 +435,12 @@ sys_untimeout(sys_timeout_handler handler, void *arg)
  *
  * Must be called periodically from your main loop.
  */
-typeof(_sys_now) _sys_now; // espressif
 void
 sys_check_timeouts(void)
 {
-  _sys_now = NOW() / ((CPU_CLK_FREQ / 1000) >> (timer2_ms_flag? 8: 4)); // espressif
+  if (!esp_ms_timer_update_and_check_changed())
+  	return; // no change in millisecond (espressif)
+  
   if (next_timeout) {
     struct sys_timeo *tmptimeout;
     u32_t diff;
