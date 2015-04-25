@@ -16,8 +16,11 @@ static void  scan_done_cb(void *arg, STATUS status)
 {
 	scaninfo *c = arg; 
 	struct bss_info *inf; 
-	if (!c->pbss)
+	if (!c->pbss) {
+		console_printf("iwscan failed\n");
+		console_lock(0);
 		return;
+	}
 	STAILQ_FOREACH(inf, c->pbss, next) {
 		console_printf("BSSID %02x:%02x:%02x:%02x:%02x:%02x channel %02d rssi %02d auth %-12s %s\n", 
 				MAC2STR(inf->bssid),
