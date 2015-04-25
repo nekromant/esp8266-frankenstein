@@ -97,6 +97,9 @@ bool "SHT21 humidity sensor"
 config CMD_I2C_BH1750
 bool "BH1750 light sensor"
 
+config CMD_I2C_SI7020
+bool "SI7020 Temperature/Humidity sensor"
+
 config CMD_I2C_PCF8591
 bool "PCF8591 8-bit ADC DAC"
 

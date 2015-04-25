@@ -209,32 +209,57 @@ static int split (microrl_t * pThis, int limit, char const ** tkn_arr)
 {
 	int i = 0;
 	int ind = 0;
+
+	/*
+	 * Are we being called to continue a previous split? ie: " ; "
+	 */
+	if (pThis->next) {
+		pThis->pcmdline = pThis->next;
+		pThis->next = 0;
+	} else
+		pThis->pcmdline = pThis->cmdline;
+
 	while (1) {
 		// go to the first whitespace (zerro for us)
-		while ((pThis->cmdline [ind] == '\0') && (ind < limit)) {
+		while ((pThis->pcmdline [ind] == '\0') && (ind < limit)) {
 			ind++;
 		}
 		if (!(ind < limit)) return i;
 		
 		// check quote
 		char quote = 0;
-		if (pThis->cmdline [ind] == '\'' || pThis->cmdline [ind] == '"')
-			quote = pThis->cmdline [ind++];
+		if (pThis->pcmdline [ind] == '\'' || pThis->pcmdline [ind] == '"')
+			quote = pThis->pcmdline [ind++];
 		
-		tkn_arr[i++] = pThis->cmdline + ind;
+		// check for ';' if not in quote mode
+		// handles " ; " and ";nextarg"
+		if (pThis->pcmdline [ind] == ';' && quote == 0) {
+			pThis->pcmdline[ind++] = '\0';	// clear the ';'
+			pThis->next = &pThis->pcmdline[ind];	// set continuation marker
+			return i;
+		}
+
+		tkn_arr[i++] = pThis->pcmdline + ind;
 		if (i >= _COMMAND_TOKEN_NMB) {
 			return -1;
 		}
 		// go to the first NOT whitespace (not zerro for us)
-		while ((pThis->cmdline [ind] != quote) && (ind < limit)) {
-			if (quote && pThis->cmdline [ind] == '\0')
+		while ((pThis->pcmdline [ind] != quote) && (ind < limit)) {
+			if (quote && pThis->pcmdline [ind] == '\0')
 				// turn \0 back to space if currently quoted
-				pThis->cmdline [ind] = ' ';
+				pThis->pcmdline [ind] = ' ';
 			ind++;
+			// check for ';' if not in quote mode
+			// handles "arg;"
+			if (pThis->pcmdline [ind] == ';' && quote == 0) {
+				pThis->pcmdline[ind++] = '\0';	// clear the ';'
+				pThis->next = &pThis->pcmdline[ind];	// set continuation marker
+				return i;
+			}
 		}
 		if (quote)
 			// clear quote from cmdline
-			pThis->cmdline [ind] = 0;
+			pThis->pcmdline [ind] = 0;
 		
 		if (!(ind < limit)) return i;
 	}
@@ -576,14 +601,17 @@ void new_line_handler(microrl_t * pThis){
 	if (pThis->cmdlen > 0)
 		hist_save_line (&pThis->ring_hist, pThis->cmdline, pThis->cmdlen);
 #endif
-	status = split (pThis, pThis->cmdlen, tkn_arr);
-	if (status == -1){
-		//          pThis->print ("ERROR: Max token amount exseed\n");
-		pThis->print ("ERROR:too many tokens");
-		pThis->print (ENDL);
-	}
-	if ((status > 0) && (pThis->execute != NULL))
-		pThis->execute (status, tkn_arr);
+	do {
+		status = split (pThis, pThis->cmdlen, tkn_arr);
+		if (status == -1){
+			//          pThis->print ("ERROR: Max token amount exseed\n");
+			pThis->print ("ERROR:too many tokens");
+			pThis->print (ENDL);
+		}
+		if ((status > 0) && (pThis->execute != NULL))
+			pThis->execute (status, tkn_arr);
+	} while(pThis->next);
+
 	print_prompt (pThis);
 	pThis->cmdlen = 0;
 	pThis->cursor = 0;

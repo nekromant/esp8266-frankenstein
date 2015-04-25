@@ -181,6 +181,20 @@ static void main_init_done(void)
 	    }
 	  }
 	}
+	/*
+	 * Check for $bootcmd after initializing wifi ...
+	 */
+	const char *cmd = env_get("bootcmd");
+	if (cmd!= NULL) {
+		int i=0;
+		console_printf("Running bootcmd: %s\r\n", cmd);
+		console_insert('\r');
+		console_insert('\n');
+		while(cmd[i] != '\0')
+			console_insert(cmd[i++]);
+		console_insert('\r');
+		console_insert('\n');
+	}
 }
 
 void user_init()
