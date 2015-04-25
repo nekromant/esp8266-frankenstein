@@ -205,8 +205,6 @@ To start AP on boot set 'default-mode' to 'AP' or 'APSTA'.
 A very simple TCP test command. It will listen on a port and print out the line 
 of text received. '\n' terminates connection. 
 
-BUG: As of 0.9.2 SDK it's impossible to terminate a running TCP listener. Say thanks
-to espressif! May be 0.9.3 will fix it.
 
 ```
 frankenstein > listen 8080
@@ -351,3 +349,10 @@ Espressif's blobs and make them go nuts.
 
 Known limitation, since only these are broken out on my modules. It's somewhere on my TODO list.
 Note that selection of the full range of valid GPIOs now exists for the `dht22`, `ds18b20`,  and the i2c commands.
+
+#SDK compatibility status:
+
+1.0.1b2: Doesn't work. Impossible to connect to a network, constant crashes
+
+1.0.1b1: Works.
+ 
