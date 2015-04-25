@@ -35,17 +35,15 @@ sudo make install
 
 Now, we'll need our toolchain. we'll need the awesome esp-open-sdk created by pfalcon: 
 https://github.com/pfalcon/esp-open-sdk
-We'll need to build it in STANDALONE mode. The build takes about an hour on my box, so 
-you can just run:
+We'll need to build it in STANDALONE mode. Check the README for compatibility notices, check the 
+esp-open-sdk Makefile to see what version you are compiling against. The build takes about an hour 
+on my box. Normally you can just run:
 
 git clone https://github.com/pfalcon/esp-open-sdk.git
 cd esp-open-sdk
 make STANDALONE=y
 
 And go grab a cup of coffee. 
-
-For the record: frankenstein is based on 0.9.2 SDK. 0.9.3 will likely break some things. 
-I plan to move frankenstein to 0.9.3 as soon an pfalcon bumps esp-open-sdk. 
 
 Once the build is done, you'll have esp-open-sdk/xtensa-lx106-elf directory. You can tarball 
 it for use on other boxes - it's a portable static toolchain that will run on any linux pc. 
@@ -65,8 +63,20 @@ make
 Frankenstein makefile will fetch antares for you. Antares is the buildsystem for embedded projects 
 it uses internally. You'll now have antares experimental branch cloned in ./antares. 
 
-run make again to build frankenstein. 
+If you have a global antares installation - make sure you have checked out experimental branch. 
+master has no esp8266 support at the time of writing.
 
+Now we need to configure frankenstein. 
+
+make defconfig 
+
+Provides you with a more or less sane default config. 
+
+make menuconfig/nconfig/xconfig/etc.
+
+Bring up the configuration menu. 
+
+run make again to build frankenstein. 
 
 make menuconfig (or nconfig, whatever) opens up a menu with possible options. 
 
@@ -88,5 +98,5 @@ void attribute((section(".iram0.text"))) func()
 
 Project settings. All stuff from kcnf at the top level shows up here. 
 Here you can select witch parts of frankenstein will be build, set up environment address and
-lengths, etc. 
+lengths, etc.
 
