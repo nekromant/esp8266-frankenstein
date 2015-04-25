@@ -51,17 +51,15 @@ static  __attribute__ ((section(".iram0.text"))) void commit_handler(void* a)
 	console_printf("\nCommiting update, %d sectors %d bytes\n", numsect, u->numbytes);
 	
 	for (i=0; i < numsect; i++) { 
-		console_printf("#");
+		ets_uart_printf("#");
 		spi_flash_erase_sector( i );
-		spi_flash_read((64 + i) * SPI_FLASH_SEC_SIZE,  (uint32*) u->buffer, SPI_FLASH_SEC_SIZE);
-		spi_flash_write((i * SPI_FLASH_SEC_SIZE), (uint32*)u->buffer, SPI_FLASH_SEC_SIZE);
-		spi_flash_erase_sector( 64 + i );
+		spi_flash_read((u->fblock + i) * SPI_FLASH_SEC_SIZE,  (uint32*) u->buffer, SPI_FLASH_SEC_SIZE);
+		spi_flash_write((i * SPI_FLASH_SEC_SIZE), (uint32*) u->buffer, SPI_FLASH_SEC_SIZE);
+		spi_flash_erase_sector( u->fblock + i );
 	}
-
-
-	console_printf("\nFirmware update completed (%d sectors), rebooting\n", i);
+	ets_uart_printf("\nFirmware update completed (%d sectors), rebooting\n", i);
 	ets_wdt_enable();
-	while (1);
+	while (1);;; /* Hang on here */
 }
 
 
