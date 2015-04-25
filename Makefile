@@ -6,7 +6,7 @@ TMPDIR=tmp
 TOPDIR=.
 project_sources=src
 ANTARES_DIR:=./antares
-ANTARES_INSTALL_DIR=$(ANTARES_DIR)
+ANTARES_INSTALL_DIR?=$(ANTARES_DIR)
 
 CFLAGS+=-I$(abspath ./include/lwip-esp8266/)
 
@@ -34,7 +34,7 @@ antares:
 	@echo "Please, re-run make"
 else
 antares:
-	ln -sf $(ANTARES_INSTALL_DIR) $(ANTARES_DIR)
+	ln -sf $(ANTARES_INSTALL_DIR) $(@)
 	@echo "Using global antares installation: $(ANTARES_INSTALL_DIR)"
 	@echo "Symlinking done, please re-run make"
 endif
