@@ -1634,9 +1634,6 @@ struct ip_info;	// defined in missing.h which should go to antares
 #define ip4_addr_t			ip_addr_t
 #endif // !LWIP_GIT
 
-extern unsigned char timer2_ms_flag;
-extern int _sys_now;
-
 #define EBLOB				1	// structure compatibility with v1.4
 
 #define LWIP_IPV4			1
@@ -1669,3 +1666,14 @@ extern int ttdbg[TTDBG]; // see cmd_at
 
 #endif /* __LWIP_OPT_H__ */
 
+#include "arch/cc.h"
+extern volatile u8_t	timer2_ms_flag;		// is it going to change anytime???
+extern u32_t		sys_now_ms;		// sys_now() in millisecond
+
+//#define NOW_MS()	(NOW() / ((CPU_CLK_FREQ / 1000) >> (timer2_ms_flag? 8: 4)))	// do not use (for the record)
+#define sys_now()	(sys_now_ms) // updated every short time in sys_check_timeouts() called by espressif's blobs
+
+void	esp_ms_timer_init			(void);
+int	esp_ms_timer_update_and_check_changed	(void);
+
+///////

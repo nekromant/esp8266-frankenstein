@@ -259,6 +259,7 @@ lwip_sanity_check(void)
 void
 lwip_init(void)
 {
+  esp_ms_timer_init(); // espressif
   /* Sanity check user-configurable values */
   lwip_sanity_check();
 

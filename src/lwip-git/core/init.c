@@ -310,6 +310,7 @@
 void
 lwip_init(void)
 {
+  esp_ms_timer_init(); // espressif
   /* Modules initialization */
   stats_init();
 #if !NO_SYS
