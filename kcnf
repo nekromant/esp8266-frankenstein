@@ -41,6 +41,9 @@ menu "Modules to build"
 config CMD_IW
 bool "Wireless commands"
 
+config CMD_PHY
+bool "Wireless hardware commands"
+
 config CMD_UART
 bool "UART commands"
 

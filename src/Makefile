@@ -27,7 +27,8 @@ objects-$(CONFIG_CMD_AT)+=cmd_at.o
 objects-$(CONFIG_CMD_ADC)+=cmd_adc.o
 objects-$(CONFIG_CMD_NSLOOKUP)+=cmd_nslookup.o
 #objects-$(CONFIG_CMD_PING)+=cmd_ping.o
-objects-$(CONFIG_ENABLE_PASSTHROUGH)+=cmd_passthrough.o
+#objects-$(CONFIG_ENABLE_PASSTHROUGH)+=cmd_passthrough.o
+objects-$(CONFIG_CMD_PHY)+=cmd_wiphy.o
 
 objects-$(CONFIG_CMD_I2C)+=cmd_i2c.o i2c_master.o 
 objects-$(CONFIG_CMD_I2C_BMP180)+=i2c_bmp180.o
