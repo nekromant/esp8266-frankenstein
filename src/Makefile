@@ -50,4 +50,4 @@ ifeq ($(CONFIG_LWIP_GIT),y)
 subdirs-y+=lwip-git
 endif
 
-endif
+subdirs-y+=mqtt
