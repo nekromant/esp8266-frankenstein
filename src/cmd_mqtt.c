@@ -16,19 +16,31 @@
 #include "lib/config.h"
 
 MQTT_Client mqttClient;
+MQTT_Client* pub_client;
 
 
 void mqttConnectedCb(uint32_t *args)
 {
-  MQTT_Client* client = (MQTT_Client*)args;
-  console_printf("MQTT: Connected\r\n");
+  //MQTT_Client* client = (MQTT_Client*)args;
+  pub_client = (MQTT_Client*)args;
+  console_printf("\r\nMQTT: mqttConnectedCb\r\n");
   /*MQTT_Subscribe(client, "/mqtt/topic/0", 0);
   MQTT_Subscribe(client, "/mqtt/topic/1", 1);
   MQTT_Subscribe(client, "/mqtt/topic/2", 2);*/
-
-  MQTT_Publish(client, "A/1", "hello0", 6, 0, 0);
-  MQTT_Publish(client, "A/1", "hello1", 6, 1, 0);
-  MQTT_Publish(client, "A/1", "hello2", 6, 2, 0);
+/*
+  if ( MQTT_Publish(client, "A/1", "hello0", 6, 0, 0) == TRUE )
+  {
+    console_printf("Successfully published message hello0\r\n");
+  }
+  if ( MQTT_Publish(client, "A/1", "hello1", 6, 1, 0) == TRUE )
+  {
+    console_printf("Successfully published message hello1\r\n");
+  }
+  if (MQTT_Publish(client, "A/1", "hello2", 6, 2, 0) == TRUE )
+  {
+    console_printf("Successfully published message hello2\r\n");
+  }
+  */
 }
 
 void mqttDisconnectedCb(uint32_t *args)
@@ -65,35 +77,40 @@ void mqttDataCb(uint32_t *args, const char* topic, uint32_t topic_len, const cha
 static int   do_startmqtt(int argc, const char* const* argv)
 {
 	CFG_Load();
-	console_printf("In startmqtt\n");
+	console_printf("In do_startmqtt\n");
 	//MQTT_InitConnection(&mqttClient, sysCfg.mqtt_host, sysCfg.mqtt_port, sysCfg.security);
-	MQTT_InitConnection(&mqttClient, "192.168.0.104", 1883, 0);
+	MQTT_InitConnection(&mqttClient, "broker.mqttdashboard.com", 1883, 0);
 	//MQTT_InitClient(&mqttClient, sysCfg.device_id, sysCfg.mqtt_user, sysCfg.mqtt_pass, sysCfg.mqtt_keepalive, 1);
-	MQTT_InitClient(&mqttClient, "client_id", "", "", 120, 1);
+	MQTT_InitClient(&mqttClient, "esp8266_mqtt_client", "", "", 120, 1);
 
 	MQTT_InitLWT(&mqttClient, "/lwt", "offline", 0, 0); 
-  	MQTT_OnConnected(&mqttClient, mqttConnectedCb);
-  	MQTT_OnDisconnected(&mqttClient, mqttDisconnectedCb);
-  	MQTT_OnPublished(&mqttClient, mqttPublishedCb);
-  	MQTT_OnData(&mqttClient, mqttDataCb);
+  MQTT_OnConnected(&mqttClient, mqttConnectedCb);
+  MQTT_OnDisconnected(&mqttClient, mqttDisconnectedCb);
+  MQTT_OnPublished(&mqttClient, mqttPublishedCb);
+  MQTT_OnData(&mqttClient, mqttDataCb);
+  MQTT_Connect(&mqttClient);
+
 	return 0;
 }
 
 static int   do_stopmqtt(int argc, const char* const* argv)
 {
 	console_printf("In stopmqtt\n");
+  MQTT_Disconnect(&mqttClient);
 	return 0;
 }
 
 static int   do_mqttpub(int argc, const char* const* argv)
 {
 	console_printf("In mqttpub\n");
+  MQTT_Publish(pub_client, "A/1", "hello0", 6, 0, 0);
 	return 0;
 }
 
 static int   do_mqttsub(int argc, const char* const* argv)
 {
 	console_printf("In mqttsub\n");
+  MQTT_Subscribe(pub_client, "/A/1", 0);
 	return 0;
 }
 
@@ -103,12 +120,12 @@ CONSOLE_CMD(startmqtt, 1, 1,
 	    "Start MQTT Service"
 );
 
-CONSOLE_CMD(stopmqtt, 3, 3, 
+CONSOLE_CMD(stopmqtt, 1, 1, 
 	    do_stopmqtt, NULL, NULL, 
 	    "Stop MQTT Service"
 );
 
-CONSOLE_CMD(mqttpub, 2, 2, 
+CONSOLE_CMD(mqttpub, 1, 1, 
 	    do_mqttpub, NULL, NULL, 
 	    "Publish MQTT"
 );
