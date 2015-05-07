@@ -49,5 +49,7 @@ endif
 ifeq ($(CONFIG_LWIP_GIT),y)
 subdirs-y+=lwip-git
 endif
+endif
 
+objects-$(CONFIG_ENABLE_MQTT)+=cmd_mqtt.o
 subdirs-y+=mqtt
