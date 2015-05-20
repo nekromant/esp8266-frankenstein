@@ -72,7 +72,7 @@ struct envpair defaultenv[] = {
 #if defined(CONFIG_SERVICE_TELNET)
   /* Note: modules requiring their own config might be able to have a 'registration' struct that adds to here */
 	{ "telnet-port",       "23" },
-	{ "telnet-autostart",  "1" },
+	{ "telnet-autostart",  "0" },
 	{ "telnet-drop",       "60" },
 #endif
 #if defined(CONFIG_CMD_TFTP)

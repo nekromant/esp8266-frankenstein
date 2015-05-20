@@ -75,17 +75,21 @@ CFG_Load()
 
 	console_printf("\r\nload MQTT configuration...\r\n");
 
-		os_sprintf(sysCfg.device_id, MQTT_CLIENT_ID, system_get_chip_id());
-		os_sprintf(sysCfg.mqtt_host, "%s", MQTT_HOST);
-		sysCfg.mqtt_port = MQTT_PORT;
-		os_sprintf(sysCfg.mqtt_user, "%s", MQTT_USER);
-		os_sprintf(sysCfg.mqtt_pass, "%s", MQTT_PASS);
+	os_sprintf(sysCfg.device_id, MQTT_CLIENT_ID, system_get_chip_id());
+	os_sprintf(sysCfg.mqtt_host, "%s", MQTT_HOST);
+	sysCfg.mqtt_port = MQTT_PORT;
+	os_sprintf(sysCfg.mqtt_user, "%s", MQTT_USER);
+	os_sprintf(sysCfg.mqtt_pass, "%s", MQTT_PASS);
 
-		sysCfg.security = DEFAULT_SECURITY;	/* default non ssl */
+	sysCfg.security = DEFAULT_SECURITY;	/* default non ssl */
 
-		sysCfg.mqtt_keepalive = MQTT_KEEPALIVE;
+	sysCfg.mqtt_keepalive = MQTT_KEEPALIVE;
 
-		console_printf(" default configuration\r\n");
+	console_printf("default configuration - Device_id: %x  host: %s  user: %s  pass: %s\r\n",
+				sysCfg.device_id,
+				sysCfg.mqtt_host,
+				sysCfg.mqtt_user,
+				sysCfg.mqtt_pass);
 
-	}
+}
 
