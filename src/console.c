@@ -152,14 +152,8 @@ static void sigint(void)
 int execute (int argc, const char * const * argv)
 {
 	struct console_cmd *cmd; 
-	console_printf("\n");
-	console_printf("argc: %d  argv0: %s", argc, argv[0]);
-	if (argc>1)
-		console_printf(" arg: %s", argv[1]);
-	if (argc>2)
-		console_printf(" arg: %s", argv[2]);
-	console_printf("\r\n");
 
+	console_printf("\n");
 	FOR_EACH_CMD(cmd) {
 		if (strcasecmp(cmd->name, argv[0])==0) { 
 			if ((cmd->required_args != -1) && argc < cmd->required_args)
