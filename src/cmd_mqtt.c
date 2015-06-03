@@ -54,11 +54,9 @@ void mqttDataCb(uint32_t *args, const char* topic, uint32_t topic_len, const cha
 static int   do_startmqtt(int argc, const char* const* argv)
 {
 	CFG_Load();
-	//MQTT_InitConnection(&mqttClient, sysCfg.mqtt_host, sysCfg.mqtt_port, sysCfg.security);
-	//MQTT_InitConnection(&mqttClient, "broker.mqttdashboard.com", 1883, 0);
-	//MQTT_InitClient(&mqttClient, sysCfg.device_id, sysCfg.mqtt_user, sysCfg.mqtt_pass, sysCfg.mqtt_keepalive, 1);
-	MQTT_InitConnection(&mqttClient, (uint8_t *)"192.168.37.30", 1883, 0);
-	MQTT_InitClient(&mqttClient, (uint8_t *)"esp8266_mqtt_client", (uint8_t *)"", (uint8_t *)"", 120, 1);
+
+	MQTT_InitConnection(&mqttClient, (uint8_t *)sysCfg.mqtt_host, sysCfg.mqtt_port, 0);
+	MQTT_InitClient(&mqttClient, sysCfg.device_id, sysCfg.mqtt_user, sysCfg.mqtt_pass, sysCfg.mqtt_keepalive, 1);
 
 	MQTT_InitLWT(&mqttClient, (uint8_t *)"/lwt", (uint8_t *)"offline", 0, 0); 
 	MQTT_OnConnected(&mqttClient, mqttConnectedCb);
@@ -72,14 +70,12 @@ static int   do_startmqtt(int argc, const char* const* argv)
 
 static int   do_stopmqtt(int argc, const char* const* argv)
 {
-	console_printf("In stopmqtt\n");
 	MQTT_Disconnect(&mqttClient);
 	return 0;
 }
 
 static int   do_mqttpub(int argc, const char* const* argv)
 {
-	console_printf("In mqttpub\n");
 	MQTT_Publish(pub_client, "A/1", "hello0", 6, 0, 0);
 	return 0;
 }
