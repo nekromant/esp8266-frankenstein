@@ -34,6 +34,7 @@
 #include "osapi.h"
 #include "user_interface.h"
 #include "console.h"
+#include "env.h"
 
 #include <lib/mqtt.h>
 #include <lib/config.h>
@@ -72,24 +73,43 @@ CFG_Save()
 void ICACHE_FLASH_ATTR
 CFG_Load()
 {
-
+	const uint8_t *p;
 	console_printf("\r\nload MQTT configuration...\r\n");
 
-	os_sprintf(sysCfg.device_id, MQTT_CLIENT_ID, system_get_chip_id());
-	os_sprintf(sysCfg.mqtt_host, "%s", MQTT_HOST);
-	sysCfg.mqtt_port = MQTT_PORT;
-	os_sprintf(sysCfg.mqtt_user, "%s", MQTT_USER);
-	os_sprintf(sysCfg.mqtt_pass, "%s", MQTT_PASS);
+	if ((p = (uint8_t *)env_get("mqtt_device_id")) != NULL)
+		os_sprintf((char *)sysCfg.device_id, "%s", p);
+	else
+		os_sprintf((char *)sysCfg.device_id, MQTT_CLIENT_ID, system_get_chip_id());
+
+	if ((p = (uint8_t *)env_get("mqtt_host")) != NULL)
+		os_sprintf((char *)sysCfg.mqtt_host, "%s", p);
+	else
+		os_sprintf((char *)sysCfg.mqtt_host, "%s", MQTT_HOST);
+
+	if ((p = (uint8_t *)env_get("mqtt_port")) != NULL) {
+		sysCfg.mqtt_port=atoi((const char *)p);
+	}
+	else
+		sysCfg.mqtt_port = MQTT_PORT;
+
+	if ((p = (uint8_t *)env_get("mqtt_user")) != NULL)
+		os_sprintf((char *)sysCfg.mqtt_user, "%s", p);
+	else
+		os_sprintf((char *)sysCfg.mqtt_user, "%s", MQTT_USER);
+
+	if ((p = (uint8_t *)env_get("mqtt_pass")) != NULL)
+		os_sprintf((char *)sysCfg.mqtt_pass, "%s", p);
+	else
+		os_sprintf((char *)sysCfg.mqtt_pass, "%s", MQTT_PASS);
+
 
 	sysCfg.security = DEFAULT_SECURITY;	/* default non ssl */
 
 	sysCfg.mqtt_keepalive = MQTT_KEEPALIVE;
 
-	console_printf("default configuration - Device_id: %x  host: %s  user: %s  pass: %s\r\n",
+	console_printf("configuration - Device_id: %s  host: %s  user: %s  pass: %s\r\n",
 				sysCfg.device_id,
 				sysCfg.mqtt_host,
 				sysCfg.mqtt_user,
 				sysCfg.mqtt_pass);
-
 }
-
