@@ -19,6 +19,7 @@
 #include <lwip/app/dhcpserver.h>
 
 #include "main.h"
+#include "sched.h"
 #include "missing.h"
 
 #include "env.h"
@@ -213,6 +214,10 @@ void user_init()
 	print_hello_banner();
 #endif
 	network_init();
+
+#if defined(CONFIG_ENABLE_SCHED)
+	sched_init();
+#endif
 
 #if defined(CONFIG_SERVICE_TELNET)
 	const char *enabled = env_get("telnet-autostart"); 

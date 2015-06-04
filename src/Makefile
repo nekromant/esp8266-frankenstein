@@ -54,3 +54,6 @@ endif
 
 objects-$(CONFIG_ENABLE_MQTT)+=cmd_mqtt.o
 subdirs-y+=mqtt
+
+objects-$(CONFIG_ENABLE_SCHED)+=sched.o
+
