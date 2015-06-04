@@ -35,6 +35,7 @@
 #include "user_interface.h"
 #include "console.h"
 #include "env.h"
+#include "helpers.h"
 
 #include <lib/mqtt.h>
 #include <lib/config.h>
@@ -42,33 +43,6 @@
 #include <lib/debug.h>
 
 SYSCFG sysCfg;
-
-/*
-void ICACHE_FLASH_ATTR
-CFG_Save()
-{
-	 spi_flash_read((CFG_LOCATION + 3) * SPI_FLASH_SEC_SIZE,
-	                   (uint32 *)&saveFlag, sizeof(SAVE_FLAG));
-
-	if (saveFlag.flag == 0) {
-		spi_flash_erase_sector(CFG_LOCATION + 1);
-		spi_flash_write((CFG_LOCATION + 1) * SPI_FLASH_SEC_SIZE,
-						(uint32 *)&sysCfg, sizeof(SYSCFG));
-		saveFlag.flag = 1;
-		spi_flash_erase_sector(CFG_LOCATION + 3);
-		spi_flash_write((CFG_LOCATION + 3) * SPI_FLASH_SEC_SIZE,
-						(uint32 *)&saveFlag, sizeof(SAVE_FLAG));
-	} else {
-		spi_flash_erase_sector(CFG_LOCATION + 0);
-		spi_flash_write((CFG_LOCATION + 0) * SPI_FLASH_SEC_SIZE,
-						(uint32 *)&sysCfg, sizeof(SYSCFG));
-		saveFlag.flag = 0;
-		spi_flash_erase_sector(CFG_LOCATION + 3);
-		spi_flash_write((CFG_LOCATION + 3) * SPI_FLASH_SEC_SIZE,
-						(uint32 *)&saveFlag, sizeof(SAVE_FLAG));
-	}
-}
-*/
 
 void ICACHE_FLASH_ATTR
 CFG_Load()
@@ -87,7 +61,7 @@ CFG_Load()
 		os_sprintf((char *)sysCfg.mqtt_host, "%s", MQTT_HOST);
 
 	if ((p = (uint8_t *)env_get("mqtt_port")) != NULL) {
-		sysCfg.mqtt_port=atoi((const char *)p);
+		sysCfg.mqtt_port=(uint16_t)skip_atoul((const char **)&p);	// save 0x10 by not using atoi()
 	}
 	else
 		sysCfg.mqtt_port = MQTT_PORT;
