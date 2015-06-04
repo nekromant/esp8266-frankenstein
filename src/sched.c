@@ -6,12 +6,13 @@
 #include "main.h"
 #include "helpers.h"
 #include "sched.h"
+#include "env.h"
 
 #include <stdlib.h>
 #include <stdlib.h>
 #include <generic/macros.h>
 
-#define MAX_SCHED_ENTRIES 5
+#define MAX_SCHED_ENTRIES 10
 
 static uint8_t last;
 static uint16_t mod;
@@ -66,20 +67,29 @@ sched_timer_cb(void *arg)
 
 	for (i=0;i<last;i++)
 	{
-		int j=0;
 		if (mod % schedule[i].modulus == 0) {
-			console_insert('\r');
-			console_insert('\n');
-			while(schedule[i].cmd[j] != '\0')
-				console_insert(schedule[i].cmd[j++]);
-			console_insert('\r');
-			console_insert('\n');
+			sched_run(schedule[i].cmd);
 		}
 	}
 	mod++;	// rolls at uint16_t
 }
 
-static int
+void ICACHE_FLASH_ATTR
+sched_run(const char *cmd)
+{
+	int i = 0;
+
+	console_insert('\r');
+	console_insert('\n');
+	while(cmd[i] != '\0')
+		console_insert(cmd[i++]);
+	console_insert('\r');
+	console_insert('\n');
+
+	return;
+}
+
+static int ICACHE_FLASH_ATTR
 do_every(int argc, const char* const* argv)
 {
 	uint16_t mod;
@@ -93,15 +103,23 @@ do_every(int argc, const char* const* argv)
 	mod = (uint16_t)skip_atoul((const char **)&argv[1]);
 
 	if (mod == 0)
-		return 0;
-	l = strlen(argv[2]);	// Assume cmd is a single arg in ''s
-
-	cmd = os_malloc(l);
-	if (cmd == NULL) {
-		console_printf("Out of memory?\r\n");
-		return 0;
+		return -1;
+	if (argv[2][0] == '$') // run an environment variable instead
+	{
+		cmd = (char *)env_get(&(argv[2][1]));
+		if (cmd == NULL)
+			return -1;
 	}
-	strcpy(cmd, argv[2]);
+	else {
+		l = strlen(argv[2]);	// Assume cmd is a single arg in ''s
+
+		cmd = os_malloc(l);
+		if (cmd == NULL) {
+			console_printf("Out of memory?\r\n");
+			return -1;
+		}
+		strcpy(cmd, argv[2]);
+	}
 
 	console_printf("Scheduling [%s] to execute every %d seconds\r\n", cmd, mod);
 
@@ -111,5 +129,6 @@ do_every(int argc, const char* const* argv)
 CONSOLE_CMD(every, -1, 3,
 		do_every, NULL, NULL,
 		"Execute console cmd every N seconds"
-		HELPSTR_NEWLINE "every 10 'gpio out 5 1'"
+		HELPSTR_NEWLINE "every 10 'gpio out 5 1 ; gpio out 5 0'"
+		HELPSTR_NEWLINE "every 10 $envvar"
 	   );
