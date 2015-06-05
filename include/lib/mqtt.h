@@ -101,6 +101,8 @@ typedef struct  {
 	QUEUE msgQueue;
 } MQTT_Client;
 
+MQTT_Client *mqttGetConnectedClient(void);
+
 #define SEC_NONSSL 0
 #define SEC_SSL	1
 
