@@ -227,7 +227,9 @@ static int split (microrl_t * pThis, int limit, char const ** tkn_arr)
 				return i;
 			ind++;
 		}
-		if (!(ind < limit)) return i;
+		if (!(ind < limit)) {
+			return i;
+		}
 		
 		// check quote
 		char quote = 0;
@@ -264,7 +266,9 @@ static int split (microrl_t * pThis, int limit, char const ** tkn_arr)
 			// clear quote from cmdline
 			pThis->pcmdline [ind] = 0;
 		
-		if (!(ind < limit)) return i;
+		if (!(ind < limit)) { 
+			return i;
+		}
 	}
 	return i;
 }
