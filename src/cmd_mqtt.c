@@ -53,9 +53,13 @@ void mqttDataCb(uint32_t *args, const char* topic, uint32_t topic_len, const cha
   dataBuf[data_len] = 0;
 
   console_printf("Receive topic: %s, data: %s \r\n", topicBuf, dataBuf);
+  MQTT_Call_Subscribe_Handler(topicBuf, dataBuf);
+
   os_free(topicBuf);
   os_free(dataBuf);
 }
+
+
 
 
 static int   do_startmqtt(int argc, const char* const* argv)
