@@ -108,7 +108,7 @@ do_si7020_pub_temp(int argc, const char* const* argv)
 		return -1;
 	}
 
-	sprintf(topic, "%s/si7020/temperature/0", client->connect_info.client_id);
+	os_sprintf(topic, "%s/si7020/temperature/0", client->connect_info.client_id);
 	buflen = os_sprintf(buf, "%d", SI7020_GetTemperature());
 	MQTT_Publish(client, topic, buf, buflen, 0, 0);
 	return 0;
@@ -132,7 +132,7 @@ do_si7020_pub_humidity(int argc, const char* const* argv)
 		return -1;
 	}
 
-	sprintf(topic, "%s/si7020/humidity/0", client->connect_info.client_id);
+	os_sprintf(topic, "%s/si7020/humidity/0", client->connect_info.client_id);
 	buflen = os_sprintf(buf, "%d", SI7020_GetHumidity());
 	MQTT_Publish(client, topic, buf, buflen, 0, 0);
 	return 0;

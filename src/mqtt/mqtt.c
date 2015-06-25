@@ -549,7 +549,7 @@ MQTT_Do_Subscribe(const char *driver, const char *arg, void (*handler)())
 	}
 
 	// TODO: bounds check on topic
-	sprintf(topic, "%s/%s/%s", client->connect_info.client_id, driver, arg);
+	os_sprintf(topic, "%s/%s/%s", client->connect_info.client_id, driver, arg);
 
 	if (MQTT_Add_Subscribe_Handler(driver, strlen(driver), handler))
 		MQTT_Subscribe(client, topic, 0);

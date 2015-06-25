@@ -94,7 +94,7 @@ uint8_t ICACHE_FLASH_ATTR UTILS_StrToIP(const int8_t* str, void *ip)
 	    /* The count of the number of bytes processed. */
 	    int i;
 	    /* A pointer to the next digit to process. */
-	    const char * start;
+	    const int8_t * start;
 
 	    start = str;
 	    for (i = 0; i < 4; i++) {
