@@ -90,22 +90,31 @@ SI7020_GetHumidity()
 #ifdef CONFIG_ENABLE_MQTT
 #include "lib/mqtt.h"
 
+/*
+ * Is this a reasonable limit?
+ */
+#define TOPIC_LEN 128
+
 static int 
 do_si7020_pub_temp(int argc, const char* const* argv)
 {
 	MQTT_Client *client = mqttGetConnectedClient();
 	char buf[6];
 	int buflen;
+	char topic[TOPIC_LEN];
 
-	if (client == NULL)
+	if (client == NULL) {
+		console_printf("MQTT Client not bound to broker\r\n");
 		return -1;
+	}
 
+	sprintf(topic, "%s/si7020/temperature/0", client->connect_info.client_id);
 	buflen = os_sprintf(buf, "%d", SI7020_GetTemperature());
-	MQTT_Publish(client, "/si7020/temperature/0", buf, buflen, 0, 0);
+	MQTT_Publish(client, topic, buf, buflen, 0, 0);
 	return 0;
 }
 
-CONSOLE_CMD(si7020_pub_temp, 1, 1, 
+CONSOLE_CMD(si7020_pub_temperature, 1, 1, 
 		do_si7020_pub_temp, NULL, NULL, 
 		"Publish Temperature via MQTT"
 );
@@ -116,12 +125,16 @@ do_si7020_pub_humidity(int argc, const char* const* argv)
 	MQTT_Client *client = mqttGetConnectedClient();
 	char buf[6];
 	int buflen;
+	char topic[TOPIC_LEN];
 
-	if (client == NULL)
+	if (client == NULL) {
+		console_printf("MQTT Client not bound to broker\r\n");
 		return -1;
+	}
 
+	sprintf(topic, "%s/si7020/humidity/0", client->connect_info.client_id);
 	buflen = os_sprintf(buf, "%d", SI7020_GetHumidity());
-	MQTT_Publish(client, "/si7020/humidity/0", buf, buflen, 0, 0);
+	MQTT_Publish(client, topic, buf, buflen, 0, 0);
 	return 0;
 }
 
