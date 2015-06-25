@@ -420,7 +420,7 @@ MQTT_Publish(MQTT_Client *client, const char* topic, const char* data, int data_
   * @retval TRUE if success queue
   */
 BOOL ICACHE_FLASH_ATTR
-MQTT_Subscribe(MQTT_Client *client, char* topic, uint8_t qos)
+MQTT_Subscribe(MQTT_Client *client, const char* topic, uint8_t qos)
 {
 	uint8_t dataBuffer[MQTT_BUF_SIZE];
 	uint16_t dataLen;
@@ -440,6 +440,124 @@ MQTT_Subscribe(MQTT_Client *client, char* topic, uint8_t qos)
 	return TRUE;
 }
 
+#define MAX_SUBSCRIBE_HANDLERS 5
+#define MAX_SUBSCRIBE_DRIVER_LEN 8
+#define MAX_SUBSCRIBE_ARG_LEN 32
+
+static struct MQTT_Subscribe_Handler {
+	char driver[MAX_SUBSCRIBE_DRIVER_LEN];
+	void (*handler)(const char*, const char*);
+} MQTT_Subscribe_Handlers[MAX_SUBSCRIBE_HANDLERS];
+
+static int nMQTT_Subscribe_Handlers;
+
+static int ICACHE_FLASH_ATTR
+MQTT_Find_Subscribe_Handler(const char *driver)
+{
+	int i;
+
+	for (i=0; i<nMQTT_Subscribe_Handlers; i++) {
+		if (strncmp(driver, MQTT_Subscribe_Handlers[i].driver, MAX_SUBSCRIBE_DRIVER_LEN) == 0)
+			return i;
+	}
+	return -1;
+}
+
+static int ICACHE_FLASH_ATTR
+MQTT_Add_Subscribe_Handler(const char *driver, int driverlen, void (*handler)(const char*, const char*))
+{
+
+	if (driverlen > MAX_SUBSCRIBE_DRIVER_LEN)
+		driverlen = MAX_SUBSCRIBE_DRIVER_LEN;
+	/*
+	 * Check if this driver has already registered a handler.  We only need
+	 * one handler per driver
+	 */
+	if (nMQTT_Subscribe_Handlers >= MAX_SUBSCRIBE_HANDLERS)
+		return 0;
+	MQTT_Subscribe_Handlers[nMQTT_Subscribe_Handlers].handler = handler;
+	memcpy(MQTT_Subscribe_Handlers[nMQTT_Subscribe_Handlers].driver, driver, driverlen);
+	return ++nMQTT_Subscribe_Handlers;	// pre-increment to handle 0th handler
+}
+
+/*
+ * Topic should be /deviceid/driver/arg
+ * (This is kind of brute force but theoretically we are being passed
+ * a well formatted topic string that we supplied at Subscribe-time.)
+ */
+void ICACHE_FLASH_ATTR
+MQTT_Call_Subscribe_Handler(const char *topic, const char *data)
+{
+	int i;
+	const char *p;
+	char driver[MAX_SUBSCRIBE_DRIVER_LEN];
+	char arg[MAX_SUBSCRIBE_ARG_LEN];
+
+	// skip over Device_ID in topic
+	p = topic;
+	if (p) {
+		while (*p)
+		{
+			if (*p == '/') {
+				break;
+			}
+			p++;
+		}
+	}
+	else
+		return;	// NULL topic?!?
+
+	// Now copy 'driver'
+	// p should be '/'
+	if (*p++ != '/')
+		return; // Invalid topic format
+	i = 0;
+	memset(driver, 0, MAX_SUBSCRIBE_DRIVER_LEN);
+	while (*p && *p != '/') {
+		driver[i++] = *p++;
+		if (i == MAX_SUBSCRIBE_DRIVER_LEN)
+			break;
+	}
+
+	// Now copy 'arg'
+	if (*p++ != '/')
+		return; // Invalid topic format.  Driverlen > MAX_SUBSCRIBE_DRIVER_LEN or we encountered a NULL
+
+	i = 0;
+	memset(arg, 0, MAX_SUBSCRIBE_ARG_LEN);
+	while (*p && *p != '/') {
+		arg[i++] = *p++;
+		if (i == MAX_SUBSCRIBE_ARG_LEN)
+			break;
+	}
+
+	if ((i = MQTT_Find_Subscribe_Handler(driver)) >= 0)
+		MQTT_Subscribe_Handlers[i].handler(arg, data);
+
+	return;
+}
+
+int ICACHE_FLASH_ATTR
+MQTT_Do_Subscribe(const char *driver, const char *arg, void (*handler)())
+{
+	MQTT_Client *client = mqttGetConnectedClient();
+	char topic[128];
+
+	if (client == NULL) {
+		console_printf("MQTT Client not bound to broker\r\n");
+		return -1;
+	}
+
+	// TODO: bounds check on topic
+	sprintf(topic, "%s/%s/%s", client->connect_info.client_id, driver, arg);
+
+	if (MQTT_Add_Subscribe_Handler(driver, strlen(driver), handler))
+		MQTT_Subscribe(client, topic, 0);
+	else
+		return -1;
+	return 0;
+}
+
 void ICACHE_FLASH_ATTR
 MQTT_Task(os_event_t *e)
 {
@@ -449,10 +567,18 @@ MQTT_Task(os_event_t *e)
 	switch(client->connState){
 
 	case TCP_RECONNECT_REQ:
+		console_printf("TCP_RECONNECT_REQ\r\n");
 		break;
 	case TCP_RECONNECT:
+		console_printf("TCP_RECONNECT\r\n");
 		MQTT_Connect(client);
 		client->connState = TCP_CONNECTING;
+		break;
+	case TCP_CONNECTING:
+		console_printf("TCP_CONNECTING\r\n");
+		break;
+	case TCP_CONNECTING_ERROR:
+		console_printf("TCP_CONNECTING_ERR\r\n");
 		break;
 	case MQTT_DATA:
 		if(QUEUE_IsEmpty(&client->msgQueue) || client->sendTimeout != 0) {
@@ -500,6 +626,7 @@ MQTT_InitConnection(MQTT_Client *mqttClient, uint8_t* host, uint32 port, uint8_t
 	mqttClient->host[temp] = 0;
 	mqttClient->port = port;
 	mqttClient->security = security;
+	nMQTT_Subscribe_Handlers = 0;
 
 }
 
