@@ -485,16 +485,10 @@ MQTT_Add_Subscribe_Handler(const char *driver, int driverlen, void (*handler)(co
  * (This is kind of brute force but theoretically we are being passed
  * a well formatted topic string that we supplied at Subscribe-time.)
  */
-void ICACHE_FLASH_ATTR
-MQTT_Call_Subscribe_Handler(const char *topic, const char *data)
-{
-	int i;
-	const char *p;
-	char driver[MAX_SUBSCRIBE_DRIVER_LEN];
-	char arg[MAX_SUBSCRIBE_ARG_LEN];
 
-	// skip over Device_ID in topic
-	p = topic;
+static const char * ICACHE_FLASH_ATTR
+MQTT_find_slash(const char *p)
+{
 	if (p) {
 		while (*p)
 		{
@@ -504,8 +498,20 @@ MQTT_Call_Subscribe_Handler(const char *topic, const char *data)
 			p++;
 		}
 	}
-	else
-		return;	// NULL topic?!?
+	return p;
+
+}
+
+void ICACHE_FLASH_ATTR
+MQTT_Call_Subscribe_Handler(const char *topic, const char *data)
+{
+	int i;
+	const char *p;
+	char driver[MAX_SUBSCRIBE_DRIVER_LEN];
+	char arg[MAX_SUBSCRIBE_ARG_LEN];
+
+	// skip over Device_ID in topic
+	p = MQTT_find_slash(topic);
 
 	// Now copy 'driver'
 	// p should be '/'
@@ -518,6 +524,11 @@ MQTT_Call_Subscribe_Handler(const char *topic, const char *data)
 		if (i == MAX_SUBSCRIBE_DRIVER_LEN)
 			break;
 	}
+
+	p = MQTT_find_slash(p);	// Should be at /ctl now
+	if (*p++ != '/')
+		return; // Invalid topic format. 
+	p = MQTT_find_slash(p);	// Should be at /<arg> now
 
 	// Now copy 'arg'
 	if (*p++ != '/')
@@ -549,7 +560,7 @@ MQTT_Do_Subscribe(const char *driver, const char *arg, void (*handler)())
 	}
 
 	// TODO: bounds check on topic
-	os_sprintf(topic, "%s/%s/%s", client->connect_info.client_id, driver, arg);
+	os_sprintf(topic, "%s/%s/ctl/%s", client->connect_info.client_id, driver, arg);
 
 	if (MQTT_Add_Subscribe_Handler(driver, strlen(driver), handler))
 		MQTT_Subscribe(client, topic, 0);

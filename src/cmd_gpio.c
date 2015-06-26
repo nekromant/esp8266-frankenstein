@@ -77,7 +77,7 @@ do_gpio_pub(int argc, const char* const* argv)
 		return -1;
 	}
 
-	os_sprintf(topic, "%s/gpio/%d", client->connect_info.client_id, gpio);
+	os_sprintf(topic, "%s/gpio/status/%d", client->connect_info.client_id, gpio);
 
 	buflen = os_sprintf(buf, "%d", GPIO_INPUT_GET(gpio));
 	MQTT_Publish(client, topic, buf, buflen, 0, 0);
