@@ -34,6 +34,7 @@ objects-$(CONFIG_CMD_I2C)+=cmd_i2c.o i2c_master.o
 objects-$(CONFIG_CMD_I2C_BMP180)+=i2c_bmp180.o
 objects-$(CONFIG_CMD_I2C_INA219)+=i2c_ina219.o
 objects-$(CONFIG_CMD_I2C_SHT21)+=i2c_sht21.o
+objects-$(CONFIG_CMD_I2C_SI7020)+=i2c_si7020.o
 objects-$(CONFIG_CMD_I2C_BH1750)+=i2c_bh1750.o
 objects-$(CONFIG_CMD_I2C_PCF8591)+=i2c_pcf8591.o
 objects-$(CONFIG_CMD_I2C_HMC5883L)+=i2c_hmc5883l.o
@@ -49,5 +50,10 @@ endif
 ifeq ($(CONFIG_LWIP_GIT),y)
 subdirs-y+=lwip-git
 endif
-
 endif
+
+objects-$(CONFIG_ENABLE_MQTT)+=cmd_mqtt.o
+subdirs-y+=mqtt
+
+objects-$(CONFIG_ENABLE_SCHED)+=sched.o
+

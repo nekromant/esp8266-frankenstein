@@ -19,6 +19,7 @@
 #include <lwip/app/dhcpserver.h>
 
 #include "main.h"
+#include "sched.h"
 #include "missing.h"
 
 #include "env.h"
@@ -72,7 +73,7 @@ struct envpair defaultenv[] = {
 #if defined(CONFIG_SERVICE_TELNET)
   /* Note: modules requiring their own config might be able to have a 'registration' struct that adds to here */
 	{ "telnet-port",       "23" },
-	{ "telnet-autostart",  "1" },
+	{ "telnet-autostart",  "0" },
 	{ "telnet-drop",       "60" },
 #endif
 #if defined(CONFIG_CMD_TFTP)
@@ -213,6 +214,10 @@ void user_init()
 	print_hello_banner();
 #endif
 	network_init();
+
+#if defined(CONFIG_ENABLE_SCHED)
+	sched_init();
+#endif
 
 #if defined(CONFIG_SERVICE_TELNET)
 	const char *enabled = env_get("telnet-autostart"); 

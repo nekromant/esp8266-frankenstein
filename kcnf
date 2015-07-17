@@ -133,6 +133,12 @@ endif
 menuconfig CMD_DHT22
 bool "DHT22/DHT11 temperature and humidity sensor"
 
+config ENABLE_MQTT
+bool "MQTT Support"
+
+config ENABLE_SCHED
+bool "Scheduled command execution"
+
 # Not working right now.
 #config ENABLE_PASSTHROUGH
 #bool "enable tcp(10101)<->serial passthrough"

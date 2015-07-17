@@ -152,6 +152,7 @@ static void sigint(void)
 int execute (int argc, const char * const * argv)
 {
 	struct console_cmd *cmd; 
+
 	console_printf("\n");
 	FOR_EACH_CMD(cmd) {
 		if (strcasecmp(cmd->name, argv[0])==0) { 
