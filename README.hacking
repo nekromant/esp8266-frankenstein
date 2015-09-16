@@ -20,6 +20,7 @@ http://ymorin.is-a-geek.org/projects/kconfig-frontends
 This is normally installed by:
 
 cd kconfig-frontends
+./bootstrap
 ./configure --prefix=/usr
 make 
 sudo make install
