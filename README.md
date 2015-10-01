@@ -121,7 +121,7 @@ All changes are made in ram. To save them to flash run
 
 Environment variables hold paramers for the firmware that are
 applied on boot or affect certain commands.
-All variables are described in [README.env](README.env). You can also store arbitary data 
+All variables are described in [README.env](README.env). You can also store arbitrary data 
 in environment variables. 
 
 
