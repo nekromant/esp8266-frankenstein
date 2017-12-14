@@ -1,33 +1,31 @@
-#This Repo under development, and it's not safe to use
-
 Frankenstein is a quick and dirty firmware, made from different bits
-and pieces (thus the name) for ESP8266. 
-The features: 
+and pieces (thus the name) for ESP8266.
+The features:
 
-* A nice and shiny commandline interface similar to that of u-boot. 
-  No more sloppy AT commands. 
-* Full command line editing and history. 
-* A very easy way of adding new commands to the shell 
+* A nice and shiny commandline interface similar to that of u-boot.
+  No more sloppy AT commands.
+* Full command line editing and history.
+* A very easy way of adding new commands to the shell
 * More or less clean code
 * Highly configurable (sort of)
-* Supports firmware updates over tftp 
+* Supports firmware updates over tftp
 
-You can start by grabbing a binary and burning it to your device. 
-Remember about backups, for all your data on the flash will be gone. 
+You can start by grabbing a binary and burning it to your device.
+Remember about backups, for all your data on the flash will be gone.
 
 #Terminal software
 
 Please note, to use proper commandline editing, use a SANE serial terminal
-emulator. 
+emulator.
 
 Linux: minicom, screen, kermit
 Windows: putty
 
-Do not file bugs telling me that commandline editing doesn't work in, say, 
+Do not file bugs telling me that commandline editing doesn't work in, say,
 coolterm.
 
-If you are communicating with frankenstein with some other hardware, here's some 
-technical stuff for you: 
+If you are communicating with frankenstein with some other hardware, here's some
+technical stuff for you:
 
 * All lines you send to ESP8266 should end with CR, i.e. "\r".
   (No more pressing CTRL^J on Linux terminals, either!)
@@ -35,14 +33,35 @@ technical stuff for you:
 * CTRL+C tries to interrupt the running command and unlocks the terminal
 
 
+# Building your personal monster
+
+
+- Install cmake, bash, make (Follow your linux distro manuals. Windows and macOS are untested!)
+
+- Get ESP Open SDK 2.0 or higher. Grab from [here](https://github.com/pfalcon/esp-open-sdk) and build in STANDALONE mode
+xtensa-lx106-elf toolchain should be in your path.
+
+- Get kconfig-frontends from [here](http://ymorin.is-a-geek.org/projects/kconfig-frontends) and install
+
+Prepare the environment and build it!:
+```
+  mkdir build
+  cd build
+  cmake ..
+  make menuconfig
+  cmake .. #NOTE THE EXTRA CMAKE!
+  make
+```
+
+- Flash the resulting binaries with esptool.py
+
 #Getting to know frankenstein. The basics:
 
 Now that we're clear with that, let's start the device and open up terminal.
-You'll see something like this: 
+You'll see something like this:
 
 ```
 Frankenstein ESP8266 Firmware
-Powered by Antares 0.2-rc1, Insane Mushroom
 (c) Andrew 'Necromant' Andrianov 2014 <andrew@ncrmnt.org>
 This is free software (where possible), published under the terms of GPLv2
 
@@ -51,7 +70,7 @@ data  : 0x3ffe8000 ~ 0x3ffe8f60, len: 3936
 rodata: 0x3ffe8f60 ~ 0x3ffeae58, len: 7928
 bss   : 0x3ffeae58 ~ 0x3fff2720, len: 30920
 heap  : 0x3fff2720 ~ 0x3fffc000, len: 39136
-hello=23env: Environment @ 0x0007b000 size 0x00001000 bytes (0x00000ffc real) 
+hello=23env: Environment @ 0x0007b000 size 0x00001000 bytes (0x00000ffc real)
 env: Bad CRC (fe1 vs ffff) using defaults
 Saving environment to flash disabled by config
 Recompile with CONFIG_ENV_NOWRITE=n
@@ -70,16 +89,16 @@ dhcps-enable  1
 === 201/4092 bytes used ===
 dhcpserver: started
 
- === Press enter to activate this console === 
+ === Press enter to activate this console ===
 
-frankenstein > 
+frankenstein >
 ```
 
 The workflow is simple. You type commands, frankenstein does things. Simple?
 
 #Environment
 
-You can store come configuration parameters in 'environment'. 
+You can store come configuration parameters in 'environment'.
 Environment is just a key=value storage. Certain variables affect behavior of different commands.  
 You can list environment with `printenv`.
 
@@ -116,13 +135,13 @@ frankenstein > getenv key
 value
 ```
 
-All changes are made in ram. To save them to flash run 
-`saveenv` and they will survive reboot. 
+All changes are made in ram. To save them to flash run
+`saveenv` and they will survive reboot.
 
 Environment variables hold paramers for the firmware that are
 applied on boot or affect certain commands.
-All variables are described in [README.env](README.env). You can also store arbitrary data 
-in environment variables. 
+All variables are described in [README.env](README.env). You can also store arbitrary data
+in environment variables.
 
 
 #Wireless modes
@@ -159,25 +178,25 @@ frankenstein > iwconnect "ap name" 'my password'
 ```
 
 
-`iwconnect` starts connection process and waits for some seconds until it 
+`iwconnect` starts connection process and waits for some seconds until it
 either connects or an error occurs. It will continue to try and reconnect in
-background. 
+background.
 
 #Checking connection info
 
-`ifconfig` prints the info about curently active interfaces. they are named `ap0` and `sta0`. 
-They do not correspond (yet!) to lwip iface names. 
- 
+`ifconfig` prints the info about curently active interfaces. they are named `ap0` and `sta0`.
+They do not correspond (yet!) to lwip iface names.
+
 ```
 frankenstein > ifconfig
 ap0: WiFi Access Point Interface
      state: Running
-     inet addr:192.168.4.1 Mask:255.255.255.0 Gateway:192.168.4.1 
+     inet addr:192.168.4.1 Mask:255.255.255.0 Gateway:192.168.4.1
 sta0: WiFi Client Interface
      state   : Connected
      rssi    : -60
      channel : 3
-     inet addr:192.168.0.198 Mask:255.255.255.0 Gateway:192.168.0.20 
+     inet addr:192.168.0.198 Mask:255.255.255.0 Gateway:192.168.0.20
 
 ```
 
@@ -196,27 +215,27 @@ SSID: myap AUTH WPA2_PSK BSSID: 1a:fe:34:98:dc:9e
 
 ```
 
-To enable DHCP server set 'dhcps-enable' to '1' and reboot. 
+To enable DHCP server set 'dhcps-enable' to '1' and reboot.
 To start AP on boot set 'default-mode' to 'AP' or 'APSTA'.
 
 
 #Listening for data
 
-A very simple TCP test command. It will listen on a port and print out the line 
-of text received. '\n' terminates connection. 
+A very simple TCP test command. It will listen on a port and print out the line
+of text received. '\n' terminates connection.
 
 
 ```
 frankenstein > listen 8080
 Listening (TCP) on port 8080
-connect    | 192.168.0.101:60804 
+connect    | 192.168.0.101:60804
 receive    | hello
-disconnect | 192.168.0.101:60803 
+disconnect | 192.168.0.101:60803
 ```
 
-#Sending out data. 
+#Sending out data.
 A very simple TCP test command. It will connect to a remote host, write a string
-and disconnect. Disconnect (for some reason) takes a while. 
+and disconnect. Disconnect (for some reason) takes a while.
 
 ```
 frankenstein > send 192.168.0.101 8080 hello
@@ -226,7 +245,7 @@ disconnected!
 
 ```
 
-#A full list of scary commands available is listed below. 
+#A full list of scary commands available is listed below.
 
 ```
 help       - Show this message
@@ -285,14 +304,6 @@ tftp       - Update firmware over tftp
              tftp
 AT         - says OK
 ```
-# Flashing the controller
-
-There is a convenience target wrapping `esptool.py`.
-Set the default tty, and whether you have a pl2303 GPIO breakout for automatically resetting the board using `make menuconfig`.
-
-```
-make deploy-esptool
-```
 
 If you dont have a pl2303 gpio breakoutboard and have to manually set the programming GPIO, use the following procedure.
 
@@ -302,19 +313,19 @@ If you dont have a pl2303 gpio breakoutboard and have to manually set the progra
 * Release GPIO#0 (at least 300ms after)
 * Deploy
 
-# Over-the-air firmware updates. 
+# Over-the-air firmware updates.
 
 Frankenstein supports OTA updates via tftp.
-TFTP update requirements: 
+TFTP update requirements:
 
 * Firmware you're flashing is <=256KiB (SPI_FLASH_SIZE /2 )
 * Firmware is made up of _ONE_ file that will be burned at 0x0000
 
-To update use the following: 
+To update use the following:
 
 * Set up a tftp server on the host pc. e.g. tftpd-hpa.   
-* Set 'tftp-server' environment variable to the tftp server ip address. 
-* Set 'tftp-dir' and 'tftp-file' to point to your firmware file. 
+* Set 'tftp-server' environment variable to the tftp server ip address.
+* Set 'tftp-dir' and 'tftp-file' to point to your firmware file.
 e.g. To get `/tftpboot/antares.rom` you'll need
 
 ```
@@ -327,32 +338,3 @@ Optionally, use `saveenv` before `tftp`.
 
 If everything goes well - you'll be running your new firmware in a few seconds.  
 Note, `tftp` doesn't check what stuff you have in your image...
-
-# Known bugs
-
-* Espressif SDK updates can cause issues
-
-To build against SDK V1.0.0 and later you need to set a specific configuration item `CONFIG_ESP8266_NEED_ESPCONN_INIT`. This workaround is presently required because it is not simple to determine the SDK version.
-
-* iwscan just hangs and iwconnect never connects to an access point
-
-This happens right after flashing Frankenstein for the first time. Power-cycle 
-(e.g remove and apply power, not just soft-reset) and it will work. This is a known 
-bug, I'm working on a fix. 
-
-* Firmware is unstable and randomly reboots.
-
-Just after flashing run `wipeparams`. Stored settings from older SDK tend to confuse 
-Espressif's blobs and make them go nuts.
-
-* gpio controls only gpio0 and gpio2
-
-Known limitation, since only these are broken out on my modules. It's somewhere on my TODO list.
-Note that selection of the full range of valid GPIOs now exists for the `dht22`, `ds18b20`,  and the i2c commands.
-
-#SDK compatibility status:
-
-1.0.1b2: Doesn't work. Impossible to connect to a network, constant crashes
-
-1.0.1b1: Works.
- 
