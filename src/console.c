@@ -8,7 +8,7 @@
 
 #include "espconn.h"
 #include "gpio.h"
-#include "driver/uart.h" 
+#include "driver/uart.h"
 #include "microrl.h"
 #include "console.h"
 #include "env.h"
@@ -23,7 +23,6 @@ int log_level = LOG_LEVEL_DEFAULT;
 static microrl_t rl;
 #define prl (&rl)
 static int console_locked = 0;
-static int passthrough = ENABLE_PASSTHROUGH_AT_BOOT;
 
 const char* loglevnam (int lev)
 {
@@ -36,24 +35,11 @@ const char* loglevnam (int lev)
 	}
 }
 
-#if 0
-struct console {
-	char name[16];
-	void (*write)(char* buf, int len);	
-};
-#endif
-
 void console_lock(int l)
 {
 	console_locked = l;
-	if (!l) 
+	if (!l)
 		microrl_print_prompt(prl);
-}
-
-void enable_passthrough(int v)
-{
-	passthrough = v;
-	console_lock(v);
 }
 
 void console_insert(char c)
@@ -62,12 +48,12 @@ void console_insert(char c)
 WIP direct link serial<->wifi
 	static uint32 esc_time = 0;
 	static int esc_count = 0;
-	
+
 	if (passthrough)
 	{
 		//console_printf("%c", c);
 		ets_uart_printf("@%c,%d", c,c);
-		
+
 		if (c != KEY_ESC)
 			esc_count = 0;
 		else
@@ -125,7 +111,7 @@ static struct console_cmd  cmd_last  __attribute__((section(".console_lastcmd"))
 };
 
 
-#define FOR_EACH_CMD(iterator) for (iterator=&cmd_first; iterator<&cmd_last; iterator++) 
+#define FOR_EACH_CMD(iterator) for (iterator=&cmd_first; iterator<&cmd_last; iterator++)
 
 static int do_help(int argc, const char* const* argv)
 {
@@ -151,13 +137,13 @@ static void sigint(void)
 
 int execute (int argc, const char * const * argv)
 {
-	struct console_cmd *cmd; 
+	struct console_cmd *cmd;
 
 	console_printf("\n");
 	FOR_EACH_CMD(cmd) {
-		if (strcasecmp(cmd->name, argv[0])==0) { 
+		if (strcasecmp(cmd->name, argv[0])==0) {
 			if ((cmd->required_args != -1) && argc < cmd->required_args)
-				goto err_more_args; 
+				goto err_more_args;
 			if ((cmd->maximum_args != -1) && (argc > cmd->maximum_args))
 				goto err_too_many_args;
 			cmd->handler(argc, argv);
@@ -167,11 +153,11 @@ int execute (int argc, const char * const * argv)
 	console_printf("\nCommand %s not found, type 'help' for a list\n", argv[0]);
 	return 1;
 err_more_args:
-	console_printf("\nCommand %s requires at least %d args, %d given\n", 
+	console_printf("\nCommand %s requires at least %d args, %d given\n",
 			argv[0], cmd->required_args, argc);
 	return 1;
 err_too_many_args:
-	console_printf("\nCommand %s takes a maximum of %d args, %d given\n", 
+	console_printf("\nCommand %s takes a maximum of %d args, %d given\n",
 			argv[0], cmd->maximum_args, argc);
 	return 1;
 }
@@ -184,7 +170,7 @@ const char ** completion(int argc, const char* const* argv)
 	static char complbuf [COMPL_BUF];
 	static const char* compl [COMPL_MAX_RESULTS + 1];
 	static const char* nocompl [] = { NULL };
-	
+
 	if (argc == 1)
 	{
 		struct console_cmd *cmd;
@@ -217,10 +203,10 @@ const char ** completion(int argc, const char* const* argv)
 				}
 			}
 		compl[i] = NULL;
-		
+
 		return (const char**)compl;
 	}
-	
+
 	return nocompl;
 }
 
@@ -235,8 +221,7 @@ void console_init(int qlen) {
 	if (p)
 		microrl_set_prompt(p);
 
-	console_printf("\n === Press enter to activate this console === \n");	
+	console_printf("\n === Press enter to activate this console === \n");
 	os_event_t *queue = os_malloc(sizeof(os_event_t) * qlen);
 	system_os_task(task_console, CONSOLE_PRIO, queue, qlen);
 }
-

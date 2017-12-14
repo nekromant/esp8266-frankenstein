@@ -1,22 +1,21 @@
-
 #include <stdlib.h>
 
 #include "ets_sys.h"
 #include "os_type.h"
 #include "mem.h"
 #include "osapi.h"
+//#include <lwip/netif.h>
+//#include <lwip/app/dhcpserver.h>
 #include "user_interface.h"
 
 #include "espconn.h"
 #include "gpio.h"
-#include "driver/uart.h" 
+#include "driver/uart.h"
 #include "microrl.h"
 #include "console.h"
 #include "helpers.h"
 #include "flash_layout.h"
 #include <generic/macros.h>
-#include <lwip/netif.h>
-#include <lwip/app/dhcpserver.h>
 
 #include "main.h"
 #include "sched.h"
@@ -77,8 +76,8 @@ struct envpair defaultenv[] = {
 	{ "telnet-drop",       "60" },
 #endif
 #if defined(CONFIG_CMD_TFTP)
-	{ "tftp-server",       CONFIG_ENV_DEFAULT_TFTP_SERVER_IP}, 
-	{ "tftp-dir",          CONFIG_ENV_DEFAULT_TFTP_SERVER_DIR}, 
+	{ "tftp-server",       CONFIG_ENV_DEFAULT_TFTP_SERVER_IP},
+	{ "tftp-dir",          CONFIG_ENV_DEFAULT_TFTP_SERVER_DIR},
 	{ "tftp-file",         CONFIG_ENV_DEFAULT_TFTP_SERVER_FILE},
 #endif
 };
@@ -94,10 +93,9 @@ void request_default_environment(void)
 void print_hello_banner(void)
 {
 	console_printf("\n\n\nFrankenstein ESP8266 Firmware\n");
-	console_printf("Powered by Antares " CONFIG_VERSION_STRING "\n");	
-	console_printf("(c) Andrew 'Necromant' Andrianov 2014 <andrew@ncrmnt.org>\n");	
-	console_printf("This is free software (where possible), published under the terms of GPLv2\n");	
-	console_printf("\nMemory Layout:\n");	
+	console_printf("(c) Andrew 'Necromant' Andrianov 2014 <andrew@ncrmnt.org>\n");
+	console_printf("This is free software (where possible), published under the terms of GPLv2\n");
+	console_printf("\nMemory Layout:\n");
 	system_print_meminfo();
 	system_set_os_print(0);
 	console_printf("\n Flash layout:\n"
@@ -120,13 +118,14 @@ void print_hello_banner(void)
 void network_init()
 {
 	struct ip_info info;
+	console_printf("Setting net mode to %s\n", env_get("default-mode"));
 	wifi_set_opmode(id_from_wireless_mode(env_get("default-mode")));
 	wifi_get_ip_info(STATION_IF, &info);
-	const char *dhcp = env_get("sta-mode"); 
+	const char *dhcp = env_get("sta-mode");
 	const char *ip, *mask, *gw;
 	if (!dhcp || strcmp(dhcp, "dhcp") != 0)
 	{
-		ip = env_get("sta-ip"); 
+		ip = env_get("sta-ip");
 		mask = env_get("sta-mask");
 		gw = env_get("sta-gw");
 		if (ip)
@@ -135,12 +134,12 @@ void network_init()
 			info.netmask.addr = ipaddr_addr(mask);
 		if (gw)
 			info.gw.addr = ipaddr_addr(gw);
-		
+
 		wifi_set_ip_info(STATION_IF, &info);
 	}
 
 	wifi_get_ip_info(SOFTAP_IF, &info);
-	ip = env_get("ap-ip"); 
+	ip = env_get("ap-ip");
 	mask = env_get("ap-mask");
 	gw = env_get("ap-gw");
 	if (ip)
@@ -149,18 +148,20 @@ void network_init()
 		info.netmask.addr = ipaddr_addr(mask);
 	if (gw)
 		info.gw.addr = ipaddr_addr(gw);
-	
+
 	if (wifi_get_opmode() != STATION_MODE)
 		wifi_set_ip_info(SOFTAP_IF, &info);
 
 #if defined(CONFIG_SERVICE_DHCPS)
-	const char *dhcps = env_get("dhcps-enable"); 
+	const char *dhcps = env_get("dhcps-enable");
 	if (dhcps && (*dhcps == '1')) {
 		dhcps_start(&info);
 		console_printf("dhcpserver: started\n");
 	} else
 		console_printf("dhcpserver: disabled\n");
 #endif
+
+	console_printf("Net config done\n");
 }
 
 #include <stdio.h>
@@ -174,6 +175,7 @@ const char* fr_request_hostname(void) {
 /* By experimentation we discovered that certain things cant be done from inside user_init... */
 static void main_init_done(void)
 {
+    network_init();
 	if (wifi_get_opmode() == STATION_MODE) {
 	  const char *sta_auto = env_get("sta-auto");
 	  if (sta_auto && atoi(sta_auto)) {
@@ -185,6 +187,24 @@ static void main_init_done(void)
 	    }
 	  }
 	}
+
+	#if defined(CONFIG_ENABLE_BANNER)
+		print_hello_banner();
+	#endif
+
+	#if defined(CONFIG_ENABLE_SCHED)
+		sched_init();
+	#endif
+
+	#if defined(CONFIG_SERVICE_TELNET)
+		const char *enabled = env_get("telnet-autostart");
+		if (enabled && (*enabled=='1'))
+			telnet_start(-1); // use env or 23
+	#endif
+
+
+	console_init(32);
+
 	/*
 	 * Check for $bootcmd after initializing wifi ...
 	 */
@@ -208,31 +228,14 @@ void user_init()
 	uart_init(1, 115200);
 #endif
 	uart_init_io();
-
 	env_init(CONFIG_ENV_OFFSET, CONFIG_ENV_LEN);
-#if defined(CONFIG_ENABLE_BANNER)
-	print_hello_banner();
-#endif
-	network_init();
-
-#if defined(CONFIG_ENABLE_SCHED)
-	sched_init();
-#endif
-
-#if defined(CONFIG_SERVICE_TELNET)
-	const char *enabled = env_get("telnet-autostart"); 
-	if (enabled && (*enabled=='1'))
-		telnet_start(-1); // use env or 23
-#endif
-	console_init(32);
-
+	
 	const char* loglevel = env_get("log-level");
 	if (loglevel) { set_log_level(atoi(loglevel)); }
-	
+
 	PIN_FUNC_SELECT(PERIPHS_IO_MUX_GPIO2_U, FUNC_GPIO2);
 	PIN_FUNC_SELECT(PERIPHS_IO_MUX_GPIO0_U, FUNC_GPIO0);
 	gpio_output_set(0, BIT2, BIT2, 0);
 	gpio_output_set(0, BIT0, BIT0, 0);
-
 	system_init_done_cb(main_init_done);
 }

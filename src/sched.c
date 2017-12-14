@@ -11,7 +11,8 @@
 #include <stdlib.h>
 #include <stdlib.h>
 #include <generic/macros.h>
-
+#include <osapi.h>
+#include <mem.h>
 #define MAX_SCHED_ENTRIES 10
 
 static uint8_t last;

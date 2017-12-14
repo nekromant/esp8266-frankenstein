@@ -1,4 +1,4 @@
-
+#include <string.h>
 #include "user_interface.h"
 
 #include "console.h"
@@ -85,10 +85,10 @@ static int do_physleep (int argc, const char* const* argv)
 	return ret;
 }
 
-CONSOLE_CMD(wiphy, -1, -1, 
-	    do_wiphy, NULL, NULL, 
+CONSOLE_CMD(wiphy, -1, -1,
+	    do_wiphy, NULL, NULL,
 	    "get/select wifi phy mode: B/G/N");
 
-CONSOLE_CMD(physleep, -1, -1, 
-	    do_physleep, NULL, NULL, 
+CONSOLE_CMD(physleep, -1, -1,
+	    do_physleep, NULL, NULL,
 	    "get/select wifi sleep mode: none/light/modem");

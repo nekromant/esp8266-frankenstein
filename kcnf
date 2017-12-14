@@ -68,8 +68,8 @@ config CMD_NSLOOKUP
 bool "Network tool: nslookup"
 
 #seems broken because of undefined reference
-#config CMD_PING
-#bool "Network tool: ping"
+config CMD_PING
+bool "Network tool: ping"
 
 config CMD_TFTP
 bool "TFTP firmware update support"
@@ -140,8 +140,8 @@ config ENABLE_SCHED
 bool "Scheduled command execution"
 
 # Not working right now.
-#config ENABLE_PASSTHROUGH
-#bool "enable tcp(10101)<->serial passthrough"
+config ENABLE_PASSTHROUGH
+bool "enable tcp(10101)<->serial passthrough"
 
 menuconfig CMD_DS18B20
 bool "DS18B20/DS18S20 Thermal Sensor support"
@@ -174,7 +174,7 @@ default 0x7c000
 
 config ENV_LEN
 hex "Environment length"
-default 0x1000 
+default 0x1000
 
 config ADDR_BLOBSETTING1
 hex "Adress of blob settings in flash (copy 1)"

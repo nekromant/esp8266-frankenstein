@@ -1,0 +1,21 @@
+#!/bin/bash
+
+CROSS_COMPILE=$1
+shift
+
+OBJDUMP=${CROSS_COMPILE}-objdump
+OBJCOPY=${CROSS_COMPILE}-objcopy
+
+for src in *; do
+    find $dir -type f -iname "*.obj"| grep $src | while read file; do
+        echo "[IROMIFY] $file"
+        for section in `${OBJDUMP} -h $file|grep text|grep -v irom|grep -v iram|awk '{print $2}'`; do
+            sname=`echo $section|sed 's/.text.//'`;
+            ${OBJCOPY} --rename-section .text.$sname=.irom0.text.$sname \
+                --rename-section .literal.$sname=.irom0.literal.$sname $file;
+        done;
+
+        ${OBJCOPY} --rename-section .text=.irom0.text \
+            --rename-section .literal=.irom0.literal $file;
+    done
+done

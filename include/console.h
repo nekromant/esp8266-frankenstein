@@ -5,7 +5,7 @@
 #define ESC_COUNT	3
 
 struct console_cmd {
-	const char *name; 
+	const char *name;
 	const char *help;
 	int required_args;
 	int maximum_args;
@@ -57,7 +57,8 @@ typedef int (*printf_f)(const char *fmt, ...) __attribute__ ((format (printf, 1,
 #include <stdarg.h>
 #include <c_types.h>
 int vsnprintf(char *str, size_t size, const char *format, va_list ap);
-       
+
+#include <espmissingincludes.h>
 extern printf_f console_printf;
 
 #define HELPSTR_NEWLINE "\n             "
@@ -74,4 +75,3 @@ const char* loglevnam (int lev);
 
 
 #endif
-

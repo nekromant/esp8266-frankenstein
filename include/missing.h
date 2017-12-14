@@ -8,11 +8,11 @@
 
 #include "user_interface.h"
 // this should go to antares user_interface.h
-struct ip_info {
-    struct ip_addr ip;
-    struct ip_addr netmask;
-    struct ip_addr gw;
-};
+//struct ip_info {
+//    struct ip_addr ip;
+//    struct ip_addr netmask;
+//    struct ip_addr gw;
+//};
 
 void ets_intr_lock (void);
 void ets_intr_unlock (void);
