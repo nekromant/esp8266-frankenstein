@@ -13,7 +13,7 @@ The features:
 You can start by grabbing a binary and burning it to your device.
 Remember about backups, for all your data on the flash will be gone.
 
-#Terminal software
+# Terminal software
 
 Please note, to use proper commandline editing, use a SANE serial terminal
 emulator.
@@ -55,7 +55,7 @@ Prepare the environment and build it!:
 
 - Flash the resulting binaries with esptool.py
 
-#Getting to know frankenstein. The basics:
+# Getting to know frankenstein. The basics:
 
 Now that we're clear with that, let's start the device and open up terminal.
 You'll see something like this:
@@ -96,7 +96,7 @@ frankenstein >
 
 The workflow is simple. You type commands, frankenstein does things. Simple?
 
-#Environment
+# Environment
 
 You can store come configuration parameters in 'environment'.
 Environment is just a key=value storage. Certain variables affect behavior of different commands.  
@@ -144,7 +144,7 @@ All variables are described in [README.env](README.env). You can also store arbi
 in environment variables.
 
 
-#Wireless modes
+# Wireless modes
 
 Wireless modes can be switched using `iwmode` command.
 Modes are: `NONE`, `STA`, `AP`, `APSTA`.
@@ -156,7 +156,7 @@ frankenstein > iwmode STA
 mode change: AP->STA
 ```
 
-#Scanning
+# Scanning
 
 
 ```
@@ -165,7 +165,7 @@ BSSID b0:48:7a:d6:92:a8 channel 11 rssi -88 auth WPA2_PSK     TP-LINK_D692A8
 BSSID c0:4a:00:c7:9d:8e channel 11 rssi -80 auth WPA_WPA2_PSK Home_TP-LINK
 ```
 
-#Connecting to an AP
+# Connecting to an AP
 
 ```
 frankenstein > iwconnect apname password
@@ -182,7 +182,7 @@ frankenstein > iwconnect "ap name" 'my password'
 either connects or an error occurs. It will continue to try and reconnect in
 background.
 
-#Checking connection info
+# Checking connection info
 
 `ifconfig` prints the info about curently active interfaces. they are named `ap0` and `sta0`.
 They do not correspond (yet!) to lwip iface names.
@@ -200,7 +200,7 @@ sta0: WiFi Client Interface
 
 ```
 
-#Configuring an AP
+# Configuring an AP
 
 `apconfig` with no arguments shows current ap configuration.
 
@@ -219,7 +219,7 @@ To enable DHCP server set 'dhcps-enable' to '1' and reboot.
 To start AP on boot set 'default-mode' to 'AP' or 'APSTA'.
 
 
-#Listening for data
+# Listening for data
 
 A very simple TCP test command. It will listen on a port and print out the line
 of text received. '\n' terminates connection.
@@ -233,7 +233,7 @@ receive    | hello
 disconnect | 192.168.0.101:60803
 ```
 
-#Sending out data.
+# Sending out data.
 A very simple TCP test command. It will connect to a remote host, write a string
 and disconnect. Disconnect (for some reason) takes a while.
 
@@ -245,7 +245,7 @@ disconnected!
 
 ```
 
-#A full list of scary commands available is listed below.
+# A full list of scary commands available is listed below.
 
 ```
 help       - Show this message
