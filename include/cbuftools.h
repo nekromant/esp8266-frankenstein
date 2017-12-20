@@ -8,7 +8,7 @@
 // was 128 but flash_scan help line is bigger:
 #define SPRINTBUFSIZE 256
 
-extern char sprintbuf [SPRINTBUFSIZE];
+extern char sprintbuf__ [SPRINTBUFSIZE];
 
 void tooshortbuf (char* str, size_t size);
 int cbuf_printf (cbuf_t* cb, const char* fmt, ...) __attribute__ ((format (printf, 2, 3)));

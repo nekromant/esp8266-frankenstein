@@ -32,7 +32,7 @@ struct envpair {
 	char *key, *value;
 };
 
-struct envpair defaultenv[] = {
+const struct envpair defaultenv[] = {
 	{ "sta-mode",          "dhcp" },
 	{ "default-mode",
 /* ideally, this should somehow be tied into helpers.c, id_from_wireless_mode... */
@@ -197,6 +197,7 @@ static void main_init_done(void)
 	#endif
 
 	#if defined(CONFIG_SERVICE_TELNET)
+        #error
 		const char *enabled = env_get("telnet-autostart");
 		if (enabled && (*enabled=='1'))
 			telnet_start(-1); // use env or 23
@@ -229,7 +230,7 @@ void user_init()
 #endif
 	uart_init_io();
 	env_init(CONFIG_ENV_OFFSET, CONFIG_ENV_LEN);
-	
+
 	const char* loglevel = env_get("log-level");
 	if (loglevel) { set_log_level(atoi(loglevel)); }
 

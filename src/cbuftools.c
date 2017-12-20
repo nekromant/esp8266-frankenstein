@@ -5,7 +5,7 @@
 
 #include "cbuftools.h"
 
-char sprintbuf [SPRINTBUFSIZE];
+char sprintbuf__ [SPRINTBUFSIZE];
 
 void tooshortbuf (char* str, size_t size)
 {
@@ -30,8 +30,8 @@ int cbuf_vprintf (cbuf_t* cb, const char* fmt, va_list ap)
 	if (cbavail + 1 > SPRINTBUFSIZE)
 		cbavail = SPRINTBUFSIZE - 1;
 
-	if (vsnprintf(sprintbuf, cbavail + 1, fmt, ap) >= cbavail + 1)
-		tooshortbuf(sprintbuf, cbavail + 1);
+	if (vsnprintf(sprintbuf__, cbavail + 1, fmt, ap) >= cbavail + 1)
+		tooshortbuf(sprintbuf__, cbavail + 1);
 
-	return cbuf_write(cb, sprintbuf, strlen(sprintbuf));
+	return cbuf_write(cb, sprintbuf__, strlen(sprintbuf__));
 }

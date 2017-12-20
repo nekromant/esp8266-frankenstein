@@ -13,14 +13,29 @@ find_program(KCONF_CONF kconfig-conf)
 add_custom_target(menuconfig ${KCONF_MCONF} ${CMAKE_SOURCE_DIR}/kcnf)
 add_custom_target(config ${KCONF_CONF} --silentoldconfig ${CMAKE_SOURCE_DIR}/kcnf)
 
+
 function(target_link_iromified target obj)
+  get_target_property(tp ${obj} TYPE)
+  message(${obj} ${tp})
   if (NOT TARGET iromify-${obj})
-    add_custom_target(iromify-${obj} DEPENDS ${obj} COMMAND
-      ${CMAKE_SOURCE_DIR}/scripts/iromify ${CROSS_COMPILE}
-      $<JOIN:$<TARGET_PROPERTY:frankenstein,SOURCES>,\t>)
+    if("${tp}" STREQUAL "OBJECT_LIBRARY")
+      add_custom_target(iromify-${obj} DEPENDS ${obj} COMMAND
+          ${CMAKE_SOURCE_DIR}/scripts/iromify ${CROSS_COMPILE} OBJECT
+          $<JOIN:$<TARGET_PROPERTY:${obj},SOURCES>,\t>)
+    else()
+      add_custom_target(iromify-${obj} DEPENDS ${obj} COMMAND
+          ${CMAKE_SOURCE_DIR}/scripts/iromify ${CROSS_COMPILE} LIBRARY
+          $<TARGET_FILE:${obj}>)
+    endif()
+
   endif()
-  target_sources(${target} PUBLIC $<TARGET_OBJECTS:${obj}>)
-  add_dependencies(${target} iromify-${obj})
+
+  if(tp STREQUAL "OBJECT_LIBRARY")
+    target_sources(${target} PUBLIC $<TARGET_OBJECTS:${obj}>)
+    add_dependencies(${target} iromify-${obj} ${obj})
+  else()
+    target_link_libraries(${target} ${obj})
+  endif()
 endfunction()
 
 function(fr_add_component desc var name config)
@@ -71,15 +86,16 @@ config_init(${CMAKE_SOURCE_DIR}/configs/config_default)
 if (NOT CROSS_COMPILE)
   SET(CROSS_COMPILE xtensa-lx106-elf)
 endif()
+SET(CMAKE_TOOLCHAIN_FILE "${CMAKE_SOURCE_DIR}/cmake/cross-compile.cmake")
 
 project(esp8266-frankenstein)
-set(CMAKE_EXE_LINKER_FLAGS "-Wl,--gc-sections -mtext-section-literals -nostdlib -Wl,--no-check-sections -u call_user_start -Wl,-static  -T${CMAKE_SOURCE_DIR}/lds/eagle.app.v6.ld")
-SET(CMAKE_TOOLCHAIN_FILE "${CMAKE_SOURCE_DIR}/cmake/cross-compile.cmake")
+set(CMAKE_EXE_LINKER_FLAGS "-Os -Wl,--gc-sections -mtext-section-literals -nostdlib -Wl,--no-check-sections -u call_user_start -u _printf_float -u _scanf_float -Wl,-static  -T${CMAKE_SOURCE_DIR}/lds/eagle.app.v6.ld")
 set(ESP8266_LIBRARIES -Wl,--start-group main cirom gcc lwip m pwm hal net80211 phy pp wpa ssl -Wl,--end-group)
-include_directories(include)
-set(CMAKE_C_FLAGS	"-std=gnu99 -Wpointer-arith -mlongcalls -Wundef -Wl,-EL -ffunction-sections -mtext-section-literals -fno-inline-functions -mlongcalls -D__ets__ -DICACHE_FLASH")
+set(CMAKE_C_FLAGS	"-Os -std=gnu99 -Wpointer-arith -mlongcalls -Wundef -Wl,-EL -ffunction-sections -fdata-sections -mtext-section-literals -fno-inline-functions -mlongcalls -D__ets__ -DICACHE_FLASH")
 set(CMAKE_C_FLAGS	"${CMAKE_C_FLAGS} -include ${CMAKE_BINARY_DIR}/include/generated/autoconf.h")
 
+
+include_directories(include)
 
 set(CORE_SRCS
   src/user_rf_cal_sector_set.c
@@ -103,6 +119,10 @@ fr_add_service(tcp CONFIG_SERVICE_TCP
   src/tcpservice.c
 )
 
+fr_add_service(aura CONFIG_SERVICE_AURA
+  src/svc_aura.c
+)
+
 fr_add_service(telnet CONFIG_SERVICE_TELNET
   src/svc_telnet.c
 )
@@ -110,6 +130,18 @@ fr_add_service(telnet CONFIG_SERVICE_TELNET
 fr_add_service(sched CONFIG_ENABLE_SCHED
   src/sched.c
 )
+
+fr_add_service(sensorlogger CONFIG_SERVICE_SENSORLOGGER
+  src/svc_sensorlogger.c
+  src/svcposter.c
+  esp8266-json/cJSON.c
+  lib/esphttpclient/httpclient.c
+  src/base64.c
+)
+
+include_directories(include/driver)
+include_directories(esp8266-json)
+include_directories(lib/esphttpclient/)
 
 fr_add_cmd(wireless CONFIG_CMD_IW src/cmd_iw.c)
 fr_add_cmd(uart CONFIG_CMD_UART src/cmd_uart.c)
@@ -147,11 +179,26 @@ fr_add_cmd(i2c_tcs3414cs CONFIG_CMD_I2C_TCS3414CS src/i2c_tcs3414cs.c)
 fr_add_cmd(i2c_mlx90614 CONFIG_CMD_I2C_MLX90614 src/i2c_mlx90614.c)
 fr_add_cmd(passthrough CONFIG_ENABLE_PASSTHROUGH src/cmd_passthrough.c)
 
+
+
 add_library(frankenstein OBJECT ${CORE_SRCS})
 add_dependencies(frankenstein config)
 add_executable(frank $<TARGET_OBJECTS:frankenstein>)
 target_link_iromified(frank frankenstein)
-target_link_libraries(frank ${ESP8266_LIBRARIES})
+target_link_libraries(frank ${ESP8266_LIBRARIES} )
+
+
+add_library(svcloglib OBJECT
+  src/sensorloggermain.c
+  src/uart.c
+  esp8266-json/cJSON.c
+  src/svcposter.c
+)
+
+#add_executable(svclog $<TARGET_OBJECTS:svcloglib>)
+#target_link_iromified(svclog svcloglib)
+#target_link_libraries(svclog ${ESP8266_LIBRARIES})
+
 
 
 add_custom_target(FLASH

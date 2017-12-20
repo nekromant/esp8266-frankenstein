@@ -48,10 +48,11 @@ static int do_at (int argc, const char* const* argv)
 		console_printf("\n");
 	}
 #endif
+
 	return 0;
 }
 
-CONSOLE_CMD(AT, 1, 10, 
-	    do_at, NULL, NULL, 
+CONSOLE_CMD(AT, 1, 10,
+	    do_at, NULL, NULL,
 	    "says OK"
 );

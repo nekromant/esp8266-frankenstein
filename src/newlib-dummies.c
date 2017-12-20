@@ -43,6 +43,7 @@
 #include <sys/times.h>
 #include <sys/unistd.h>
 #include <mem.h>
+#include <console.h>
 
 /************************** _close_r ************************************/
 /*  Support function.  Closes a file.					*/
@@ -131,8 +132,7 @@ double __ieee754_sqrt(double x) {
 	return x;
 }
 
-void *_malloc_r(void *ctx, size_t sz) {
-    console_printf("MALLOC %d\n", sz);
+void  * _malloc_r(void *ctx, size_t sz) {
 	return (void *) os_malloc(sz);
 }
 
@@ -143,4 +143,42 @@ void *_realloc_r(void *ctx, void *ptr, size_t sz) {
 void _free_r(void *ctx, void *ptr)
 {
 	return (void *) os_free(ptr);
+}
+
+
+_ssize_t  _read_r (void *ptr, int fd, char *buf, ssize_t cnt)
+{
+	return cnt;
+}
+
+_ssize_t _write_r (void *ptr, int fd, char *buf, ssize_t cnt)
+{
+	return cnt;
+}
+
+void abort()
+{
+
+}
+
+
+void *malloc(size_t sz) {
+    return (void *) os_malloc(sz);
+}
+
+void *realloc(void *oldptr, size_t sz) {
+    return (void *) os_realloc(oldptr, sz);
+}
+
+
+void _calloc_r(void *ctx, size_t sz, int num_el) {
+    return (void *) os_calloc(sz * num_el);
+}
+
+void calloc(size_t sz, int num_el) {
+    return (void *) os_calloc(sz * num_el);
+}
+
+void free(void *ptr) {
+    return os_free(ptr);
 }

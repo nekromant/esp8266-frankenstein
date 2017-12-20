@@ -59,11 +59,11 @@ static int  do_echo(int argc, const char* const* argv)
 		return echo_start(-1);
 	else
 		console_printf("echo: invalid command '%s'\n", argv[1]);
-	
+
 	return 0;
 }
 
-CONSOLE_CMD(echo, 2, 2, 
-	    do_echo, NULL, NULL, 
+CONSOLE_CMD(echo, 2, 2,
+	    do_echo, NULL, NULL,
 	    "start/stop tcp echo server"
 	    HELPSTR_NEWLINE "echo start - start service");

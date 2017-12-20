@@ -1,0 +1,6 @@
+[submodule "esp8266-json"]
+	path = esp8266-json
+	url = https://github.com/osbean/esp8266-json.git
+[submodule "lib/esphttpclient"]
+	path = lib/esphttpclient
+	url = https://github.com/Caerbannog/esphttpclient.git

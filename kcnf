@@ -23,6 +23,12 @@ bool "DHCP Server"
 help
 	You should execute 'resetenv' and reboot again after flashing, if you change this setting.
 
+config SERVICE_AURA
+bool "AURA RPC Client"
+
+config SERVICE_SENSORLOGGER
+bool "NextCloud Sensorlogger"
+
 config SERVICE_TCP
 bool "TCP/IP services"
 

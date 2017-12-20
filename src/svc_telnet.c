@@ -1,5 +1,5 @@
 
-// TODO: include telnet_state_t in send_buffer so to remove the need of telnet_service_s 
+// TODO: include telnet_state_t in send_buffer so to remove the need of telnet_service_s
 
 #define TELNET_IAC   255
 #define TELNET_WILL  251
@@ -37,7 +37,7 @@ typedef struct telnet_state_s
 } telnet_state_t;
 
 #define state(s)	((telnet_state_t*)((s)->sendbuf + (s)->send_buffer.size))
-	
+
 ///////////////////////////////////////////////////////////
 // callbacks for tcp service
 
@@ -71,8 +71,8 @@ static int telnet_printf (const char *fmt, ...)
 		ret = cbuf_vprintf(&current_telnet->send_buffer, fmt, ap);
 	else
 	{
-		vsnprintf(sprintbuf, SPRINTBUFSIZE, fmt, ap);
-		ret = SERIAL_PRINTF(sprintbuf);
+		vsnprintf(sprintbuf__, SPRINTBUFSIZE, fmt, ap);
+		ret = SERIAL_PRINTF(sprintbuf__);
 	}
 	va_end(ap);
 
@@ -98,26 +98,26 @@ static tcpservice_t* telnet_new_peer (tcpservice_t* listener)
 	peer->cb_recv = telnet_recv;
 	peer->cb_poll = telnet_poll;
 	tcp_service_set_poll_ms(peer, 1000);
-	
+
 	const char* tmp = env_get("telnet-drop");
 	state(peer)->state = STATE_NORMAL;
 	state(peer)->idle = 0;
 	state(peer)->max_idle = tmp? atoi(tmp): 60;
-	
+
 
 	return peer;
 }
 
 static err_t telnet_established (tcpservice_t* s)
 {
-	console_printf("\ntelnet: Incoming connection, switching to telnet console...\n"); 
+	console_printf("\ntelnet: Incoming connection, switching to telnet console...\n");
 	console_printf = telnet_printf;
 
 	/* Send in a welcome message */
 	CURRENT(s);
 	console_printf("Welcome to %s!\n", env_get("hostname"));
 	console_printf("Press enter to activate this console\n");
-	
+
 	return ERR_OK;
 }
 
@@ -127,7 +127,7 @@ static void telnet_closing (tcpservice_t* peer)
 }
 
 static void telnet_poll (tcpservice_t* peer)
-{ 
+{
 	if (state(peer)->max_idle > 0 && ++state(peer)->idle >= state(peer)->max_idle)
 	{
 		CURRENT(peer);
@@ -150,15 +150,15 @@ int sendopt (tcpservice_t* s, u8_t option, u8_t value)
 static size_t telnet_recv (tcpservice_t* ts, const char* q, size_t len)
 {
 	size_t ret = len;
-	
+
 	CURRENT(ts);
-	
+
 	state(ts)->idle = 0;
 	while (len > 0)
 	{
 		char c = *q++;
 		--len;
-	       
+
 		switch (state(ts)->state) {
 		case STATE_IAC:
 			if(c == TELNET_IAC) {
@@ -213,7 +213,7 @@ static size_t telnet_recv (tcpservice_t* ts, const char* q, size_t len)
 			break;
 		}
 	}
-	
+
 	return ret;
 }
 
@@ -253,13 +253,13 @@ static int  do_telnet(int argc, const char* const* argv)
 	}
 	else
 		console_printf("telnet: invalid command '%s'\n", argv[1]);
-	
+
 	return 0;
 }
 
 
-CONSOLE_CMD(telnet, 2, 2, 
-	    do_telnet, NULL, NULL, 
+CONSOLE_CMD(telnet, 2, 2,
+	    do_telnet, NULL, NULL,
 	    "start/stop telnet server"
 	    HELPSTR_NEWLINE "telnet start - start service"
 	    HELPSTR_NEWLINE "telnet stop  - stop service"
