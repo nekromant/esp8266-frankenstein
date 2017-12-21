@@ -89,7 +89,7 @@ endif()
 SET(CMAKE_TOOLCHAIN_FILE "${CMAKE_SOURCE_DIR}/cmake/cross-compile.cmake")
 
 project(esp8266-frankenstein)
-set(CMAKE_EXE_LINKER_FLAGS "-Os -Wl,--gc-sections -mtext-section-literals -nostdlib -Wl,--no-check-sections -u call_user_start -u _printf_float -u _scanf_float -Wl,-static  -T${CMAKE_SOURCE_DIR}/lds/eagle.app.v6.ld")
+set(CMAKE_EXE_LINKER_FLAGS "-Os -Wl,--gc-sections -mtext-section-literals -nostdlib -Wl,--no-check-sections -u call_user_start -u user_rf_cal_sector_set -Wl,-static  -T${CMAKE_SOURCE_DIR}/lds/eagle.app.v6.ld")
 set(ESP8266_LIBRARIES -Wl,--start-group main cirom gcc lwip m pwm hal net80211 phy pp wpa ssl -Wl,--end-group)
 set(CMAKE_C_FLAGS	"-Os -std=gnu99 -Wpointer-arith -mlongcalls -Wundef -Wl,-EL -ffunction-sections -fdata-sections -mtext-section-literals -fno-inline-functions -mlongcalls -D__ets__ -DICACHE_FLASH")
 set(CMAKE_C_FLAGS	"${CMAKE_C_FLAGS} -include ${CMAKE_BINARY_DIR}/include/generated/autoconf.h")
@@ -116,6 +116,7 @@ set(CORE_SRCS
   lib/esphttpclient/httpclient.c
   src/base64.c
   src/cmd_env.c
+  src/console_auth.c
 )
 
 fr_add_service(tcp CONFIG_SERVICE_TCP
@@ -162,7 +163,12 @@ fr_add_service(MQTT CONFIG_ENABLE_MQTT
   src/mqtt/ringbuf.c
   src/mqtt/utils.c
 )
-#fr_add_service(tftp CONFIG_CMD_TFTP src/cmd_tftp.c)
+
+fr_add_service(tftp CONFIG_CMD_TFTP
+  src/cmd_tftp.c
+  src/tftp.c
+)
+
 fr_add_cmd(at CONFIG_CMD_AT src/cmd_at.c)
 fr_add_cmd(adc CONFIG_CMD_ADC src/cmd_adc.c)
 fr_add_cmd(nslookup CONFIG_CMD_NSLOOKUP src/cmd_nslookup.c)

@@ -7,3 +7,6 @@
 [submodule "lib/esphttpclient"]
 	path = lib/esphttpclient
 	url = https://github.com/Caerbannog/esphttpclient.git
+[submodule "lib/esp8266_ping"]
+	path = lib/esp8266_ping
+	url = https://github.com/eadf/esp8266_ping.git
