@@ -15,15 +15,10 @@
 #include <generic/macros.h>
 
 
-
-
-//struct slogger_instace *slogger_instance_create(struct slogger_opts *opts);
-//int slogger_instance_register_datatype(struct slogger_instace *i, const char *type, const char* desc, const char* unit);
-//struct slogger_report *slogger_instance_create_report(struct slogger_instance *i);
-//int slogger_report_add_data(int id, )
-//void slogger_report_add_data(struct slogger_instance *i);
-
-
+static double get_something(struct slogger_data_type *tp)
+{
+	return system_get_time() / 1000000.0;
+}
 
 static struct slogger_instance this = {
 	.deviceId			= "dev-arven-001",
@@ -38,6 +33,7 @@ static struct slogger_instance this = {
 			.type		= "mana",
 			.description	= "Mana regen rate",
 			.unit		= "pts/sec",
+            .get_current_value = get_something
 		},
 		{
 		}
@@ -65,27 +61,51 @@ static void svclog_load_env()
 
 static struct slogger_http_request *cur_rq;
 
+
+static void request_finalize() {
+	console_lock(0);
+	char *tmp = cur_rq->userdata;
+	slogger_http_request_release(cur_rq);
+	cur_rq = NULL;
+	if (tmp)
+		console_write(tmp, strlen(tmp));
+}
+
 void http_cb(char *response_body, int http_status, char *response_headers, int body_size)
 {
 	console_printf("http status: %d\n", http_status);
 	if (http_status != HTTP_STATUS_GENERIC_ERROR) {
 		console_printf("server response: %s\n", response_body);
 	}
-	slogger_http_request_release(cur_rq);
-	cur_rq = NULL;
-	console_lock(0);
+	request_finalize();
+}
+
+void http_data_type_cb(char *response_body, int http_status, char *response_headers, int body_size)
+{
+	console_printf("http status: %d\n", http_status);
+	if (http_status != HTTP_STATUS_GENERIC_ERROR)
+		slogger_instance_populate_data_type_ids(&this, response_body);
+	request_finalize();
 }
 
 static int   do_svclog(int argc, const char *const *argv)
 {
 	struct slogger_http_request *rq;
+	http_callback cb = http_cb;
 	svclog_load_env();
+
+
 	if (strcmp(argv[1], "register") == 0) {
 		rq = slogger_instance_rq_register(&this);
+		rq->userdata = "senslog get_dt\n\r\n\r";
 		console_printf("Registering device at %s\n", rq->url);
 	} else if (strcmp(argv[1], "post") == 0) {
-		rq = slogger_instance_rq_post(&this, 0, system_get_time() / 1000000.0);
+		rq = slogger_instance_rq_post(&this);
 		console_printf("Posting data to %s\n", rq->url);
+	} else if (strcmp(argv[1], "get_dt") == 0) {
+		rq = slogger_instance_rq_get_data_types(&this);
+		cb = http_data_type_cb;
+		console_printf("Requesting info at %s\n", rq->url);
 	} else {
 		console_printf("Unknown op %s\n", argv[1]);
 		return 0;
@@ -93,7 +113,7 @@ static int   do_svclog(int argc, const char *const *argv)
 
 	cur_rq = rq;
 	console_printf("%s\n", rq->data);
-	http_post(rq->url, rq->data, rq->headers, http_cb);
+	http_post(rq->url, rq->data, rq->headers, cb);
 	console_lock(1);
 	return 0;
 }
@@ -103,8 +123,10 @@ static void do_svclog_interrupt(void)
 }
 
 
-CONSOLE_CMD(senslog, 1, -1,
+CONSOLE_CMD(senslog, 2, -1,
 	    do_svclog, do_svclog_interrupt, NULL,
-	    "Send data to a remote host."
-	    HELPSTR_NEWLINE "Send svclog request"
+	    "Register and send data to a nextcloud sensorlogger."
+	    HELPSTR_NEWLINE "senslog register       - registers this device with logger"
+	    HELPSTR_NEWLINE "senslog get_data_types - obtains data type ids from server"
+	    HELPSTR_NEWLINE "senslog post           - posts data from all configured sensors"
 	    );

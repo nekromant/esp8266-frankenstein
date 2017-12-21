@@ -53,15 +53,22 @@ struct slogger_http_request *slogger_instance_rq_register(struct slogger_instanc
 	APPEND(root, inst, deviceGroup);
 	APPEND(root, inst, deviceParentGroup);
 
-	cJSON_AddItemToObject(root, "deviceDataTypes", dt = cJSON_CreateObject());
-	struct slogger_data_type *tp = inst->deviceDataTypes;
-	while (tp->type) {
-		APPEND(dt, tp, type);
-		APPEND(dt, tp, description);
-		APPEND(dt, tp, unit);
-		tp++;
+
+	cJSON_AddItemToObject(root, "deviceDataTypes", dt = cJSON_CreateArray());
+	int i = 0;
+	while (inst->deviceDataTypes[i].type) {
+		cJSON *tmp;
+		tmp = cJSON_CreateObject();
+		struct slogger_data_type *current = &inst->deviceDataTypes[i];
+		APPEND(tmp, current, type);
+		APPEND(tmp, current, description);
+		APPEND(tmp, current, unit);
+		cJSON_AddItemToArray(dt, tmp);
+		i++;
 	}
+
 	ret = malloc(sizeof(*ret));
+	ret->userdata = NULL;	
 	ret->data = cJSON_Print(root);
 	ret->headers = slogger_get_headers(inst);
 	asprintf(&ret->url, "%s/index.php/apps/sensorlogger/api/v1/registerdevice/", inst->nextCloudUrl);
@@ -85,21 +92,113 @@ void float2char(float val, char *smallBuff)
 		sprintf(smallBuff, "%i.%u", val1, val2);
 }
 
-struct slogger_http_request *slogger_instance_rq_post(struct slogger_instance *inst, int id, double value)
+struct slogger_http_request *slogger_instance_rq_post(struct slogger_instance *inst)
 {
 	struct slogger_http_request *ret;
-	cJSON *root;
+	cJSON *root, *dt, *item;
 
 	root = cJSON_CreateObject();
 	APPEND(root, inst, deviceId);
-	char tmp[64];
-	float2char(value, tmp);
-	cJSON_AddStringToObject(root, inst->deviceDataTypes[id].type, tmp);
+
+	cJSON_AddItemToObject(root, "data", dt = cJSON_CreateArray());
+
+	int i = 0;
+	while (inst->deviceDataTypes[i].type) {
+		struct slogger_data_type *current = &inst->deviceDataTypes[i];
+		char tmp[64];
+		item = cJSON_CreateObject();
+		cJSON_AddItemToObject(item, "dataTypeId", cJSON_CreateNumber(current->dataTypeId));
+		float2char(current->get_current_value(current), tmp);
+		cJSON_AddStringToObject(item, "value", tmp);
+		cJSON_AddItemToArray(dt, item);
+		i++;
+	}
 
 	ret = malloc(sizeof(*ret));
+	ret->userdata = NULL;
 	ret->data = cJSON_Print(root);
 	ret->headers = slogger_get_headers(inst);
 	asprintf(&ret->url, "%s/index.php/apps/sensorlogger/api/v1/createlog/", inst->nextCloudUrl);
 	cJSON_Delete(root);
 	return ret;
+}
+
+struct slogger_http_request *slogger_instance_rq_get_data_types(struct slogger_instance *inst)
+{
+	struct slogger_http_request *ret;
+	cJSON *root, *dt, *item;
+
+	root = cJSON_CreateObject();
+	APPEND(root, inst, deviceId);
+
+	ret = malloc(sizeof(*ret));
+	ret->userdata = NULL;
+	ret->data = cJSON_Print(root);
+	ret->headers = slogger_get_headers(inst);
+	asprintf(&ret->url, "%s/index.php/apps/sensorlogger/api/v1/getdevicedatatypes/", inst->nextCloudUrl);
+	cJSON_Delete(root);
+	return ret;
+}
+
+
+void slogger_instance_set_data_type_id(struct slogger_instance *inst,
+				       char *			description,
+				       char *			type,
+				       char *			shortd,
+				       int			id
+				       )
+{
+	struct slogger_data_type *pos = inst->deviceDataTypes;
+	while(pos->type) {
+		if ((strcmp(pos->type, type) == 0) &&
+			(strcmp(pos->description, description) == 0) &&
+			(strcmp(pos->unit, shortd) == 0)) {
+				pos->dataTypeId = id;
+			}
+		pos++;
+	}
+}
+
+void slogger_instance_populate_data_type_ids(struct slogger_instance *inst, char *json)
+{
+	cJSON *tmp = cJSON_Parse(json);
+	cJSON *obj;
+
+	if (!tmp) {
+		return;
+	}
+
+	if (tmp->type != cJSON_Array) {
+		goto bailout;
+	}
+
+	obj = tmp->child;
+	while (obj) {
+		if (obj->type != cJSON_Object) {
+			goto bailout;
+		}
+
+		cJSON *prop = obj->child;
+		int id = 0;
+		char *description = NULL;
+		char *type = NULL;
+		char *shortd = NULL;
+		while (prop) {
+			if (strcmp(prop->string, "id") == 0)
+				id = atoi(prop->valuestring);
+			else if (strcmp(prop->string, "description") == 0)
+				description = prop->valuestring;
+			else if (strcmp(prop->string, "type") == 0)
+				type = prop->valuestring;
+			else if (strcmp(prop->string, "short") == 0)
+				shortd = prop->valuestring;
+			prop = prop->next;
+		}
+
+		slogger_instance_set_data_type_id(inst, description, type, shortd, id);
+		obj = obj->next;
+	}
+
+bailout:
+	cJSON_Delete(tmp);
 }
