@@ -112,7 +112,7 @@ set(CORE_SRCS
   src/console.c
   src/uart.c
   src/sensorlogger.c
-  esp8266-json/cJSON.c
+  lib/esp8266-json/cJSON.c
   lib/esphttpclient/httpclient.c
   src/base64.c
   src/cmd_env.c
@@ -141,7 +141,7 @@ fr_add_service(sensorlogger CONFIG_SERVICE_SENSORLOGGER
 )
 
 include_directories(include/driver)
-include_directories(esp8266-json)
+include_directories(lib/esp8266-json)
 include_directories(lib/esphttpclient/)
 
 fr_add_cmd(wireless CONFIG_CMD_IW src/cmd_iw.c)

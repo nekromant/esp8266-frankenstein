@@ -2,7 +2,7 @@
 	path = lib/auraclient
 	url = https://github.com/nekromant/auraclient.git
 [submodule "esp8266-json"]
-	path = esp8266-json
+	path = lib/esp8266-json
 	url = https://github.com/osbean/esp8266-json.git
 [submodule "lib/esphttpclient"]
 	path = lib/esphttpclient
