@@ -111,6 +111,11 @@ set(CORE_SRCS
   src/iwconnect.c
   src/console.c
   src/uart.c
+  src/sensorlogger.c
+  esp8266-json/cJSON.c
+  lib/esphttpclient/httpclient.c
+  src/base64.c
+  src/cmd_env.c
 )
 
 fr_add_service(tcp CONFIG_SERVICE_TCP
@@ -133,10 +138,6 @@ fr_add_service(sched CONFIG_ENABLE_SCHED
 
 fr_add_service(sensorlogger CONFIG_SERVICE_SENSORLOGGER
   src/svc_sensorlogger.c
-  src/svcposter.c
-  esp8266-json/cJSON.c
-  lib/esphttpclient/httpclient.c
-  src/base64.c
 )
 
 include_directories(include/driver)
@@ -187,13 +188,6 @@ add_executable(frank $<TARGET_OBJECTS:frankenstein>)
 target_link_iromified(frank frankenstein)
 target_link_libraries(frank ${ESP8266_LIBRARIES} )
 
-
-add_library(svcloglib OBJECT
-  src/sensorloggermain.c
-  src/uart.c
-  esp8266-json/cJSON.c
-  src/svcposter.c
-)
 
 #add_executable(svclog $<TARGET_OBJECTS:svcloglib>)
 #target_link_iromified(svclog svcloglib)
