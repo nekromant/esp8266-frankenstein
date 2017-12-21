@@ -116,7 +116,7 @@ static err_t telnet_established (tcpservice_t* s)
 	/* Send in a welcome message */
 	CURRENT(s);
 	console_printf("Welcome to %s!\n", env_get("hostname"));
-	console_printf("Press enter to activate this console\n");
+    console_auth_start();
 
 	return ERR_OK;
 }

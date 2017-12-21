@@ -19,6 +19,7 @@ printf_f console_printf = SERIAL_PRINTF;
 #define CONSOLE_PRIO 1
 
 int log_level = LOG_LEVEL_DEFAULT;
+static int authorized;
 
 static microrl_t rl;
 #define prl (&rl)
@@ -42,43 +43,24 @@ void console_lock(int l)
 		microrl_print_prompt(prl);
 }
 
+
+static void (*console_cur_handler)(void* arg, char c);
+static void *console_cur_arg;
+
+void console_set_charhandler( void (*charhndlr)(void* arg, char c), void *arg)
+{
+	console_cur_handler = charhndlr;
+	console_cur_arg = arg;
+}
+
 void console_insert(char c)
 {
-#if 0
-WIP direct link serial<->wifi
-	static uint32 esc_time = 0;
-	static int esc_count = 0;
-
-	if (passthrough)
-	{
-		//console_printf("%c", c);
-		ets_uart_printf("@%c,%d", c,c);
-
-		if (c != KEY_ESC)
-			esc_count = 0;
-		else
-		{
-			uint32 now = system_get_time();
-			if (++esc_count > 1)
-			{
-				if (now - esc_time < ESC_SPACE)
-					esc_count = 0;
-				else if (esc_count == ESC_COUNT)
-				{
-					// disable passthrough
-					enable_passthrough(0);
-					console_printf("console on serial line\n");
-					esc_count = 0;
-				}
-			}
-			esc_time = now;
-		}
-	}
-	else
-#endif
-		if (!console_locked || (c) == KEY_ETX)
+		if (console_cur_handler)
+			console_cur_handler(console_cur_arg, c);
+ 		else if (!console_locked || (c) == KEY_ETX)
 			microrl_insert_char (prl, c);
 }
+
 
 void console_write(char *buf, int len)
 {

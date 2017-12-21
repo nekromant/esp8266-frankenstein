@@ -68,7 +68,7 @@ void console_insert(char c);
 void console_lock(int l);
 void console_write(char *buf, int len);
 void console_exec(char *str);
-
+void console_set_charhandler( void (*charhndlr)(void* arg, char c), void *arg);
 void enable_passthrough(int v);
 
 const char* loglevnam (int lev);

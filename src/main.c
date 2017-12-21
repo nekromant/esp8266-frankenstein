@@ -93,7 +93,8 @@ void request_default_environment(void)
 void print_hello_banner(void)
 {
 	console_printf("\n\n\nFrankenstein ESP8266 Firmware\n");
-	console_printf("(c) Andrew 'Necromant' Andrianov 2014 <andrew@ncrmnt.org>\n");
+	console_printf("(c) Andrew 'Necromant' Andrianov 2014-2017 <andrew@ncrmnt.org>\n");
+	console_printf("    and (c) other nice folks @github ;)\n");
 	console_printf("This is free software (where possible), published under the terms of GPLv2\n");
 	console_printf("\nMemory Layout:\n");
 	system_print_meminfo();
@@ -197,7 +198,6 @@ static void main_init_done(void)
 	#endif
 
 	#if defined(CONFIG_SERVICE_TELNET)
-        #error
 		const char *enabled = env_get("telnet-autostart");
 		if (enabled && (*enabled=='1'))
 			telnet_start(-1); // use env or 23
@@ -206,6 +206,8 @@ static void main_init_done(void)
 
 	console_init(32);
 
+	console_auth_start();
+	
 	/*
 	 * Check for $bootcmd after initializing wifi ...
 	 */
