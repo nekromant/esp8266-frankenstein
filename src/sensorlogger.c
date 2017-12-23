@@ -40,6 +40,27 @@ static char *slogger_get_headers(struct slogger_instance *inst)
 	return ret;
 }
 
+
+static struct slogger_data_type *get_last_dt(struct slogger_instance *inst)
+{
+	struct slogger_data_type *f = inst->deviceDataTypes;
+
+	while (f->next)
+		f = f->next;
+	return f;
+}
+
+void sensorlogger_instance_register_data_type(struct slogger_instance *inst, struct slogger_data_type *new)
+{
+	if (!inst->deviceDataTypes) {
+		inst->deviceDataTypes = new;
+	} else {
+		struct slogger_data_type *l = get_last_dt(inst);
+		l->next = new;
+	}
+	new->next = NULL;
+}
+
 struct slogger_http_request *slogger_instance_rq_register(struct slogger_instance *inst)
 {
 	struct slogger_http_request *ret;
@@ -55,20 +76,20 @@ struct slogger_http_request *slogger_instance_rq_register(struct slogger_instanc
 
 
 	cJSON_AddItemToObject(root, "deviceDataTypes", dt = cJSON_CreateArray());
-	int i = 0;
-	while (inst->deviceDataTypes[i].type) {
+
+	struct slogger_data_type *current = inst->deviceDataTypes;
+	while (current) {
 		cJSON *tmp;
 		tmp = cJSON_CreateObject();
-		struct slogger_data_type *current = &inst->deviceDataTypes[i];
 		APPEND(tmp, current, type);
 		APPEND(tmp, current, description);
 		APPEND(tmp, current, unit);
 		cJSON_AddItemToArray(dt, tmp);
-		i++;
+		current = current->next;
 	}
 
 	ret = malloc(sizeof(*ret));
-	ret->userdata = NULL;	
+	ret->userdata = NULL;
 	ret->data = cJSON_Print(root);
 	ret->headers = slogger_get_headers(inst);
 	asprintf(&ret->url, "%s/index.php/apps/sensorlogger/api/v1/registerdevice/", inst->nextCloudUrl);
@@ -102,16 +123,18 @@ struct slogger_http_request *slogger_instance_rq_post(struct slogger_instance *i
 
 	cJSON_AddItemToObject(root, "data", dt = cJSON_CreateArray());
 
-	int i = 0;
-	while (inst->deviceDataTypes[i].type) {
-		struct slogger_data_type *current = &inst->deviceDataTypes[i];
+	struct slogger_data_type *current = inst->deviceDataTypes;
+	while (current) {
 		char tmp[64];
 		item = cJSON_CreateObject();
+		double value = current->current_value;
+		if (current->get_current_value)
+			value = current->get_current_value(current);
 		cJSON_AddItemToObject(item, "dataTypeId", cJSON_CreateNumber(current->dataTypeId));
-		float2char(current->get_current_value(current), tmp);
+		float2char(value, tmp);
 		cJSON_AddStringToObject(item, "value", tmp);
 		cJSON_AddItemToArray(dt, item);
-		i++;
+		current = current->next;
 	}
 
 	ret = malloc(sizeof(*ret));
@@ -141,22 +164,50 @@ struct slogger_http_request *slogger_instance_rq_get_data_types(struct slogger_i
 }
 
 
-void slogger_instance_set_data_type_id(struct slogger_instance *inst,
-				       char *			description,
-				       char *			type,
-				       char *			shortd,
-				       int			id
-				       )
+struct slogger_data_type *slogger_instance_find_data_type(struct slogger_instance *	inst,
+							  char *			description,
+							  char *			type,
+							  char *			shortd
+							  )
 {
 	struct slogger_data_type *pos = inst->deviceDataTypes;
-	while(pos->type) {
-		if ((strcmp(pos->type, type) == 0) &&
-			(strcmp(pos->description, description) == 0) &&
-			(strcmp(pos->unit, shortd) == 0)) {
-				pos->dataTypeId = id;
-			}
-		pos++;
+
+	while (pos) {
+		if ((type || (strcmp(pos->type, type) == 0)) &&
+		    (description || strcmp(pos->description, description == 0)) &&
+		    (shortd || strcmp(pos->unit, shortd == 0)))
+			break;
+		pos = pos->next;
 	}
+
+	return pos;
+}
+
+void slogger_instance_set_current_value(struct slogger_instance *	inst,
+					char *				description,
+					char *				type,
+					char *				shortd,
+					double				value)
+{
+	struct slogger_data_type *pos =
+		slogger_instance_find_data_type(inst, description, type, shortd);
+
+	if (pos)
+		pos->current_value = value;
+}
+
+static void slogger_instance_set_data_type_id(struct slogger_instance * inst,
+					      char *			description,
+					      char *			type,
+					      char *			shortd,
+					      int			id
+					      )
+{
+	struct slogger_data_type *pos =
+		slogger_instance_find_data_type(inst, description, type, shortd);
+
+	if (pos)
+		pos = pos->next;
 }
 
 void slogger_instance_populate_data_type_ids(struct slogger_instance *inst, char *json)
@@ -164,19 +215,16 @@ void slogger_instance_populate_data_type_ids(struct slogger_instance *inst, char
 	cJSON *tmp = cJSON_Parse(json);
 	cJSON *obj;
 
-	if (!tmp) {
+	if (!tmp)
 		return;
-	}
 
-	if (tmp->type != cJSON_Array) {
+	if (tmp->type != cJSON_Array)
 		goto bailout;
-	}
 
 	obj = tmp->child;
 	while (obj) {
-		if (obj->type != cJSON_Object) {
+		if (obj->type != cJSON_Object)
 			goto bailout;
-		}
 
 		cJSON *prop = obj->child;
 		int id = 0;

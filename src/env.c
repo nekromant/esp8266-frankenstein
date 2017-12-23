@@ -1,4 +1,4 @@
-/* Dirty and inefficient key=value storage */ 
+/* Dirty and inefficient key=value storage */
 
 #include "ets_sys.h"
 #include "os_type.h"
@@ -8,7 +8,7 @@
 
 #include "espconn.h"
 #include "gpio.h"
-#include "driver/uart.h" 
+#include "driver/uart.h"
 #include "microrl.h"
 #include "console.h"
 
@@ -20,19 +20,19 @@
 
 struct environment {
 	uint16_t crc;
-	uint16_t occupied; 
+	uint16_t occupied;
 	char data[];
 } __attribute__ ((packed));
 
 static struct environment *current_env;
 static uint16_t current_env_size;
 static uint16_t current_env_end;
-static uint32_t current_env_flash_addr; 
+static uint32_t current_env_flash_addr;
 
 /* [CRC, LEN]| KEY 0x0, VALUE, 0x0, KEY 0x0, VALUE, 0x0 ... 0xFF */
 
 struct env_element {
-	char* key; 
+	char* key;
 	char* value;
 };
 
@@ -57,7 +57,7 @@ struct env_element env_next(char **ptr)
 {
 	struct env_element ret;
 	ret.key = NULL;
-	
+
 	if (**ptr == 0xFF)
 		goto bailout; /* at end */
 
@@ -65,7 +65,7 @@ struct env_element env_next(char **ptr)
 	*ptr+= strlen(*ptr) + 1;
 	ret.value = *ptr;
 	*ptr+=strlen(*ptr) + 1;
- 
+
 bailout:
 	return ret;
 }
@@ -77,20 +77,20 @@ int env_delete(const char* key)
 	struct env_element e;
 	do {
 		e = env_next(&ptr);
-		if (e.key && (strcmp(e.key, key)==0)) {  
+		if (e.key && (strcmp(e.key, key)==0)) {
 			char* to = e.key;
-			e = env_next(&ptr);				
+			e = env_next(&ptr);
 			char* from = e.key;
 			if (!from)
-				from = &current_env->data[current_env->occupied]; 
-			int delta = (from - to); 
-			while (*from != 0xff) 
+				from = &current_env->data[current_env->occupied];
+			int delta = (from - to);
+			while (*from != 0xff)
 				*to++ = *from++;
 			*to = 0xff;
 			current_env->occupied-=delta;
 			return 0;
 		}
-	} while (e.key);	
+	} while (e.key);
 	return 0;
 }
 
@@ -101,9 +101,9 @@ int env_insert(const char* key, const char *value)
 	if (klen + vlen >= (current_env_size - current_env->occupied))
 		return -1; /* No space */
 	env_delete(key);
-	memcpy(&current_env->data[current_env->occupied], key, klen); 
+	memcpy(&current_env->data[current_env->occupied], key, klen);
 	current_env->occupied+=klen;
-	memcpy(&current_env->data[current_env->occupied], value, vlen); 
+	memcpy(&current_env->data[current_env->occupied], value, vlen);
 	current_env->occupied+=vlen;
 	current_env->data[current_env->occupied]=0xff;
 	return 0;
@@ -111,15 +111,22 @@ int env_insert(const char* key, const char *value)
 
 void env_save(void)
 {
+    int ret;
 #ifndef CONFIG_ENV_NOWRITE
+//	char tmp[SPI_FLASH_SEC_SIZE];
 	current_env->crc = crc16((const unsigned char*)&current_env->occupied, current_env_size + sizeof(uint16_t) );
 	spi_flash_erase_sector(current_env_flash_addr / SPI_FLASH_SEC_SIZE);
-	spi_flash_write(current_env_flash_addr, (uint32*)current_env, 
+	spi_flash_write(current_env_flash_addr, (uint32*)current_env,
 			current_env_size + sizeof(uint16_t));
+//	spi_flash_read(current_env_flash_addr, tmp, SPI_FLASH_SEC_SIZE);
+//	if (memcmp(tmp, current_env_flash_addr, SPI_FLASH_SEC_SIZE) != 0) {
+//		console_printf("Data readback failed! ;(");
+//	}
+
 #else
 	console_printf("Saving environment to flash disabled by config\n");
 	console_printf("Recompile with CONFIG_ENV_NOWRITE=n\n");
-#endif	
+#endif
 }
 
 void env_reset(void)
@@ -128,7 +135,7 @@ void env_reset(void)
 	current_env_end=0;
 	current_env->data[0]=0xFF;
 	request_default_environment();
-	env_save();	
+	env_save();
 }
 
 const char* env_get(const char* key)
@@ -137,7 +144,7 @@ const char* env_get(const char* key)
 	struct env_element e;
 	do {
 		e = env_next(&ptr);
-		if (e.key && (strcmp(key, e.key)==0)) 
+		if (e.key && (strcmp(key, e.key)==0))
 			return e.value;
 	} while (e.key);
 	return NULL;
@@ -150,11 +157,11 @@ void env_dump(void)
 	console_printf("=== Current environment ===\n");
 	do {
 		e = env_next(&ptr);
-		if (e.key) 
+		if (e.key)
 			console_printf("%-10s  %s\n", e.key, e.value);
 	} while (e.key);
-	console_printf("=== %d/%d bytes used ===\n", 
-		       current_env->occupied, 
+	console_printf("=== %d/%d bytes used ===\n",
+		       current_env->occupied,
 		       current_env_size);
 }
 
@@ -165,16 +172,21 @@ void env_init(uint32_t flashaddr, uint32_t envsize)
 	current_env_flash_addr = flashaddr;
 	current_env_size=envsize - sizeof(struct environment);
 #if defined(CONFIG_ENABLE_BANNER)
-	console_printf("env: Environment @ %p size %d bytes (%d real) \n", 
+	console_printf("env: Environment @ %p size %d bytes (%d real) \n",
 		       (void*)flashaddr, (int)envsize, (int)current_env_size);
 #endif
 	spi_flash_read(flashaddr, (uint32*)current_env, envsize);
 	uint16_t crc = crc16((const unsigned char*)&current_env->occupied, envsize - sizeof(uint16_t));
-	if ((current_env->occupied == 0) || (crc != current_env->crc)) { 
+	if ((current_env->occupied == 0) || (crc != current_env->crc)) {
 		console_printf("env: Bad CRC (%x vs %x) using defaults\n", crc, current_env->crc);
 		env_reset();
 	}
 #if defined(CONFIG_ENABLE_BANNER)
 	env_dump();
 #endif
+}
+
+void env_get_flash_location()
+{
+    return current_env_flash_addr;
 }

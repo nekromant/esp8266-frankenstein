@@ -28,17 +28,8 @@ static struct slogger_instance this = {
 	.userName			= "andrew",
 	.password			= "JMjpL-7o5dP-ez8DK-jQzSq-8aiqM",
 	.nextCloudUrl		= "https://cloud.ncrmnt.org",
-	.deviceDataTypes	= {
-		{
-			.type		= "mana",
-			.description	= "Mana regen rate",
-			.unit		= "pts/sec",
-            .get_current_value = get_something
-		},
-		{
-		}
-	}
 };
+
 
 #define load_param(key) \
 	tmp = env_get("slog-" #key); \
@@ -88,14 +79,58 @@ void http_data_type_cb(char *response_body, int http_status, char *response_head
 	request_finalize();
 }
 
+
+void add_dummy()
+{
+	struct slogger_data_type *dt = malloc(sizeof(*dt));
+
+	dt->type		= "mana";
+	dt->description	= "Mana";
+	dt->unit		= "pts";
+	dt->get_current_value = get_something;
+	sensorlogger_instance_register_data_type(&this, dt);
+
+	dt = malloc(sizeof(*dt));
+
+	dt->type		= "health";
+	dt->description	= "Health";
+	dt->unit		= "pts";
+	dt->get_current_value = get_something;
+	sensorlogger_instance_register_data_type(&this, dt);
+}
+
 static int   do_svclog(int argc, const char *const *argv)
 {
-	struct slogger_http_request *rq;
+	struct slogger_http_request *rq = NULL;
 	http_callback cb = http_cb;
 	svclog_load_env();
 
 
-	if (strcmp(argv[1], "register") == 0) {
+	if (strcmp(argv[1], "create") == 0) {
+		/* type description unit */
+		if (argc < 5) {
+			console_printf("Need at least 4 arguments");
+			return 0;
+		}
+		struct slogger_data_type *dt = malloc(sizeof(*dt));
+		dt->type		= strdup(argv[2]);
+		dt->description	= strdup(argv[3]);
+		dt->unit		= strdup(argv[4]);
+		dt->get_current_value = NULL;
+		dt->current_value = 0;
+		sensorlogger_instance_register_data_type(&this, dt);
+	} else if (strcmp(argv[1], "add_dummy") == 0) {
+		console_printf("registering dummies\n");
+		add_dummy();
+	} else if (strcmp(argv[1], "set") == 0) {
+		if (argc < 5) {
+			console_printf("Need at least 4 arguments");
+			return 0;
+		}
+		double value = strtod(argv[5], NULL);
+		slogger_instance_set_current_value(&this,
+			argv[2], argv[3], argv[4], value);
+	} else if (strcmp(argv[1], "register") == 0) {
 		rq = slogger_instance_rq_register(&this);
 		rq->userdata = "senslog get_dt\n\r\n\r";
 		console_printf("Registering device at %s\n", rq->url);
@@ -108,9 +143,10 @@ static int   do_svclog(int argc, const char *const *argv)
 		console_printf("Requesting info at %s\n", rq->url);
 	} else {
 		console_printf("Unknown op %s\n", argv[1]);
-		return 0;
 	}
 
+	if (!rq)
+		return 0;
 	cur_rq = rq;
 	console_printf("%s\n", rq->data);
 	http_post(rq->url, rq->data, rq->headers, cb);
@@ -125,8 +161,10 @@ static void do_svclog_interrupt(void)
 
 CONSOLE_CMD(senslog, 2, -1,
 	    do_svclog, do_svclog_interrupt, NULL,
-	    "Register and send data to a nextcloud sensorlogger."
-	    HELPSTR_NEWLINE "senslog register       - registers this device with logger"
-	    HELPSTR_NEWLINE "senslog get_data_types - obtains data type ids from server"
-	    HELPSTR_NEWLINE "senslog post           - posts data from all configured sensors"
+	    "Register and send data to a nextcloud sensorlogger"
+	    HELPSTR_NEWLINE "senslog register       						 - Registers this device with nextcloud and obtain data type ids (Implies get_dt)"
+	    HELPSTR_NEWLINE "senslog get_dt         						 - obtains data type ids from server"
+	    HELPSTR_NEWLINE "senslog post           						 - posts data from all configured sensors"
+	    HELPSTR_NEWLINE "senslog create type description unit            - Create a new datatype from commandline"
+	    HELPSTR_NEWLINE "senslog set type description unit current_value - Update current sensor value from commandline"
 	    );

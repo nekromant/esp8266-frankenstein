@@ -34,6 +34,7 @@ struct envpair {
 
 const struct envpair defaultenv[] = {
 	{ "sta-mode",          "dhcp" },
+	{ "prompt", 		   "frankenstein"},
 	{ "default-mode",
 /* ideally, this should somehow be tied into helpers.c, id_from_wireless_mode... */
 #if defined(CONFIG_WIFI_MODE_AP)

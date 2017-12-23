@@ -199,11 +199,12 @@ void console_init(int qlen) {
 	microrl_set_sigint_callback(prl, sigint);
 	microrl_set_complete_callback(prl, completion);
 
-	const char *p = env_get("hostname");
+	const char *p = env_get("prompt");
 	if (p)
 		microrl_set_prompt(p);
 
-	console_printf("\n === Press enter to activate this console === \n");
 	os_event_t *queue = os_malloc(sizeof(os_event_t) * qlen);
 	system_os_task(task_console, CONSOLE_PRIO, queue, qlen);
+	console_printf("\n\n");
+	microrl_print_prompt(prl);
 }
