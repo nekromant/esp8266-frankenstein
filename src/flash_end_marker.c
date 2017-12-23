@@ -6,20 +6,27 @@
 
 #include "espconn.h"
 #include "gpio.h"
-#include "driver/uart.h" 
+#include "driver/uart.h"
 #include "microrl.h"
 #include "console.h"
 #include <generic/macros.h>
 
-static __attribute__ ((used))	
+static __attribute__ ((used))
 __attribute__((section(".firmware_end_marker"))) uint32_t flash_ends_here;
 
-/* 
+/*
    Since flash's placed @ 0x40200000 we can easily calculate where to place user data
 */
 
+
+uint32_t fr_get_firmware_last_loc()
+{
+	return (uint32_t) &flash_ends_here;
+}
+
 uint32_t fr_get_firmware_size()
 {
+
 	return (((uint32_t) &flash_ends_here) + sizeof(uint32_t) - 0x40200000);
 }
 
@@ -34,4 +41,9 @@ uint32_t fr_fs_flash_offset()
 void *fr_fs_physaddr()
 {
 	return (void *) (fr_fs_flash_offset() + 0x40200000);
+}
+
+uint32_t fr_fs_size()
+{
+    return env_get_flash_location() - fr_fs_flash_offset();
 }

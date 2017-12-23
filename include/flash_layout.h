@@ -4,5 +4,6 @@
 uint32_t fr_get_firmware_size();
 uint32_t fr_fs_flash_offset();
 void *fr_fs_physaddr();
+uint32_t fr_fs_size();
 
 #endif

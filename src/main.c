@@ -99,11 +99,14 @@ void print_hello_banner(void)
 	console_printf("\nMemory Layout:\n");
 	system_print_meminfo();
 	system_set_os_print(0);
-	console_printf("\n Flash layout:\n"
-		       "Firmware size is     %d KiB (0x%x)\n"
-		       "Filesystem starts at %d KiB (0x%x)\n",
-		       fr_get_firmware_size()/1024, fr_get_firmware_size(),
-		       fr_fs_flash_offset()/1024,   fr_fs_flash_offset());
+	console_printf("\nFlash layout:\n");
+	console_printf("Firmware ends @ %p\n", fr_get_firmware_last_loc());
+	console_printf("Firmware size is     %d KiB (0x%x)\n",
+		       fr_get_firmware_size()/1024, fr_get_firmware_size());
+	console_printf("Filesystem starts at %d KiB (0x%x)\n", fr_fs_flash_offset()/1024, fr_fs_flash_offset());
+	console_printf("Filesystem size      %d KiB \n", fr_fs_size() / 1024);
+
+
 	console_printf("\nAvailable services:\n");
   int have_features = 0;
 #if defined(CONFIG_SERVICE_DHCPS)
@@ -205,12 +208,12 @@ static void main_init_done(void)
 
 
 	console_init(32);
-
-	console_auth_start();
-	
 	/*
 	 * Check for $bootcmd after initializing wifi ...
 	 */
+
+	return;
+	/* TODO: ARM timer for bootcmd */
 	const char *cmd = env_get("bootcmd");
 	if (cmd!= NULL) {
 		int i=0;
@@ -231,10 +234,20 @@ void user_init()
 	uart_init(1, 115200);
 #endif
 	uart_init_io();
-	env_init(CONFIG_ENV_OFFSET, CONFIG_ENV_LEN);
 
-	const char* loglevel = env_get("log-level");
-	if (loglevel) { set_log_level(atoi(loglevel)); }
+	extern char flashchip;
+    SpiFlashChip *flash = (SpiFlashChip*)(&flashchip + 4);
+	uint32_t cal_addr = ((flash->chip_size >> 12) - 5) << 12;
+	ets_uart_printf("Flash size: %d bytes, esp calibration data at sector @ %p\n",
+		flash->chip_size, cal_addr);
+	uint32_t env_addr = cal_addr - CONFIG_ENV_LEN;
+	if (env_addr % SPI_FLASH_SEC_SIZE) {
+		env_addr -= SPI_FLASH_SEC_SIZE;
+		env_addr = ((env_addr >> 12) << 12);
+	}
+
+	env_init(env_addr, CONFIG_ENV_LEN);
+
 
 	PIN_FUNC_SELECT(PERIPHS_IO_MUX_GPIO2_U, FUNC_GPIO2);
 	PIN_FUNC_SELECT(PERIPHS_IO_MUX_GPIO0_U, FUNC_GPIO0);
