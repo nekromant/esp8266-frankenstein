@@ -17,14 +17,10 @@
 static void ping_recv_callback(void* arg, void *pdata)
 {
 	struct ping_resp *pingresp = pdata;
-
-	if(pingresp->seqno == 3 /*LAST PING PACKET*/){
-		console_printf("total %d, lost %d, %d bytes, %d ms (%d)\n" , 
-			pingresp->total_count, pingresp->timeout_count, pingresp->total_bytes, pingresp->total_time, pingresp->ping_err);
-		console_lock(0);
-	} else {
-		console_printf("recv %d bytes in %d ms, seq %d (%d)\n" , pingresp->bytes, pingresp->resp_time, pingresp->seqno, pingresp->ping_err);
-	}
+	console_printf("seq %d total %d, lost %d, %d bytes, %d ms (%d)\n" ,
+			pingresp->seqno, pingresp->total_count, pingresp->timeout_count,
+			pingresp->total_bytes, pingresp->total_time, pingresp->ping_err);
+	console_lock(0);
 }
 
 static int do_ping(int argc, const char* const* argv)
@@ -34,7 +30,7 @@ static int do_ping(int argc, const char* const* argv)
 	ipaddr.addr = ipaddr_addr(argv[1]);
 
 	pingopts->ip = ipaddr.addr;
-	pingopts->count = 3;
+	pingopts->count = 1;
 	pingopts->recv_function=ping_recv_callback;
 	pingopts->sent_function=NULL;
 	ping_start(pingopts);
@@ -42,8 +38,8 @@ static int do_ping(int argc, const char* const* argv)
 	return 0;
 }
 
-CONSOLE_CMD(ping, 2, 2, 
-	do_ping, NULL, NULL, 
+CONSOLE_CMD(ping, 2, 2,
+	do_ping, NULL, NULL,
 	"Send icmp ping to specified address"
 	HELPSTR_NEWLINE "ping 8.8.8.8"
 );
