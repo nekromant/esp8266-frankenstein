@@ -163,8 +163,7 @@ SECTIONS
     *(.console_firstcmd)
     KEEP (*(SORT(.console_cmd*)))
     *(.console_lastcmd)
-    *(.firmware_end_marker)
-
+    KEEP(*(.firmware_end_marker))
   } >irom0_0_seg :irom0_0_phdr
 
   .text : ALIGN(4)
