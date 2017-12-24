@@ -32,7 +32,7 @@ LOCAL void uart0_rx_intr_handler(void *para);
  * Parameters   : uart_no, use UART0 or UART1 defined ahead
  * Returns      : NONE
 *******************************************************************************/
-LOCAL void 
+LOCAL void
 uart_config(uint8 uart_no)
 {
     if (uart_no == UART1) {
@@ -72,9 +72,8 @@ uart_config(uint8 uart_no)
  * Parameters   : uint8 TxChar - character to tx
  * Returns      : OK
 *******************************************************************************/
-#if 0
-LOCAL STATUS 
-uart1_tx_one_char(uint8 TxChar)
+
+__attribute__ ((section(".iram0.text"))) void uart1_tx_one_char(uint8 TxChar)
 {
     while (true)
 	{
@@ -87,7 +86,7 @@ uart1_tx_one_char(uint8 TxChar)
 	WRITE_PERI_REG(UART_FIFO(UART1) , TxChar);
 	return OK;
 }
-#endif
+
 
 static  __attribute__ ((section(".iram0.text"))) STATUS uart0_tx_one_char(uint8 TxChar)
 {
@@ -104,7 +103,6 @@ static  __attribute__ ((section(".iram0.text"))) STATUS uart0_tx_one_char(uint8 
 }
 
 
-#if 0
 /******************************************************************************
  * FunctionName : uart1_write_char
  * Description  : Internal used function
@@ -112,8 +110,7 @@ static  __attribute__ ((section(".iram0.text"))) STATUS uart0_tx_one_char(uint8 
  * Parameters   : char c - character to tx
  * Returns      : NONE
 *******************************************************************************/
-LOCAL void 
-uart1_write_char(char c)
+__attribute__ ((section(".iram0.text"))) void uart1_write_char(char c)
 {
     if (c == '\n') {
         uart1_tx_one_char('\r');
@@ -123,7 +120,7 @@ uart1_write_char(char c)
         uart1_tx_one_char(c);
     }
 }
-#endif
+
 
  __attribute__ ((section(".iram0.text")))  void  uart0_write_char(char c)
 {
@@ -162,7 +159,7 @@ static  __attribute__ ((section(".iram0.text"))) void uart0_rx_intr_handler(void
     WRITE_PERI_REG(UART_INT_CLR(UART0), UART_RXFIFO_FULL_INT_CLR);
 
     while (READ_PERI_REG(UART_STATUS(UART0)) & (UART_RXFIFO_CNT << UART_RXFIFO_CNT_S)) {
-	    RcvChar = READ_PERI_REG(UART_FIFO(UART0)) & 0xFF;	    
+	    RcvChar = READ_PERI_REG(UART_FIFO(UART0)) & 0xFF;
 	    /* you can add your handle code below.*/
 	    system_os_post(1, 0, RcvChar);
     }
@@ -178,7 +175,7 @@ static  __attribute__ ((section(".iram0.text"))) void uart0_rx_intr_handler(void
  *                uint16 len - buffer len
  * Returns      :
 *******************************************************************************/
-void 
+void
 uart0_tx_buffer(uint8 *buf, uint16 len)
 {
     uint16 i;
@@ -201,14 +198,14 @@ uart0_tx_buffer(uint8 *buf, uint16 len)
 void uart_init(int port, UartBautRate br)
 {
 	UartDev.baut_rate = br;
-	switch(port) { 
+	switch(port) {
 	case 0:
 		uart_config(UART0);
 		break;
 	case 1:
 		uart_config(UART1);
 		break;
-		
+
 	}
 }
 
@@ -216,5 +213,5 @@ void uart_init(int port, UartBautRate br)
 void uart_init_io()
 {
     ETS_UART_INTR_ENABLE();
-    os_install_putc1((void *)uart0_write_char);	
+    os_install_putc1((void *)uart0_write_char);
 }
