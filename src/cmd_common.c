@@ -54,7 +54,7 @@ static  int do_argtest(int argc, const char* const* argv)
 	console_printf("argc == %d\n", argc);
 	for (i=0; i<argc; i++)
 	{
-		console_printf("argv[%d] == %s\n", i, argv[i]);
+		console_printf("argv[%d] == '%s'\n", i, argv[i]);
 	}
 	return 0;
 }
