@@ -264,7 +264,7 @@ static int split (microrl_t * pThis, int limit, char const ** tkn_arr)
 		}
 
 		if (quote) {
-			pThis->pcmdline[ind++] = ' '; // Turn ' to space
+			pThis->pcmdline[ind++] = 0x0; // Turn ' to space
 			ind++;
 		}
 
