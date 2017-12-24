@@ -89,5 +89,10 @@ void slogger_instance_set_current_value(struct slogger_instance *inst,
 					       char *			shortd,
 					       double			value);
 
+/**
+ * Dumps current senslogger instance to stdout
+ * @param inst [description]
+ */
+void slogger_instance_dump(struct slogger_instance *inst);
 
 #endif /* end of include guard: SENSORLOGGER_H */

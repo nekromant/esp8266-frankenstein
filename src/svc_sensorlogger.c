@@ -74,8 +74,10 @@ void http_cb(char *response_body, int http_status, char *response_headers, int b
 void http_data_type_cb(char *response_body, int http_status, char *response_headers, int body_size)
 {
 	console_printf("http status: %d\n", http_status);
-	if (http_status != HTTP_STATUS_GENERIC_ERROR)
+	if (http_status != HTTP_STATUS_GENERIC_ERROR) {
+		console_printf("server resp: %s\n", response_body);
 		slogger_instance_populate_data_type_ids(&this, response_body);
+	}
 	request_finalize();
 }
 
@@ -109,7 +111,7 @@ static int   do_svclog(int argc, const char *const *argv)
 	if (strcmp(argv[1], "create") == 0) {
 		/* type description unit */
 		if (argc < 5) {
-			console_printf("Need at least 4 arguments");
+			console_printf("Need at least 4 arguments, have %d", argc);
 			return 0;
 		}
 		struct slogger_data_type *dt = malloc(sizeof(*dt));
@@ -124,12 +126,12 @@ static int   do_svclog(int argc, const char *const *argv)
 		add_dummy();
 	} else if (strcmp(argv[1], "set") == 0) {
 		if (argc < 5) {
-			console_printf("Need at least 4 arguments");
+			console_printf("Need at least 4 arguments, have %d", argc);
 			return 0;
 		}
 		double value = strtod(argv[5], NULL);
 		slogger_instance_set_current_value(&this,
-			argv[2], argv[3], argv[4], value);
+			argv[3], argv[2], argv[4], value);
 	} else if (strcmp(argv[1], "register") == 0) {
 		rq = slogger_instance_rq_register(&this);
 		rq->userdata = "senslog get_dt\n\r\n\r";
@@ -137,6 +139,8 @@ static int   do_svclog(int argc, const char *const *argv)
 	} else if (strcmp(argv[1], "post") == 0) {
 		rq = slogger_instance_rq_post(&this);
 		console_printf("Posting data to %s\n", rq->url);
+    } else if (strcmp(argv[1], "dump") == 0) {
+		slogger_instance_dump(&this);
 	} else if (strcmp(argv[1], "get_dt") == 0) {
 		rq = slogger_instance_rq_get_data_types(&this);
 		cb = http_data_type_cb;

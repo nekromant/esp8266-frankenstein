@@ -4,6 +4,7 @@
 #include <cJSON.h>
 #include <sensorlogger.h>
 
+#include "console.h"
 void slogger_http_request_release(struct slogger_http_request *rq)
 {
 	free(rq->url);
@@ -17,6 +18,13 @@ void slogger_http_request_release(struct slogger_http_request *rq)
 		cJSON_AddItemToObject(r, #field, cJSON_CreateString(object->field)); \
 	else \
 		cJSON_AddItemToObject(r, #field, cJSON_CreateString(""));
+
+
+#define DUMP_STR(object, field) \
+	console_printf("%s: %s\n", #field, object->field);
+
+#define DUMP_VAL(object, field) \
+	console_printf("%s: %d\n", #field, object->field);
 
 
 static char *slogger_get_headers(struct slogger_instance *inst)
@@ -59,6 +67,7 @@ void sensorlogger_instance_register_data_type(struct slogger_instance *inst, str
 		l->next = new;
 	}
 	new->next = NULL;
+	new->dataTypeId = -1;
 }
 
 struct slogger_http_request *slogger_instance_rq_register(struct slogger_instance *inst)
@@ -173,9 +182,11 @@ struct slogger_data_type *slogger_instance_find_data_type(struct slogger_instanc
 	struct slogger_data_type *pos = inst->deviceDataTypes;
 
 	while (pos) {
-		if ((type || (strcmp(pos->type, type) == 0)) &&
-		    (description || strcmp(pos->description, description == 0)) &&
-		    (shortd || strcmp(pos->unit, shortd == 0)))
+		if (
+			((!type) || (strcmp(pos->type, type) == 0)) &&
+			((!description) || strcmp(pos->description, description) == 0) &&
+			((!shortd) || strcmp(pos->unit, shortd) == 0)
+			)
 			break;
 		pos = pos->next;
 	}
@@ -196,6 +207,7 @@ void slogger_instance_set_current_value(struct slogger_instance *	inst,
 		pos->current_value = value;
 }
 
+
 static void slogger_instance_set_data_type_id(struct slogger_instance * inst,
 					      char *			description,
 					      char *			type,
@@ -207,7 +219,7 @@ static void slogger_instance_set_data_type_id(struct slogger_instance * inst,
 		slogger_instance_find_data_type(inst, description, type, shortd);
 
 	if (pos)
-		pos = pos->next;
+		pos->dataTypeId = id;
 }
 
 void slogger_instance_populate_data_type_ids(struct slogger_instance *inst, char *json)
@@ -249,4 +261,28 @@ void slogger_instance_populate_data_type_ids(struct slogger_instance *inst, char
 
 bailout:
 	cJSON_Delete(tmp);
+}
+
+
+void slogger_instance_dump(struct slogger_instance *inst)
+{
+	printf(" == SensorLogger Instance == ");
+	DUMP_STR(inst, deviceId);
+	DUMP_STR(inst, deviceName);
+	DUMP_STR(inst, deviceType);
+	DUMP_STR(inst, deviceGroup);
+	DUMP_STR(inst, deviceParentGroup);
+	DUMP_STR(inst, nextCloudUrl);
+	DUMP_STR(inst, userName);
+	DUMP_STR(inst, password);
+	console_printf(" == Data types == ");
+	struct slogger_data_type *pos = inst->deviceDataTypes;
+	while (pos) {
+		DUMP_STR(pos, type);
+		DUMP_STR(pos, description);
+		DUMP_STR(pos, unit);
+		DUMP_VAL(pos, dataTypeId);
+		pos = pos->next;
+		console_printf(" == == == ");
+	}
 }
