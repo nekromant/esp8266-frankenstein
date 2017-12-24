@@ -117,6 +117,7 @@ set(CORE_SRCS
   src/base64.c
   src/cmd_env.c
   src/console_auth.c
+  src/cmd_common.c
 )
 
 fr_add_service(tcp CONFIG_SERVICE_TCP
@@ -203,13 +204,13 @@ target_link_libraries(frank ${ESP8266_LIBRARIES} )
 
 add_custom_target(FLASH
   COMMAND esptool.py --chip esp8266 elf2image frank
-  COMMAND pl2303gpio --gpio=0 --out=0 --gpio=1 --out=0
-  --gpio=1 --in --sleep 350
-  --gpio=0 --in
+#  COMMAND pl2303gpio --gpio=0 --out=0 --gpio=1 --out=0
+#  --gpio=1 --in --sleep 350
+#  --gpio=0 --in
   COMMAND esptool.py write_flash 0x0 frank-0x00000.bin
-  COMMAND pl2303gpio --gpio=0 --out=0 --gpio=1 --out=0
-  --gpio=1 --in --sleep 350
-  --gpio=0 --in
+#  COMMAND pl2303gpio --gpio=0 --out=0 --gpio=1 --out=0
+#  --gpio=1 --in --sleep 350
+#  --gpio=0 --in
   COMMAND esptool.py write_flash 0x10000 frank-0x10000.bin
   COMMAND minicom -o -D /dev/ttyUSB0 -b 115200
 )
