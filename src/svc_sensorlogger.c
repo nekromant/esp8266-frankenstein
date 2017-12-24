@@ -21,13 +21,9 @@ static double get_something(struct slogger_data_type *tp)
 }
 
 static struct slogger_instance this = {
-	.deviceId			= "dev-arven-001",
 	.deviceType			= "dummy",
 	.deviceGroup		= "development",
-	.deviceName			= "arven-green",
-	.userName			= "andrew",
-	.password			= "JMjpL-7o5dP-ez8DK-jQzSq-8aiqM",
-	.nextCloudUrl		= "https://cloud.ncrmnt.org",
+	.deviceName			= "frankenstein-sensorlogger",
 };
 
 
@@ -48,6 +44,17 @@ static void svclog_load_env()
 	load_param(userName);
 	load_param(password);
 	load_param(nextCloudUrl);
+
+	if (!this.deviceId) {
+		asprintf(&this.deviceId, "frankenstein-%x", system_get_chip_id());
+	}
+
+	if (!this.userName)
+		console_printf("[!] Please set slog-userName or senslog will not work correctly\n");
+	if (!this.nextCloudUrl)
+		console_printf("[!] Please set slog-nextCloudUrl or senslog will not work correctly\n");
+	if (!this.password)
+		console_printf("[!] Please set slog-password or senslog will not work correctly\n");
 }
 
 static struct slogger_http_request *cur_rq;
@@ -166,6 +173,7 @@ static void do_svclog_interrupt(void)
 CONSOLE_CMD(senslog, 2, -1,
 	    do_svclog, do_svclog_interrupt, NULL,
 	    "Register and send data to a nextcloud sensorlogger"
+	    HELPSTR_NEWLINE "senslog dump       						     - Print all info about sensorlogger and registered data types"
 	    HELPSTR_NEWLINE "senslog register       						 - Registers this device with nextcloud and obtain data type ids (Implies get_dt)"
 	    HELPSTR_NEWLINE "senslog get_dt         						 - obtains data type ids from server"
 	    HELPSTR_NEWLINE "senslog post           						 - posts data from all configured sensors"
