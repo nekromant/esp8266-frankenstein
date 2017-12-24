@@ -208,7 +208,7 @@ static void main_init_done(void)
 	#endif
 
 
-	console_init(32);
+	console_init(128);
 	/*
 	 * Check for $bootcmd after initializing wifi ...
 	 */
