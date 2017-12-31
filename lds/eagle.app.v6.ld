@@ -163,6 +163,11 @@ SECTIONS
     *(.console_firstcmd)
     KEEP (*(SORT(.console_cmd*)))
     *(.console_lastcmd)
+
+    _fr_init_array_start = ABSOLUTE(.);
+    KEEP (*(SORT(.fr_init_array)))
+    _fr_init_array_end = ABSOLUTE(.);
+
     KEEP(*(.firmware_end_marker))
   } >irom0_0_seg :irom0_0_phdr
 

@@ -177,6 +177,12 @@ const char* fr_request_hostname(void) {
 	return env_get("hostname");
 }
 
+
+
+extern void (*_fr_init_array_start)(void);
+extern void (*_fr_init_array_end)(void);
+
+
 /* By experimentation we discovered that certain things cant be done from inside user_init... */
 static void main_init_done(void)
 {
@@ -209,9 +215,15 @@ static void main_init_done(void)
 
 
 	console_init(128);
-	/*
-	 * Check for $bootcmd after initializing wifi ...
-	 */
+	console_lock(1);
+
+	console_printf("Starting services\n");
+	void (**p)(void) = &_fr_init_array_end;
+	while (p != &_fr_init_array_start)
+	     (*--p)();
+
+	console_printf("Startup complete\n");
+	console_lock(0);
 
 	return;
 	/* TODO: ARM timer for bootcmd */

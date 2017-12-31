@@ -4,15 +4,14 @@
 
 #include "console.h"
 
-/*
-   !!
-	DO NOT USE MALLOC
-   !!
-  
-   USE MEM_ALLOC INSTEAD (MEM_ALLOC/MEM_REALLOC/MEM_FREE)
-   which are defined in lwip/mem.h and defined as PvPort*...
-   or os_*alloc()...
-*/
+struct slogger_instance;
+struct slogger_instance  *svclog_get_global_instance();
+
+#define FR_CONSTRUCTOR(fn)                                              \
+	static void fn();                                                     \
+	__attribute__((__section__(".fr_init_array"))) void *fn ## _high = fn; \
+	static void __attribute__((__used__)) fn()
+
 
 extern printf_f console_printf; // = ets_uart_printf;
 
