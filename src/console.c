@@ -205,6 +205,4 @@ void console_init(int qlen) {
 
 	os_event_t *queue = os_malloc(sizeof(os_event_t) * qlen);
 	system_os_task(task_console, CONSOLE_PRIO, queue, qlen);
-	console_printf("\n\n");
-	microrl_print_prompt(prl);
 }

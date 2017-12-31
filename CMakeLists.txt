@@ -195,6 +195,8 @@ fr_add_cmd(i2c_mlx90614 CONFIG_CMD_I2C_MLX90614 src/i2c_mlx90614.c)
 fr_add_cmd(passthrough CONFIG_ENABLE_PASSTHROUGH src/cmd_passthrough.c)
 
 
+fr_add_service(vdd3v3 CONFIG_SENSLOG_VDD3V3 src/sensorloggers/vdd3v3.c)
+
 SET_SOURCE_FILES_PROPERTIES(${AUTOCONF_H}
 PROPERTIES HEADER_FILE_ONLY TRUE)
 

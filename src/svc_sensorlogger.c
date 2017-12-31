@@ -27,6 +27,11 @@ static struct slogger_instance this = {
 };
 
 
+struct slogger_instance  *svclog_get_global_instance()
+{
+		return &this;
+}
+
 #define load_param(key) \
 	tmp = env_get("slog-" #key); \
 	if (tmp) { \
@@ -91,6 +96,7 @@ void http_data_type_cb(char *response_body, int http_status, char *response_head
 
 void add_dummy()
 {
+	console_printf("senslogger: Registering dummy sensors\n");
 	struct slogger_data_type *dt = malloc(sizeof(*dt));
 
 	dt->type		= "mana";
@@ -107,6 +113,13 @@ void add_dummy()
 	dt->get_current_value = get_something;
 	sensorlogger_instance_register_data_type(&this, dt);
 }
+
+#ifdef CONFIG_SENSLOG_DUMMY
+FR_CONSTRUCTOR(dummy_reg)
+{
+	add_dummy();
+}
+#endif
 
 static int   do_svclog(int argc, const char *const *argv)
 {
@@ -129,7 +142,6 @@ static int   do_svclog(int argc, const char *const *argv)
 		dt->current_value = 0;
 		sensorlogger_instance_register_data_type(&this, dt);
 	} else if (strcmp(argv[1], "add_dummy") == 0) {
-		console_printf("registering dummies\n");
 		add_dummy();
 	} else if (strcmp(argv[1], "set") == 0) {
 		if (argc < 5) {

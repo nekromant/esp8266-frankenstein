@@ -26,8 +26,25 @@ help
 config SERVICE_AURA
 bool "AURA RPC Client"
 
-config SERVICE_SENSORLOGGER
+menuconfig SERVICE_SENSORLOGGER
 bool "NextCloud Sensorlogger"
+help
+	Provides an interface to NextCloud Sensorlogger app.
+	Your can register and submit data via frankenstein commandline
+	or via a set of sensors connected to the board.
+
+if SERVICE_SENSORLOGGER
+
+	config SENSLOG_DUMMY
+	bool "Dummy sensor"
+
+	config SENSLOG_PING
+	bool "Ping sensor logger"
+
+	config SENSLOG_VDD3V3
+	bool "VDD3V3 sensor"
+
+endif
 
 config SERVICE_TCP
 bool "TCP/IP services"
