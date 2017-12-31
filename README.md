@@ -49,7 +49,6 @@ Prepare the environment and build it!:
   cd build
   cmake ..
   make menuconfig
-  cmake .. #NOTE THE EXTRA CMAKE!
   make
 ```
 

@@ -10,13 +10,24 @@ file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/include/config)
 find_program(KCONF_MCONF kconfig-mconf)
 find_program(KCONF_CONF kconfig-conf)
 
-add_custom_target(menuconfig ${KCONF_MCONF} ${CMAKE_SOURCE_DIR}/kcnf)
-add_custom_target(config ${KCONF_CONF} --silentoldconfig ${CMAKE_SOURCE_DIR}/kcnf)
+add_custom_target(configure COMMENT "Frankenstein now configured")
+
+add_custom_target(menuconfig
+  COMMAND ${KCONF_MCONF} ${CMAKE_SOURCE_DIR}/kcnf
+  COMMAND ${CMAKE_COMMAND} ${CMAKE_BINARY_DIR}
+)
+
+set(AUTOCONF_H ${CMAKE_BINARY_DIR}/include/generated/autoconf.h)
+
+add_custom_command(OUTPUT ${AUTOCONF_H}
+    COMMAND ${KCONF_CONF} --silentoldconfig ${CMAKE_SOURCE_DIR}/kcnf
+    DEPENDS ${CMAKE_BINARY_DIR}/.config
+    )
+
 
 
 function(target_link_iromified target obj)
   get_target_property(tp ${obj} TYPE)
-  message(${obj} ${tp})
   if (NOT TARGET iromify-${obj})
     if("${tp}" STREQUAL "OBJECT_LIBRARY")
       add_custom_target(iromify-${obj} DEPENDS ${obj} COMMAND
@@ -27,7 +38,6 @@ function(target_link_iromified target obj)
           ${CMAKE_SOURCE_DIR}/scripts/iromify ${CROSS_COMPILE} LIBRARY
           $<TARGET_FILE:${obj}>)
     endif()
-
   endif()
 
   if(tp STREQUAL "OBJECT_LIBRARY")
@@ -43,9 +53,6 @@ function(fr_add_component desc var name config)
     list(APPEND ${var} ${name})
     list(APPEND CORE_SRCS ${ARGN})
     set(CORE_SRCS ${CORE_SRCS} PARENT_SCOPE)
-    message(STATUS "${name} ${desc}: enabled")
-  else()
-    message(STATUS "${name} ${desc}: disabled")
   endif()
 endfunction()
 
@@ -92,7 +99,7 @@ project(esp8266-frankenstein)
 set(CMAKE_EXE_LINKER_FLAGS "-Os -Wl,--gc-sections -mtext-section-literals -nostdlib -Wl,--no-check-sections -u call_user_start -u user_rf_cal_sector_set -Wl,-static  -T${CMAKE_SOURCE_DIR}/lds/eagle.app.v6.ld")
 set(ESP8266_LIBRARIES -Wl,--start-group main cirom gcc lwip m pwm hal net80211 phy pp wpa ssl -Wl,--end-group)
 set(CMAKE_C_FLAGS	"-Os -std=gnu99 -Wpointer-arith -mlongcalls -Wundef -Wl,-EL -ffunction-sections -fdata-sections -mtext-section-literals -fno-inline-functions -mlongcalls -D__ets__ -DICACHE_FLASH")
-set(CMAKE_C_FLAGS	"${CMAKE_C_FLAGS} -include ${CMAKE_BINARY_DIR}/include/generated/autoconf.h")
+set(CMAKE_C_FLAGS	"${CMAKE_C_FLAGS} -include ${AUTOCONF_H}")
 
 
 include_directories(include)
@@ -188,9 +195,15 @@ fr_add_cmd(i2c_mlx90614 CONFIG_CMD_I2C_MLX90614 src/i2c_mlx90614.c)
 fr_add_cmd(passthrough CONFIG_ENABLE_PASSTHROUGH src/cmd_passthrough.c)
 
 
+SET_SOURCE_FILES_PROPERTIES(${AUTOCONF_H}
+PROPERTIES HEADER_FILE_ONLY TRUE)
+
+foreach(f ${CORE_SRCS})
+  SET_SOURCE_FILES_PROPERTIES(${f} PROPERTIES
+      OBJECT_DEPENDS ${AUTOCONF_H})
+endforeach()
 
 add_library(frankenstein OBJECT ${CORE_SRCS})
-add_dependencies(frankenstein config)
 add_executable(frank $<TARGET_OBJECTS:frankenstein>)
 target_link_iromified(frank frankenstein)
 target_link_libraries(frank ${ESP8266_LIBRARIES} )
@@ -204,13 +217,13 @@ target_link_libraries(frank ${ESP8266_LIBRARIES} )
 
 add_custom_target(FLASH
   COMMAND esptool.py --chip esp8266 elf2image frank
-#  COMMAND pl2303gpio --gpio=0 --out=0 --gpio=1 --out=0
-#  --gpio=1 --in --sleep 350
-#  --gpio=0 --in
+  COMMAND pl2303gpio --gpio=0 --out=0 --gpio=1 --out=0
+  --gpio=1 --in --sleep 350
+  --gpio=0 --in
   COMMAND esptool.py write_flash 0x0 frank-0x00000.bin
-#  COMMAND pl2303gpio --gpio=0 --out=0 --gpio=1 --out=0
-#  --gpio=1 --in --sleep 350
-#  --gpio=0 --in
+  COMMAND pl2303gpio --gpio=0 --out=0 --gpio=1 --out=0
+  --gpio=1 --in --sleep 350
+  --gpio=0 --in
   COMMAND esptool.py write_flash 0x10000 frank-0x10000.bin
   COMMAND minicom -o -D /dev/ttyUSB0 -b 115200
 )
