@@ -177,6 +177,20 @@ fr_add_service(tftp CONFIG_CMD_TFTP
   src/tftp.c
 )
 
+fr_add_service(httpd CONFIG_SVC_HTTPD
+  src/httpd/auth.c
+  src/httpd/cgiwifi.c
+  src/httpd/io.c
+  src/httpd/config_store.c
+  src/httpd/heatshrink_decoder.c  
+  src/httpd/httpd.c
+  src/httpd/cgi.c
+  src/httpd/espfs.c
+  src/httpd/httpdespfs.c
+  src/httpd/sysex.c
+  src/httpd/main.c
+)
+
 fr_add_cmd(at CONFIG_CMD_AT src/cmd_at.c)
 fr_add_cmd(adc CONFIG_CMD_ADC src/cmd_adc.c)
 fr_add_cmd(nslookup CONFIG_CMD_NSLOOKUP src/cmd_nslookup.c)
@@ -196,6 +210,7 @@ fr_add_cmd(passthrough CONFIG_ENABLE_PASSTHROUGH src/cmd_passthrough.c)
 
 
 fr_add_service(vdd3v3 CONFIG_SENSLOG_VDD3V3 src/sensorloggers/vdd3v3.c)
+fr_add_service(ping CONFIG_SENSLOG_PING src/sensorloggers/ping.c)
 
 SET_SOURCE_FILES_PROPERTIES(${AUTOCONF_H}
 PROPERTIES HEADER_FILE_ONLY TRUE)

@@ -32,7 +32,6 @@ static struct update_server *u = NULL;
 static  __attribute__ ((section(".iram0.text"))) void commit_handler(void* a)
 {
 	int i;
-
 	/* Inhibit any interrupts */
 
 	ets_wdt_disable();
@@ -84,11 +83,12 @@ void recv_cb(struct tftp_server *ts, int num_block, char* buf, int len)
 		return recv_cb(ts, num_block, &buf[tocopy], len);
 
 	if (islast) {
-		console_printf("\n TFTP done, %d bytes transferred\n", (int)u->numbytes);
-		console_printf("Comitting update in 2 seconds\n");
-		os_timer_disarm(&u->commit_timer);
-		os_timer_setfn(&u->commit_timer, (os_timer_func_t *) commit_handler, ts);
-		os_timer_arm(&u->commit_timer, 2000, 0);
+		console_printf("\n TFTP download done, %d bytes transferred\n", (int)u->numbytes);
+		console_lock(0);
+		//console_printf("Comitting update in 2 seconds\n");
+		//os_timer_disarm(&u->commit_timer);
+		//os_timer_setfn(&u->commit_timer, (os_timer_func_t *) commit_handler, ts);
+		//os_timer_arm(&u->commit_timer, 2000, 0);
 	}
 }
 
@@ -165,6 +165,6 @@ CONSOLE_CMD(tftp_info, 1, 1,
 
 CONSOLE_CMD(tftp, 1, 1,
 	    do_tftp, NULL, NULL,
-	    "Update firmware over tftp"
+	    "Download fs image over tftp"
 	    HELPSTR_NEWLINE "tftp"
 	);
