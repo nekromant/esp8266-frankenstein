@@ -18,7 +18,6 @@ struct pinger_instance {
 	struct ping_option pingopts;
 	struct slogger_data_type data_type;
 	char *target;
-	uint32_t current_ms;
 	ETSTimer periodic;
 	int pending;
 };
@@ -26,18 +25,9 @@ struct pinger_instance {
 static void ping_recv_callback(void* arg, void *pdata)
 {
 	struct ping_resp *pingresp = pdata;
-
 	struct pinger_instance *inst = arg;
-	inst->current_ms = pingresp->total_time;
-	console_printf("ping %d ms\n", inst->current_ms);
+	inst->data_type.current_value = pingresp->resp_time;
 	inst->pending = 0;
-//	if(pingresp->seqno == 3 /*LAST PING PACKET*/){
-//		console_printf("total %d, lost %d, %d bytes, %d ms (%d)\n" ,
-//			pingresp->total_count, pingresp->timeout_count, pingresp->total_bytes, , pingresp->ping_err);
-//		console_lock(0);
-//	} else {
-//		console_printf("recv %d bytes in %d ms, seq %d (%d)\n" , pingresp->bytes, pingresp->resp_time, pingresp->seqno, pingresp->ping_err);
-//	}
 }
 
 
@@ -54,7 +44,6 @@ static void dns_callback(const char * hostname, ip_addr_t * addr, void * arg)
 static void start_ping(struct pinger_instance *pinger)
 {
 	ip_addr_t addr;
-	console_printf("%p \n", pinger);
 	pinger->pending = 1;
 	err_t error = espconn_gethostbyname(pinger, /* UNDOCUMENTED API: This one will get into dns_callback as arg*/
 										pinger->target, &addr, dns_callback);
@@ -76,17 +65,16 @@ static void start_ping(struct pinger_instance *pinger)
 
 static void pinger_workhorse(void *arg)
 {
-	console_printf("Koo!\n");
-	//struct pinger_instance *pinger = arg;
-	//if (pinger->pending)
-	//	return;
-	//start_ping(pinger);
+	struct pinger_instance *pinger = arg;
+	if (pinger->pending)
+		return;
+	start_ping(pinger);
 }
 
 static void create_background_pinger(const char *target, int period)
 {
-	console_printf("  pinger: Will ping %s every %d seconds\n", target, period);
-	struct pinger_instance *pinger = os_zalloc(sizeof(struct ping_option));
+	console_printf("    pinger: Will ping %s every %d seconds\n", target, period);
+	struct pinger_instance *pinger = os_malloc(sizeof(*pinger));
 	memset(pinger, 0x0, sizeof(*pinger));
 	pinger->pingopts.count = 1;
 	pinger->pingopts.recv_function=ping_recv_callback;
@@ -94,14 +82,22 @@ static void create_background_pinger(const char *target, int period)
 	pinger->target = strdup(target);
 	pinger->pending = 0;
 
-	//os_timer_disarm(&pinger->periodic);
+	pinger->data_type.unit = "ms";
+	pinger->data_type.get_current_value = NULL;
+	asprintf(&pinger->data_type.type, "%s", target);
+	asprintf(&pinger->data_type.description, "%s response time", target);
+
+	struct slogger_instance * inst = svclog_get_global_instance();
+	sensorlogger_instance_register_data_type(inst, &pinger->data_type);
+
+	os_timer_disarm(&pinger->periodic);
 	os_timer_setfn(&pinger->periodic, (os_timer_func_t *) pinger_workhorse, pinger);
-	os_timer_arm(&pinger->periodic, period, 0);
+	os_timer_arm(&pinger->periodic, period, 1);
 }
 
 static void do_ping()
 {
-	create_background_pinger("silverblade", 10000);
+	create_background_pinger("8.8.8.8", 10000);
 }
 
 CONSOLE_CMD(ping2, 2, 2,
@@ -112,7 +108,19 @@ CONSOLE_CMD(ping2, 2, 2,
 
 FR_CONSTRUCTOR(sensor_ping)
 {
-	console_printf("senslog: Registering 'ping' sensor\n");
-//	create_background_pinger("silverblade", 10000);
-//	ip_addr_t ipaddr;
+	console_printf("senslog: Registering 'ping' sensors\n");
+	int timeout = 10000;
+	char *hosts = env_get("ping-hosts");
+	char *timeout_str = env_get("ping-period");
+	if (timeout_str)
+		timeout = atoi(timeout_str);
+	if (!hosts)
+		return;
+	hosts = strdup(hosts);
+	char *host = strtok(hosts, ",");
+	do {
+		create_background_pinger(host, timeout);
+		host = strtok(NULL, ",");
+	} while (host);
+	os_free(hosts);
 }

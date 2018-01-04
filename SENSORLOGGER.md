@@ -177,11 +177,37 @@ There are 2 ways to do that. Either connect them directly to esp8266 (standalone
 
 In this case you have to connect your sensors directly to esp8266 and enable the required sensor via menuconfig when building frankenstein.
 
-Currently available sensors:
-    * dummy - a set of 2 dumb dummy sensors reporting 'health' an 'mana'.
-    * vdd3v3 - a sensor reporting measurements of 3v3 volts at the esp8266
-    * adc - a sensor reporting measurements from esp8266 internal adc.
-    * ping - a sensor pinging a set of hosts from environment variable and reporting ping times
+Currently available sensors are listed below
+### dummy
+A set of 2 dumb dummy sensors "reporting" 'health' an 'mana'
+
+### vdd3v3
+A sensor reporting measurements of 3v3 volts at the esp8266 power lines
+
+### adc
+A sensor reporting measurements from esp8266 internal adc.
+
+### ping
+A 'sensor' that pings remote hosts and reports their response times as sensor
+values. This sensor is configured via 2 environment variables:
+
+- ping-hosts is a comma separated list of hosts and ip adresses to ping
+- ping-period sets how often these should be pinged
+
+N.B. Remeber to save environment and reboot for the changes to take effect.
+
+If you have changed the list of hosts you have to CHANGE THE SENSORLOGGER DEVICE
+UUID and re-register (Or delete the device from nextcloud server)
+
+Example comfiguration:
+```
+setenv ping-hosts 'silverblade,yandex.ru,github.com,192.168.0.1'
+setenv ping-period 600000
+saveenv
+reset
+```
+
+Right now pings and data reporting are completely async and only the last pinged value will be reported to nextcloud sensorlogger. Therefore there's no practical need to ping more often than you report the data to nextcloud.
 
 ## Slave mode
 
@@ -197,5 +223,6 @@ This way you can keep the power-hungry esp8266 offline most of the time, switchi
 
 - Add more i2c sensors to the sensorlogger infrastructure
 - Create some awesome custom hardware for this thing.
+- Create WEBUI for easier sensor management
 - ...
-- PROFIT 
+- PROFIT

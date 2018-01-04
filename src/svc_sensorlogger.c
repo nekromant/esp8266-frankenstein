@@ -13,6 +13,7 @@
 #include <sensorlogger.h>
 #include <stdlib.h>
 #include <generic/macros.h>
+#include <main.h>
 
 
 static double get_something(struct slogger_data_type *tp)
