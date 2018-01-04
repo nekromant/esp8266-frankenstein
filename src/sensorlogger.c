@@ -21,10 +21,10 @@ void slogger_http_request_release(struct slogger_http_request *rq)
 
 
 #define DUMP_STR(object, field) \
-	console_printf("%s: %s\n", #field, object->field);
+	console_printf("%s%s: %s\n", spaces, #field, object->field);
 
 #define DUMP_VAL(object, field) \
-	console_printf("%s: %d\n", #field, object->field);
+	console_printf("%s%s: %d\n", spaces, #field, object->field);
 
 
 static char *slogger_get_headers(struct slogger_instance *inst)
@@ -266,7 +266,8 @@ bailout:
 
 void slogger_instance_dump(struct slogger_instance *inst)
 {
-	printf(" == SensorLogger Instance == ");
+	char *spaces = "";
+	console_printf(" === SensorLogger Instance === \n");
 	DUMP_STR(inst, deviceId);
 	DUMP_STR(inst, deviceName);
 	DUMP_STR(inst, deviceType);
@@ -275,7 +276,8 @@ void slogger_instance_dump(struct slogger_instance *inst)
 	DUMP_STR(inst, nextCloudUrl);
 	DUMP_STR(inst, userName);
 	DUMP_STR(inst, password);
-	console_printf(" == Data types == ");
+	console_printf(" === Data types === \n");
+	spaces = "  ";
 	struct slogger_data_type *pos = inst->deviceDataTypes;
 	while (pos) {
 		DUMP_STR(pos, type);
@@ -283,6 +285,6 @@ void slogger_instance_dump(struct slogger_instance *inst)
 		DUMP_STR(pos, unit);
 		DUMP_VAL(pos, dataTypeId);
 		pos = pos->next;
-		console_printf(" == == == ");
+		console_printf(" == == == \n");
 	}
 }

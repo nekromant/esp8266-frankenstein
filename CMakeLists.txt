@@ -182,7 +182,7 @@ fr_add_service(httpd CONFIG_SVC_HTTPD
   src/httpd/cgiwifi.c
   src/httpd/io.c
   src/httpd/config_store.c
-  src/httpd/heatshrink_decoder.c  
+  src/httpd/heatshrink_decoder.c
   src/httpd/httpd.c
   src/httpd/cgi.c
   src/httpd/espfs.c
@@ -210,6 +210,7 @@ fr_add_cmd(passthrough CONFIG_ENABLE_PASSTHROUGH src/cmd_passthrough.c)
 
 
 fr_add_service(vdd3v3 CONFIG_SENSLOG_VDD3V3 src/sensorloggers/vdd3v3.c)
+fr_add_service(vdd3v3 CONFIG_SENSLOG_ADC src/sensorloggers/adc.c)
 fr_add_service(ping CONFIG_SENSLOG_PING src/sensorloggers/ping.c)
 
 SET_SOURCE_FILES_PROPERTIES(${AUTOCONF_H}

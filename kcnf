@@ -26,7 +26,7 @@ help
 config SVC_HTTPD
 bool "HTTP Server"
 help
-	
+
 
 
 config SERVICE_AURA
@@ -49,6 +49,9 @@ if SERVICE_SENSORLOGGER
 
 	config SENSLOG_VDD3V3
 	bool "VDD3V3 sensor"
+
+	config SENSLOG_ADC
+	bool "Internal ADC sensor"
 
 endif
 
