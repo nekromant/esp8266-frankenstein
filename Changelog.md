@@ -5,6 +5,11 @@
     * Autodetect proper environment address
     * Fix ping
     * Fix microrl quoting
-    * Implement nextcloud sensorlogger infrastructure
+    * senslogger: Implement nextcloud sensorlogger infrastructure
+    * senslogger: Add adc sensor
+    * senslogger: Add vdd3v3 sensor
+    * Add http server functionality
+    * tftp downloads to arbitrary flash areas
+    * Add web-based commandline support
     * Basic telnet authentification support
     * Implement console charhandler API
