@@ -1,0 +1,6 @@
+cmake_minimum_required(VERSION 2.8)
+project(mkespfsimage)
+add_executable(mkespfsimage main.c heatshrink_encoder.c)
+include_directories(${CMAKE_SOURCE_DIR}/../src/heatshrink)
+include_directories(${CMAKE_SOURCE_DIR}/../include)
+add_definitions(-std=gnu99)

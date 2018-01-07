@@ -2,7 +2,7 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.8.8)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake)
 
 find_package(Doxygen)
-
+include(ExternalProject)
 #Kconfig stuff
 file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/include/generated)
 file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/include/config)
@@ -227,11 +227,24 @@ target_link_iromified(frank frankenstein)
 target_link_libraries(frank ${ESP8266_LIBRARIES} )
 
 
-#add_executable(svclog $<TARGET_OBJECTS:svcloglib>)
-#target_link_iromified(svclog svcloglib)
-#target_link_libraries(svclog ${ESP8266_LIBRARIES})
 
 
+ExternalProject_Add(mkespfsimage
+    SOURCE_DIR        "${CMAKE_SOURCE_DIR}/mkespfsimage"
+    BINARY_DIR        "${CMAKE_BINARY_DIR}/mkespfsimage"
+    PREFIX            "${CMAKE_BINARY_DIR}/mkespfsimage/prefix"
+#    CONFIGURE_COMMAND  ${CMAKE_COMMAND} ${CMAKE_SOURCE_DIR}/${dir} ${ARGN}
+#    BUILD_COMMAND     "make"
+#    TEST_COMMAND      cd ${CMAKE_BINARY_DIR}/${name} && make test
+    INSTALL_COMMAND   ""
+#    STEP_TARGETS      configure
+  )
+
+
+add_custom_target(filesystem
+  COMMAND find . | ${CMAKE_BINARY_DIR}/mkespfsimage/mkespfsimage > ${CMAKE_BINARY_DIR}/filesystem.espfs
+  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/html
+)
 
 add_custom_target(FLASH
   COMMAND esptool.py --chip esp8266 elf2image frank
