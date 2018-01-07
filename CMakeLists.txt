@@ -101,7 +101,6 @@ set(ESP8266_LIBRARIES -Wl,--start-group main cirom gcc lwip m pwm hal net80211 p
 set(CMAKE_C_FLAGS	"-Os -std=gnu99 -Wpointer-arith -mlongcalls -Wundef -Wl,-EL -ffunction-sections -fdata-sections -mtext-section-literals -fno-inline-functions -mlongcalls -D__ets__ -DICACHE_FLASH")
 set(CMAKE_C_FLAGS	"${CMAKE_C_FLAGS} -include ${AUTOCONF_H}")
 
-
 include_directories(include)
 
 set(CORE_SRCS
@@ -233,15 +232,12 @@ ExternalProject_Add(mkespfsimage
     SOURCE_DIR        "${CMAKE_SOURCE_DIR}/mkespfsimage"
     BINARY_DIR        "${CMAKE_BINARY_DIR}/mkespfsimage"
     PREFIX            "${CMAKE_BINARY_DIR}/mkespfsimage/prefix"
-#    CONFIGURE_COMMAND  ${CMAKE_COMMAND} ${CMAKE_SOURCE_DIR}/${dir} ${ARGN}
-#    BUILD_COMMAND     "make"
-#    TEST_COMMAND      cd ${CMAKE_BINARY_DIR}/${name} && make test
     INSTALL_COMMAND   ""
-#    STEP_TARGETS      configure
   )
 
 
 add_custom_target(filesystem
+  ALL
   COMMAND find . | ${CMAKE_BINARY_DIR}/mkespfsimage/mkespfsimage > ${CMAKE_BINARY_DIR}/filesystem.espfs
   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/html
 )
@@ -258,6 +254,3 @@ add_custom_target(FLASH
   COMMAND esptool.py write_flash 0x10000 frank-0x10000.bin
   COMMAND minicom -o -D /dev/ttyUSB0 -b 115200
 )
-#print_target_properties(frankenstein)
-#add_executable(frbin src/main.c)
-#
