@@ -1,3 +1,5 @@
+[![Build Status](https://jenkins.ncrmnt.org/job/GithubCI/job/esp8266-frankenstein/badge/icon)](https://jenkins.ncrmnt.org/job/GithubCI/job/esp8266-frankenstein/)
+
 Frankenstein is a quick and dirty firmware, made from different bits
 and pieces (thus the name) for ESP8266.
 The features:

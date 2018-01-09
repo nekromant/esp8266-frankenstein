@@ -13,3 +13,4 @@
     * Add web-based commandline support
     * Basic telnet authentification support
     * Implement console charhandler API
+    * Automated builds via jenkins
