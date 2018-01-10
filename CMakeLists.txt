@@ -238,6 +238,7 @@ ExternalProject_Add(mkespfsimage
 
 add_custom_target(filesystem
   ALL
+  DEPENDS mkespfsimage
   COMMAND find . | ${CMAKE_BINARY_DIR}/mkespfsimage/mkespfsimage > ${CMAKE_BINARY_DIR}/filesystem.espfs
   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/html
 )
