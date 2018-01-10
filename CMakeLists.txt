@@ -243,8 +243,14 @@ add_custom_target(filesystem
   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/html
 )
 
-add_custom_target(FLASH
+add_custom_target(binaries
+  ALL
+  DEPENDS frank
   COMMAND esptool.py --chip esp8266 elf2image frank
+)
+
+add_custom_target(FLASH
+  DEPENDS binaries
   COMMAND pl2303gpio --gpio=0 --out=0 --gpio=1 --out=0
   --gpio=1 --in --sleep 350
   --gpio=0 --in
