@@ -246,7 +246,7 @@ add_custom_target(filesystem
 add_custom_target(binaries
   ALL
   DEPENDS frank
-  COMMAND esptool.py --chip esp8266 elf2image frank
+  COMMAND esptool.py elf2image frank
 )
 
 add_custom_target(FLASH
