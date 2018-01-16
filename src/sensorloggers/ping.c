@@ -34,6 +34,12 @@ static void ping_recv_callback(void* arg, void *pdata)
 static void dns_callback(const char * hostname, ip_addr_t * addr, void * arg)
 {
 	struct pinger_instance * i = arg;
+	if (!addr) {
+		i->pending = 0;
+		i->data_type.current_value = -1;
+		return;
+	}
+
 	i->pingopts.ip = addr->addr;
 	i->pingopts.count = 1;
 	i->pingopts.recv_function=ping_recv_callback;
@@ -73,8 +79,8 @@ static void pinger_workhorse(void *arg)
 
 static void create_background_pinger(const char *target, int period)
 {
-	console_printf("    pinger: Will ping %s every %d seconds\n", target, period);
 	struct pinger_instance *pinger = os_malloc(sizeof(*pinger));
+	console_printf("    pinger: Will ping %s every %d ms\n", target, period);
 	memset(pinger, 0x0, sizeof(*pinger));
 	pinger->pingopts.count = 1;
 	pinger->pingopts.recv_function=ping_recv_callback;
