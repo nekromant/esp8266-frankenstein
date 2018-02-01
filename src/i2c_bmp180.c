@@ -4,72 +4,84 @@
 
 #include "driver/i2c_master.h"
 #include "driver/i2c_bmp180.h"
+#include <sensorlogger.h>
+#include <main.h>
+#include <osapi.h>
+#include <mem.h>
 
+//#define CONFIG_USEFLOAT
+//#define CONFIG_CMD_BMP180_DEBUG
 #ifdef CONFIG_CMD_BMP180_DEBUG
-#define dbg(fmt, ...) LOG(LOG_DEBUG, fmt, ##__VA_ARGS__)
+#define dbg(fmt, ...) LOG(LOG_DEBUG, fmt, ## __VA_ARGS__)
 #else
 #define dbg(fmt, ...)
 #endif
 
 #include "console.h"
 
+struct bmp180_inst {
 #ifdef CONFIG_USEFLOAT
-static sint16 AC1,AC2,AC3,VB1,VB2,MB,MC,MD;
-static uint16 AC4,AC5,AC6; 
-static float c5,c6,mc,md,x0,x1,x2,ay0,ay1,ay2,p0,p1,p2;
+	sint16				AC1, AC2, AC3, VB1, VB2, MB, MC, MD;
+	uint16				AC4, AC5, AC6;
+	float				c5, c6, mc, md, x0, x1, x2, ay0, ay1, ay2, p0, p1, p2;
+	float				LAST_BMP_TEMPERATURE;
+	float				LAST_BMP_REAL_PRESSURE;
 #else
-static sint16 ac1, ac2, ac3;
-static uint16 ac4, ac5, ac6;
-static sint16 b1, b2;
-static sint16 mb, mc, md; 
+	sint16				ac1, ac2, ac3;
+	uint16				ac4, ac5, ac6;
+	sint16				b1, b2;
+	sint16				mb, mc, md;
+	sint32				LAST_BMP_TEMPERATURE;
+	sint32				LAST_BMP_REAL_PRESSURE;
 #endif
+	struct slogger_data_type	sld[2];
+};
 
-static uint16 BMP180_readRawValue(uint8 cmd) 
+static uint16 BMP180_readRawValue(uint8 cmd)
 {
 	i2c_master_writeBytes2(BMP180_ADDRESS, BMP180_REG_CONTROL, cmd);
-	switch(cmd){
-		case BMP180_COMMAND_TEMPERATURE:
-		case BMP180_COMMAND_PRESSURE0:
-			os_delay_us(BMP180_CONVERSION_TIME*1000);
-			break;
+	switch (cmd) {
+	case BMP180_COMMAND_TEMPERATURE:
+	case BMP180_COMMAND_PRESSURE0:
+		os_delay_us(BMP180_CONVERSION_TIME * 1000);
+		break;
 /*Unsupported yet. Need to read 3 bytes from device.
-		case BMP180_COMMAND_PRESSURE1:
-			os_delay_us(8*1000);
-			break;
-
-		case BMP180_COMMAND_PRESSURE2:
-			os_delay_us(14*1000);
-			break;
-
-		case BMP180_COMMAND_PRESSURE3:
-			os_delay_us(26*1000);
-			break;
-*/
+ *              case BMP180_COMMAND_PRESSURE1:
+ *                      os_delay_us(8*1000);
+ *                      break;
+ *
+ *              case BMP180_COMMAND_PRESSURE2:
+ *                      os_delay_us(14*1000);
+ *                      break;
+ *
+ *              case BMP180_COMMAND_PRESSURE3:
+ *                      os_delay_us(26*1000);
+ *                      break;
+ */
 	}
-	
+
 	uint16 result;
-	if(i2c_master_readUint16(BMP180_ADDRESS, BMP180_REG_RESULT, &result)){
+	if (i2c_master_readUint16(BMP180_ADDRESS, BMP180_REG_RESULT, &result))
 		return result;
-	}
 
 	return false;
 }
 
-bool BMP180_Read()
+bool BMP180_Read(struct bmp180_inst *this)
 {
 #ifdef CONFIG_USEFLOAT
-	float tu,pu,a,s,x,y,z;
+	float tu, pu, a, s, x, y, z;
 
 	tu = BMP180_readRawValue(BMP180_COMMAND_TEMPERATURE);
-	a = c5 * (tu - c6);
-	LAST_BMP_TEMPERATURE = a + (mc / (a + md));
+	a = this->c5 * (tu - this->c6);
+	this->LAST_BMP_TEMPERATURE = a + (this->mc / (a + this->md));
 
- 	pu = BMP180_readRawValue(BMP180_COMMAND_PRESSURE0);
-	s = LAST_BMP_TEMPERATURE - 25.0;
-	x = (x2 * pow(s,2)) + (x1 * s) + x0;
-	y = (ay2 * pow(s,2)) + (ay1 * s) + ay0;
+	pu = BMP180_readRawValue(BMP180_COMMAND_PRESSURE0);
+	s = this->LAST_BMP_TEMPERATURE - 25.0;
+	x = (this->x2 * pow(s, 2)) + (this->x1 * s) + this->x0;
+	y = (this->ay2 * pow(s, 2)) + (this->ay1 * s) + this->ay0;
 	z = (pu - x) / y;
-	LAST_BMP_REAL_PRESSURE = (((p2 * pow(z,2)) + (p1 * z) + p0) * 0.75);
+	this->LAST_BMP_REAL_PRESSURE = (((this->p2 * pow(z, 2)) + (this->p1 * z) + this->p0) * 0.75);
 #else
 	int32 UT;
 	uint16 UP;
@@ -77,156 +89,175 @@ bool BMP180_Read()
 	uint32 B4, B7;
 	int32 X1, X2, X3;
 	int32 T, P;
-	
-	UT = BMP180_readRawValue(BMP180_COMMAND_TEMPERATURE);
-	X1 = (UT - (sint32)ac6) * ((sint32)ac5) >> 15;
-	X2 = ((sint32)mc << 11) / (X1 + (sint32)md); 
-	B5 = X1 + X2;
-	T  = (B5+8) >> 4;
-	LAST_BMP_TEMPERATURE = T; 
 
-	dbg( "UT: %d\nX1: %d\nX2: %d\nB5: %d\n", UT, X1, X2, B5);
+	UT = BMP180_readRawValue(BMP180_COMMAND_TEMPERATURE);
+	X1 = (UT - (sint32)this->ac6) * ((sint32)this->ac5) >> 15;
+	X2 = ((sint32)this->mc << 11) / (X1 + (sint32)this->md);
+	B5 = X1 + X2;
+	T = (B5 + 8) >> 4;
+	this->LAST_BMP_TEMPERATURE = T;
+
+	dbg("UT: %d\nX1: %d\nX2: %d\nB5: %d\n", UT, X1, X2, B5);
 
 	UP = BMP180_readRawValue(BMP180_COMMAND_PRESSURE0);
 	B6 = B5 - 4000;
-	X1 = ((sint32)b2 * ((B6 * B6) >> 12)) >> 11;
-	X2 = ((sint32)ac2 * B6) >> 11;
+	X1 = ((sint32)this->b2 * ((B6 * B6) >> 12)) >> 11;
+	X2 = ((sint32)this->ac2 * B6) >> 11;
 	X3 = X1 + X2;
-	B3 = (((sint32)ac1 * 4 + X3) + 2) >> 2;
+	B3 = (((sint32)this->ac1 * 4 + X3) + 2) >> 2;
 
-	dbg( "UP: %d\nB5: %d\nB6: %d\nX1: %d\nX2: %d\nX3: %d\n", UP, B5, B6, X1, X2, X3);
+	dbg("UP: %d\nB5: %d\nB6: %d\nX1: %d\nX2: %d\nX3: %d\n", UP, B5, B6, X1, X2, X3);
 
-	X1 = ((sint32)ac3 * B6) >> 13;
-	X2 = ((sint32)b1 * ((B6 * B6) >> 12)) >> 16;
+	X1 = ((sint32)this->ac3 * B6) >> 13;
+	X2 = ((sint32)this->b1 * ((B6 * B6) >> 12)) >> 16;
 	X3 = ((X1 + X2) + 2) >> 2;
-	B4 = ((uint32)ac4 * (uint32)(X3 + 32768)) >> 15;
+	B4 = ((uint32)this->ac4 * (uint32)(X3 + 32768)) >> 15;
 	B7 = ((uint32)UP - B3) * (50000);
-	
-	if (B7 < 0x80000000) {
-		P = (B7 * 2) / B4;
-	} else {
-		P = (B7 / B4) * 2;
-	}
 
-	dbg( "X1: %d\nX2: %d\nX3: %d\nB4: %d\nB7: %d\nP: %d\n", X1, X2, X3, B4, B7, P);
+	if (B7 < 0x80000000)
+		P = (B7 * 2) / B4;
+	else
+		P = (B7 / B4) * 2;
+
+	dbg("X1: %d\nX2: %d\nX3: %d\nB4: %d\nB7: %d\nP: %d\n", X1, X2, X3, B4, B7, P);
 
 	X1 = (P >> 8) * (P >> 8);
 	X1 = (X1 * 3038) >> 16;
 	X2 = (-7357 * P) >> 16;
 
-	P  = P + ((X1 + X2 + (sint32)3791) >> 4);
-	LAST_BMP_REAL_PRESSURE = P * 0.75;
+	P = P + ((X1 + X2 + (sint32)3791) >> 4);
+	this->LAST_BMP_REAL_PRESSURE = P * 0.75;
 
-	dbg( "X1: %d\nX2: %d\nP: %d\n", X1, X2, P);
+	dbg("X1: %d\nX2: %d\nP: %d\n", X1, X2, P);
 
 #endif
 	return true;
 }
 
-bool BMP180_Init()
+
+static double get_temperature(struct slogger_data_type *tp)
 {
+	struct bmp180_inst *this = tp->user_arg;
 
+	BMP180_Read(this);
+#ifndef CONFIG_USEFLOAT
+	return ((double)this->LAST_BMP_TEMPERATURE) / 100;
+#else
+	return this->LAST_BMP_TEMPERATURE;
+#endif
+}
+
+static double get_pressure(struct slogger_data_type *tp)
+{
+	struct bmp180_inst *this = tp->user_arg;
+
+	BMP180_Read(this);
+#ifndef CONFIG_USEFLOAT
+	return ((double)this->LAST_BMP_REAL_PRESSURE) / 100;
+#else
+	return this->LAST_BMP_REAL_PRESSURE;
+#endif
+}
+
+struct bmp180_inst *BMP180_Init()
+{
 	uint16 reg;
-	if(!i2c_master_readUint16(BMP180_ADDRESS, BMP180_REG_CHIPID, &reg))
-		return false;
-	
 
-	if(reg != BMP180_MAGIC_CHIPID){
-		dbg( "Invalid chip id: 0x%X, mustbe 0x%X\n", reg, BMP180_MAGIC_CHIPID);
+	if (!i2c_master_readUint16(BMP180_ADDRESS, BMP180_REG_CHIPID, &reg))
+		return false;
+
+
+	if (reg != BMP180_MAGIC_CHIPID && reg != BMP180_MAGIC_CHIPID2) {
+		dbg("Invalid chip id: 0x%X, mustbe 0x%X\n", reg, BMP180_MAGIC_CHIPID);
 		return false;
 	}
 
-	if(!i2c_master_readUint16(BMP180_ADDRESS, BMP180_REG_VERSION, &reg))
+	if (!i2c_master_readUint16(BMP180_ADDRESS, BMP180_REG_VERSION, &reg))
 		return false;
+
+	console_printf("i2c: Detected BMP180 sensor at address 0x%x\n", BMP180_ADDRESS);
+	struct bmp180_inst *this = os_malloc(sizeof(*this));
+	this->sld[0].type = "Temperature";
+	this->sld[0].unit = "C";
+	this->sld[0].description = "BMP180 Temperature";
+	this->sld[0].user_arg = this;
+	this->sld[0].get_current_value = get_temperature;
+
+	this->sld[1].type = "Pressure";
+	this->sld[1].unit = "mmHg";
+	this->sld[1].description = "BMP180 Presure";
+	this->sld[1].user_arg = this;
+	this->sld[1].get_current_value = get_pressure;
+
+	struct slogger_instance *ilog = svclog_get_global_instance();
+	sensorlogger_instance_register_data_type(ilog, &this->sld[0]);
+	sensorlogger_instance_register_data_type(ilog, &this->sld[1]);
 
 #ifdef CONFIG_USEFLOAT
 	//Read calibration values
-	AC1 = i2c_master_readRegister16(BMP180_ADDRESS, 0xAA);				 
-	AC2 = i2c_master_readRegister16(BMP180_ADDRESS, 0xAC);
-	AC3 = i2c_master_readRegister16(BMP180_ADDRESS, 0xAE);
-	AC4 = i2c_master_readRegister16(BMP180_ADDRESS, 0xB0);
-	AC5 = i2c_master_readRegister16(BMP180_ADDRESS, 0xB2);
-	AC6 = i2c_master_readRegister16(BMP180_ADDRESS, 0xB4);
-	VB1  = i2c_master_readRegister16(BMP180_ADDRESS, 0xB6);
-	VB2  = i2c_master_readRegister16(BMP180_ADDRESS, 0xB8);
-	MB  = i2c_master_readRegister16(BMP180_ADDRESS, 0xBA);
-	MC  = i2c_master_readRegister16(BMP180_ADDRESS, 0xBC);
-	MD  = i2c_master_readRegister16(BMP180_ADDRESS, 0xBE);
+	this->AC1 = i2c_master_readRegister16(BMP180_ADDRESS, 0xAA);
+	this->AC2 = i2c_master_readRegister16(BMP180_ADDRESS, 0xAC);
+	this->AC3 = i2c_master_readRegister16(BMP180_ADDRESS, 0xAE);
+	this->AC4 = i2c_master_readRegister16(BMP180_ADDRESS, 0xB0);
+	this->AC5 = i2c_master_readRegister16(BMP180_ADDRESS, 0xB2);
+	this->AC6 = i2c_master_readRegister16(BMP180_ADDRESS, 0xB4);
+	this->VB1 = i2c_master_readRegister16(BMP180_ADDRESS, 0xB6);
+	this->VB2 = i2c_master_readRegister16(BMP180_ADDRESS, 0xB8);
+	this->MB = i2c_master_readRegister16(BMP180_ADDRESS, 0xBA);
+	this->MC = i2c_master_readRegister16(BMP180_ADDRESS, 0xBC);
+	this->MD = i2c_master_readRegister16(BMP180_ADDRESS, 0xBE);
 
 	//Compute floating-point polynominals:
-	float c3,c4,b1;
-	c3 = 160.0 * pow(2,-15) * AC3;
-	c4 = pow(10,-3) * pow(2,-15) * AC4;
-	b1 = pow(160,2) * pow(2,-30) * VB1;
-	c5 = (pow(2,-15) / 160) * AC5;
-	c6 = AC6;
-	mc = (pow(2,11) / pow(160,2)) * MC;
-	md = MD / 160.0;
-	x0 = AC1;
-	x1 = 160.0 * pow(2,-13) * AC2;
-	x2 = pow(160,2) * pow(2,-25) * VB2;
-	ay0 = c4 * pow(2,15);
-	ay1 = c4 * c3;
-	ay2 = c4 * b1;
-	p0 = (3791.0 - 8.0) / 1600.0;
-	p1 = 1.0 - 7357.0 * pow(2,-20);
-	p2 = 3038.0 * 100.0 * pow(2,-36);
-	IS_ALREADY_INITED = true;
+	float c3, c4, b1;
+	c3 = 160.0 * pow(2, -15) * this->AC3;
+	c4 = pow(10, -3) * pow(2, -15) * this->AC4;
+	b1 = pow(160, 2) * pow(2, -30) * this->VB1;
+	this->c5 = (pow(2, -15) / 160) * this->AC5;
+	this->c6 = this->AC6;
+	this->mc = (pow(2, 11) / pow(160, 2)) * this->MC;
+	this->md = this->MD / 160.0;
+	this->x0 = this->AC1;
+	this->x1 = 160.0 * pow(2, -13) * this->AC2;
+	this->x2 = pow(160, 2) * pow(2, -25) * this->VB2;
+	this->ay0 = c4 * pow(2, 15);
+	this->ay1 = c4 * c3;
+	this->ay2 = c4 * b1;
+	this->p0 = (3791.0 - 8.0) / 1600.0;
+	this->p1 = 1.0 - 7357.0 * pow(2, -20);
+	this->p2 = 3038.0 * 100.0 * pow(2, -36);
 	return true;
 #else
 
-	if(i2c_master_readSint16(BMP180_ADDRESS, 0xAA, &ac1)
-	&& i2c_master_readSint16(BMP180_ADDRESS, 0xAC, &ac2)
-	&& i2c_master_readSint16(BMP180_ADDRESS, 0xAE, &ac3)
-	&& i2c_master_readUint16(BMP180_ADDRESS, 0xB0, &ac4)
-	&& i2c_master_readUint16(BMP180_ADDRESS, 0xB2, &ac5)
-	&& i2c_master_readUint16(BMP180_ADDRESS, 0xB4, &ac6)
-	&& i2c_master_readSint16(BMP180_ADDRESS, 0xB6, &b1)
-	&& i2c_master_readSint16(BMP180_ADDRESS, 0xB8, &b2)
-	&& i2c_master_readSint16(BMP180_ADDRESS, 0xBA, &mb)
-	&& i2c_master_readSint16(BMP180_ADDRESS, 0xBC, &mc)
-	&& i2c_master_readSint16(BMP180_ADDRESS, 0xBE, &md)){
-
-	dbg( "ac1: %d\nac2: %d\nac3: %d\nac4: %d\nac5: %d\nac6: %d\nb1: %d\nb2: %d\nmb: %d\nmc: %d\nmd: %d\n", ac1,ac2,ac3,ac4,ac5,ac6,b1,b2,mb,mc,md);
-		
-		IS_ALREADY_INITED = true;
+	if (i2c_master_readSint16(BMP180_ADDRESS, 0xAA, &this->ac1)
+	    && i2c_master_readSint16(BMP180_ADDRESS, 0xAC, &this->ac2)
+	    && i2c_master_readSint16(BMP180_ADDRESS, 0xAE, &this->ac3)
+	    && i2c_master_readUint16(BMP180_ADDRESS, 0xB0, &this->ac4)
+	    && i2c_master_readUint16(BMP180_ADDRESS, 0xB2, &this->ac5)
+	    && i2c_master_readUint16(BMP180_ADDRESS, 0xB4, &this->ac6)
+	    && i2c_master_readSint16(BMP180_ADDRESS, 0xB6, &this->b1)
+	    && i2c_master_readSint16(BMP180_ADDRESS, 0xB8, &this->b2)
+	    && i2c_master_readSint16(BMP180_ADDRESS, 0xBA, &this->mb)
+	    && i2c_master_readSint16(BMP180_ADDRESS, 0xBC, &this->mc)
+	    && i2c_master_readSint16(BMP180_ADDRESS, 0xBE, &this->md)) {
+		dbg("ac1: %d\nac2: %d\nac3: %d\nac4: %d\nac5: %d\nac6: %d\nb1: %d\nb2: %d\nmb: %d\nmc: %d\nmd: %d\n",
+		    this->ac1,
+		    this->ac2,
+		    this->ac3,
+		    this->ac4,
+		    this->ac5,
+		    this->ac6,
+		    this->b1,
+		    this->b2,
+		    this->mb,
+		    this->mc,
+		    this->md);
 		return true;
 	}
-	console_printf( "Cant read calibration values\n");
+	console_printf("Cant read calibration values\n");
 	return false;
 #endif
 }
 
-static int do_i2c_bmp180(int argc, const char* const* argv)
-{
-	if(argc == 1 || strcmp(argv[1], "read") == 0){
-
-		if((IS_ALREADY_INITED || BMP180_Init()) && BMP180_Read()){
-			console_printf( argc == 1 ? "%d %d\n" : "Temperature: %d C\nPressure: %d mmHg\n", 
-#ifdef CONFIG_USEFLOAT
-				(int)(LAST_BMP_TEMPERATURE*100), 
-				(uint32_t)(LAST_BMP_REAL_PRESSURE*100)
-#else
-				LAST_BMP_TEMPERATURE,
-				LAST_BMP_REAL_PRESSURE
-#endif
-			);
-		}else{
-			console_printf( "Failed to read value\n" );
-		}
-	} else
-
-	if(strcmp(argv[1], "init") == 0){
-
-		console_printf( BMP180_Init() ? "Ok\n":"Failed\n" );
-	} 
-
-	return false;
+FR_CONSTRUCTOR(bmp180_init){
+	BMP180_Init();
 }
-
-CONSOLE_CMD(i2c_bmp180, 0, 2, 
-		do_i2c_bmp180, NULL, NULL, 
-		"I2C pressure sensor BMP180"
-		HELPSTR_NEWLINE "i2c_bmp180 init"
-		HELPSTR_NEWLINE "i2c_bmp180 [read]"
-);

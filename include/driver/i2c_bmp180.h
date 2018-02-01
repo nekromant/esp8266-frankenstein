@@ -9,7 +9,8 @@
 
 #define BMP180_CONVERSION_TIME	5
 #define BMP180_REG_CHIPID	0xD0
-#define BMP180_MAGIC_CHIPID	0x55FF
+#define BMP180_MAGIC_CHIPID	    0x55FF
+#define BMP180_MAGIC_CHIPID2	0x5502
 #define BMP180_REG_VERSION	0xD1
 #define	BMP180_REG_CONTROL	0xF4
 #define	BMP180_REG_RESULT	0xF6
@@ -20,16 +21,7 @@
 //#define	BMP180_COMMAND_PRESSURE3	0xF4 // Max conversion time 25.5ms (OSS = 3)
 
 
-#ifdef CONFIG_USEFLOAT
-float LAST_BMP_TEMPERATURE;
-float LAST_BMP_REAL_PRESSURE;
-#else
-sint32 LAST_BMP_TEMPERATURE;
-sint32 LAST_BMP_REAL_PRESSURE;
-#endif
-static bool IS_ALREADY_INITED = false;
-
-bool BMP180_Init(void);
-bool BMP180_Read(void);
-
+struct bmp180_inst;
+struct bmp180_inst *BMP180_Init();
+bool BMP180_Read(struct bmp180_inst *this);
 #endif
