@@ -141,7 +141,7 @@ static double get_temperature(struct slogger_data_type *tp)
 
 	BMP180_Read(this);
 #ifndef CONFIG_USEFLOAT
-	return ((double)this->LAST_BMP_TEMPERATURE) / 100;
+	return ((double)this->LAST_BMP_TEMPERATURE) / 10;
 #else
 	return this->LAST_BMP_TEMPERATURE;
 #endif
