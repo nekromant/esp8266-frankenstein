@@ -83,6 +83,14 @@ struct slogger_http_request *slogger_instance_rq_post(struct slogger_instance *i
 void slogger_http_request_release(struct slogger_http_request *rq);
 
 
+/**
+ * Tells if all DataTypeIds have been filled and the instance is
+ * ready to accept data posts
+ * @param  inst [description]
+ * @return      [description]
+ */
+int slogger_instance_is_ready(struct slogger_instance *inst);
+
 void slogger_instance_set_current_value(struct slogger_instance *inst,
 					       char *			description,
 					       char *			type,

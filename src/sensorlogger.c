@@ -264,9 +264,21 @@ bailout:
 }
 
 
+int slogger_instance_is_ready(struct slogger_instance *inst)
+{
+	struct slogger_data_type *pos = inst->deviceDataTypes;
+	while (pos) {
+		if (pos->dataTypeId == -1)
+			return 0;
+		pos = pos->next;
+	}
+	return 1;
+}
+
 void slogger_instance_dump(struct slogger_instance *inst)
 {
 	char *spaces = "";
+    char tmp[64];
 	console_printf(" === SensorLogger Instance === \n");
 	DUMP_STR(inst, deviceId);
 	DUMP_STR(inst, deviceName);
@@ -284,6 +296,16 @@ void slogger_instance_dump(struct slogger_instance *inst)
 		DUMP_STR(pos, description);
 		DUMP_STR(pos, unit);
 		DUMP_VAL(pos, dataTypeId);
+
+		double value;
+		if (!pos->get_current_value)
+			value = pos->current_value;
+		else
+			value = pos->get_current_value(pos);
+
+		float2char(value, tmp);
+		console_printf("%s%s: %s\n", spaces, "value", tmp);
+
 		pos = pos->next;
 		console_printf(" == == == \n");
 	}

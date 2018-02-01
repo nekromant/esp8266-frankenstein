@@ -21,6 +21,8 @@ static double get_something(struct slogger_data_type *tp)
 	return system_get_time() / 1000000.0;
 }
 
+ETSTimer schedTimer;
+
 static struct slogger_instance this = {
 	.deviceType			= "dummy",
 	.deviceGroup		= "development",
@@ -121,6 +123,49 @@ FR_CONSTRUCTOR(dummy_reg)
 	add_dummy();
 }
 #endif
+
+
+static void rearm();
+static void autopost() {
+	struct slogger_http_request *rq = NULL;
+	http_callback cb = http_cb;
+	svclog_load_env();
+
+	if (cur_rq)
+		return;
+
+	if (!slogger_instance_is_ready(&this)) {
+		rq = slogger_instance_rq_get_data_types(&this);
+		cb = http_data_type_cb;
+	} else {
+		rq = slogger_instance_rq_post(&this);
+	}
+
+	cur_rq = rq;
+	http_post(rq->url, rq->data, rq->headers, cb);
+	rearm();
+}
+
+static void rearm()
+{
+	char *period = env_get("slog-interval");
+	if (period) {
+		uint32_t tm = atoi(period);
+		os_timer_disarm(&schedTimer);
+		os_timer_setfn(&schedTimer, (os_timer_func_t *)autopost, NULL);
+		os_timer_arm(&schedTimer, tm, 0);
+	}
+}
+
+FR_CONSTRUCTOR(periodic_post)
+{
+	char *period = env_get("slog-interval");
+	if (period) {
+		uint32_t tm = atoi(period);
+		console_printf("senslog: Will post data every %d ms\n", tm);
+	}
+	rearm();
+}
 
 static int   do_svclog(int argc, const char *const *argv)
 {
