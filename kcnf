@@ -190,6 +190,10 @@ endmenu
 
 menu "Commandline fine-tuning"
 
+config ENV_DEFAULT_PROMPT
+string "default commandline prompt"
+default "frankenstein"
+
 config MICRORL_USE_COMPLETE
 bool "Command auto-completion"
 
