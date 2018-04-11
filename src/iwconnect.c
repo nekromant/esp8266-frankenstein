@@ -6,6 +6,7 @@
 #include "espconn.h"
 #include "helpers.h"
 #include "iwconnect.h"
+#include "env.h"
 #include "main.h"
 
 static int conntimes = 0;
@@ -48,8 +49,9 @@ int exec_iwconnect(const char *ssid, const char *password)
 		os_strncpy((char*)&sta_conf.password, password, 32);
   }
 
-	wifi_station_set_config(&sta_conf);		
 	wifi_station_disconnect();
+	wifi_station_set_config(&sta_conf);
+	wifi_station_set_hostname(env_get("hostname"));
 	wifi_station_connect();
 
 	os_timer_disarm(&conn_checker);
