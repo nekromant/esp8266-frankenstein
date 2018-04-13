@@ -58,9 +58,25 @@ endif
 config SERVICE_TCP
 bool "TCP/IP services"
 
-config SERVICE_TELNET
+menuconfig SERVICE_TELNET
 bool "Telnet Service"
 depends on SERVICE_TCP
+help
+    Provides a commandline interface via telnet.
+    
+if SERVICE_TELNET
+    config ENV_DEFAULT_TELNET_AUTOSTART
+    bool "always run telnet server after boot"
+    default n
+    
+    config ENV_DEFAULT_TELNET_PORT
+    int "TCP port to bind to"
+    default 23
+    
+    config ENV_DEFAULT_TELNET_DROP
+    int "Drop connection after this many seconds of inactivity"
+    default 60
+endif
 
 config SERVICE_ECHO
 bool "Echo Service"
