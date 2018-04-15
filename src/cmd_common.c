@@ -68,6 +68,28 @@ static  int do_deepsleep(int argc, const char* const* argv)
 	return 0;
 }
 
+/* block for a certain amount of us */
+static int do_sleep(int argc, const char* const* argv)
+{
+	/* amount of us to delay before watchdog kicks in.
+	 * API reference says 500ms (500000us)
+	 */
+	#define MAX_DELAY 500000
+
+	const char *tmp = argv[1];
+	unsigned long n = skip_atoul(&tmp);
+	/* delay in chunks of 500ms */
+	for(int c=0; c < n/MAX_DELAY; c++) {
+		/* block */
+		os_delay_us(MAX_DELAY);
+		/* make watchdog happy */
+		system_soft_wdt_feed();
+	}
+	/* delay remaining time */
+	os_delay_us(n % MAX_DELAY);
+    return 0;
+}
+
 static int do_rtcdump(int argc, const char* const* argv)
 {
 	/* To minimise stack we just query 16 bytes at a type */
@@ -111,6 +133,12 @@ CONSOLE_CMD(chipinfo, -1, -1,
 CONSOLE_CMD(reset, -1, -1,
 	    do_reboot, NULL, NULL,
 	    "Soft-reboot the device "
+);
+
+CONSOLE_CMD(sleep, 2, 2,
+        do_sleep, NULL, NULL,
+        "delay for some microseconds"
+        HELPSTR_NEWLINE "sleep 10000"
 );
 
 CONSOLE_CMD(deepsleep, 2, 2,
