@@ -1436,7 +1436,7 @@ static void eap_request(ppp_pcb *pcb, u_char *inp, int id, int len) {
 		}
 
 		/* Not so likely to happen. */
-		if (vallen >= len + sizeof (rhostname)) {
+		if (len - vallen >= sizeof (rhostname)) {
 			ppp_dbglog("EAP: trimming really long peer name down");
 			MEMCPY(rhostname, inp + vallen, sizeof (rhostname) - 1);
 			rhostname[sizeof (rhostname) - 1] = '\0';
@@ -1862,7 +1862,7 @@ static void eap_response(ppp_pcb *pcb, u_char *inp, int id, int len) {
 		}
 
 		/* Not so likely to happen. */
-		if (vallen >= len + sizeof (rhostname)) {
+		if (len - vallen >= sizeof (rhostname)) {
 			ppp_dbglog("EAP: trimming really long peer name down");
 			MEMCPY(rhostname, inp + vallen, sizeof (rhostname) - 1);
 			rhostname[sizeof (rhostname) - 1] = '\0';
